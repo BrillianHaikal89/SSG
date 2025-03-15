@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Navbar from '@/components/navbar';
 
 const HomePage = () => {
-  const profileRef = useRef(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   
   // Animation variants
   const containerVariants = {
@@ -34,17 +34,10 @@ const HomePage = () => {
   
   // Function to handle smooth scrolling with improved mobile support
   const scrollToProfile = () => {
-    if (profileRef.current) {
-      // Get the height of the navbar for offset calculation
+    if (typeof window !== "undefined" && profileRef.current) {
       const navbarHeight = 64;
-      
-      // Get the element's position relative to the viewport
       const profileRect = profileRef.current.getBoundingClientRect();
-      
-      // Calculate the absolute position of the element on the page
       const profilePosition = profileRect.top + window.pageYOffset;
-      
-      // Scroll to the element with offset for the navbar
       window.scrollTo({
         top: profilePosition - navbarHeight,
         behavior: 'smooth'
