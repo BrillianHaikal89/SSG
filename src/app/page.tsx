@@ -1,103 +1,196 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useRef } from 'react';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import Navbar from '@/components/navbar';
+
+const HomePage = () => {
+  const profileRef = useRef(null);
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10
+      }
+    }
+  };
+  
+  // Function to handle smooth scrolling with improved mobile support
+  const scrollToProfile = () => {
+    if (profileRef.current) {
+      // Get the height of the navbar for offset calculation
+      const navbarHeight = 64;
+      
+      // Get the element's position relative to the viewport
+      const profileRect = profileRef.current.getBoundingClientRect();
+      
+      // Calculate the absolute position of the element on the page
+      const profilePosition = profileRect.top + window.pageYOffset;
+      
+      // Scroll to the element with offset for the navbar
+      window.scrollTo({
+        top: profilePosition - navbarHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen font-poppins overflow-x-hidden">
+      {/* Header with navigation */}
+      <Navbar />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+      {/* Main content */}
+      <main>
+        {/* Hero section - full screen with background image */}
+        <div id="home" className="relative w-full h-screen overflow-hidden">
+          {/* Background image replacing the gradient */}
+          <div className="absolute inset-0 z-0">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src="/img/bghome.png"
+              alt="Background"
+              fill
+              priority
+              style={{ objectFit: 'cover' }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+          
+          {/* Optional overlay to ensure text readability if needed */}
+          <div className="absolute inset-0 bg-black/10 z-10"></div>
+          
+          {/* Main heading content - centered vertically, left-aligned */}
+          <div className="absolute z-30 inset-0 flex flex-col justify-center px-12 md:px-20 lg:px-24">
+            <div className="max-w-4xl">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div
+                  variants={itemVariants}
+                  className="mb-6"
+                >
+                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+                    <span className="text-white">Mengubah</span><br />
+                    <span className="text-amber-500">Kepribadian</span><br />
+                    <span className="text-white">Menjadi </span>
+                    <span className="text-amber-500">Lebih </span>
+                    <span className="text-blue-900">Baik.</span>
+                  </h1>
+                  <div className="mt-6">
+                    <p className="text-xl md:text-2xl font-bold text-blue-900">
+                      Program Pendidikan dan Latihan
+                    </p>
+                    <p className="text-base md:text-lg mt-2 text-white">
+                      yang dirancang untuk membentuk generasi muda<br />
+                      yang berkarakter <span className="text-amber-500 font-bold">BAKU</span>
+                      <span className="text-white"> (</span>
+                      <span className="text-amber-500 font-bold">Baik</span>
+                      <span className="text-white"> & </span>
+                      <span className="text-amber-500 font-bold">Kuat</span>
+                      <span className="text-white">).</span>
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+          
+          {/* Call to action button - bottom left aligned */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="absolute z-30 bottom-16 left-0 w-full px-12 md:px-20 lg:px-24"
           >
-            Read our docs
-          </a>
+            <div className="max-w-4xl">
+              <motion.button 
+                variants={itemVariants}
+                onClick={scrollToProfile}
+                className="flex items-center space-x-2 bg-gray-300/30 backdrop-blur-sm text-white font-medium py-3 px-8 rounded-full border border-white/20 cursor-pointer"
+                type="button"
+                aria-label="Baca profil selengkapnya"
+              >
+                <span>Baca Selengkapnya</span>
+              </motion.button>
+            </div>
+          </motion.div>
         </div>
+
+        {/* Profile section - unchanged */}
+        <section id="profile" ref={profileRef} className="py-10 px-4 md:px-20 scroll-mt-16">
+          <motion.div 
+            className="max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Profil Lengkap</h2>
+            
+            <div className="bg-white shadow-lg rounded-xl p-5 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+                <div className="md:w-1/3">
+                  <div className="relative h-72 w-full md:h-96 rounded-lg overflow-hidden shadow-md">
+                    <Image
+                      src="/img/aagym.png" 
+                      alt="KH. Abdullah Gymnastyar"
+                      fill
+                      style={{ objectFit: 'cover' }}
+                      className="rounded-lg"
+                    />
+                  </div>
+                </div>
+                
+                <div className="md:w-2/3">
+                  <h3 className="text-xl font-semibold mb-3 md:mb-4 text-gray-800">KH. Abdullah Gymnastyar</h3>
+                  
+                  <p className="text-gray-600 mb-3 md:mb-4 text-sm md:text-base">
+                    KH. Abdullah Gymnastyar, yang lebih dikenal dengan panggilan Aa Gym, adalah seorang pendakwah, pengusaha, dan pendiri Pesantren Daarut Tauhid di Bandung, Jawa Barat. Beliau lahir di Bandung pada 29 Januari 1962.
+                  </p>
+                  
+                  <p className="text-gray-600 mb-3 md:mb-4 text-sm md:text-base">
+                    Aa Gym dikenal dengan pendekatan dakwahnya yang moderat dan menyejukkan. Konsep Manajemen Qolbu yang beliau kembangkan telah menginspirasi banyak orang untuk memperbaiki kualitas diri, baik dalam hubungan dengan Allah SWT maupun dalam bermuamalah dengan sesama manusia.
+                  </p>
+                  
+                  <p className="text-gray-600 mb-3 md:mb-4 text-sm md:text-base">
+                    Selain aktif berdakwah, beliau juga seorang pengusaha sukses yang mengelola berbagai unit usaha di bawah naungan Koperasi Pondok Pesantren Daarut Tauhid. Melalui pendekatan bisnis yang berbasis nilai-nilai Islam, beliau menunjukkan bahwa kesuksesan dunia dan akhirat dapat diraih secara bersamaan.
+                  </p>
+                  
+                  <div className="mt-4 md:mt-6">
+                    <h4 className="font-semibold mb-2 text-gray-800">Kontribusi:</h4>
+                    <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm md:text-base">
+                      <li>Pendiri Pesantren Daarut Tauhid</li>
+                      <li>Pengembang konsep Manajemen Qolbu</li>
+                      <li>Penulis berbagai buku motivasi dan keagamaan</li>
+                      <li>Pembina berbagai kegiatan sosial dan pendidikan</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
-}
+};
+
+export default HomePage;

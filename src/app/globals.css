@@ -1,26 +1,93 @@
 @import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 255, 255, 255;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Removed dark mode styles to keep background light */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient( to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+    overflow-x: hidden;
+}
+
+
+/* Custom classes for the LPM website */
+
+.lpm-logo {
+    font-weight: bold;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.lpm-logo-main {
+    color: #00A8E8;
+    font-size: 1.5rem;
+}
+
+.lpm-logo-subtitle {
+    color: #FFD700;
+    font-size: 0.7rem;
+}
+
+.lpm-nav-link {
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+.lpm-nav-link:hover {
+    color: #00A8E8;
+}
+
+.lpm-heading {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.lpm-button {
+    background-color: #0D3B66;
+    color: white;
+    font-weight: 700;
+    padding: 0.75rem 2.5rem;
+    border-radius: 9999px;
+    transition: background-color 0.3s ease;
+}
+
+.lpm-button:hover {
+    background-color: #0A2F52;
+}
+
+
+/* Media queries for responsive design */
+
+@media (max-width: 768px) {
+    .lpm-heading {
+        font-size: 2.25rem;
+        line-height: 1.2;
+    }
+    .lpm-logo img {
+        max-width: 80px;
+    }
+    .lpm-button {
+        padding: 0.5rem 1.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .lpm-heading {
+        font-size: 1.875rem;
+        line-height: 1.3;
+    }
+    .lpm-button {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.875rem;
+    }
 }
