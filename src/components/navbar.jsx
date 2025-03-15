@@ -31,7 +31,7 @@ const Navbar = () => {
   // Get current path to highlight active link
   const pathname = usePathname();
   
-  // Set initial active item based on pathname - FIXED by adding proper dependency array
+  // Set initial active item based on pathname
   useEffect(() => {
     // Find the matching nav item for the current path
     const matchingItem = navItems.find(item => item.path === pathname && !item.isScroll);
@@ -42,7 +42,7 @@ const Navbar = () => {
     }
   }, [pathname]); // Only run when pathname changes
   
-  // Effect to handle scrolling when redirected with a section parameter - FIXED by adding proper dependency array
+  // Effect to handle scrolling when redirected with a section parameter
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
@@ -65,7 +65,7 @@ const Navbar = () => {
     }
   }, [pathname]); // Only run when pathname changes
   
-  // Effect to handle scroll events - FIXED by using a reference for the callback function
+  // Effect to handle scroll events
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
@@ -116,6 +116,9 @@ const Navbar = () => {
     // For other navigation items, let the Link component handle it normally
   };
   
+  // Common gradient background style for consistent appearance - with darker grays
+  const navGradient = "bg-gradient-to-r from-gray-400/95 via-gray-300/90 to-gray-200/85";
+  
   return (
     <motion.header 
       className="w-full fixed top-0 left-0 right-0 z-50"
@@ -126,8 +129,7 @@ const Navbar = () => {
       }}
       transition={{ duration: 0.3 }}
     >
-      {/* Updated with very light, faded gray gradient */}
-      <div className="bg-gradient-to-r from-gray-300/90 via-gray-200/80 to-gray-100/70 rounded-[30px]">
+      <div className={`${navGradient} rounded-[30px]`}>
         <div className="container mx-auto px-4 md:px-6 flex justify-between items-center h-20">
           {/* Logo with link to home */}
           <motion.div 
@@ -184,7 +186,7 @@ const Navbar = () => {
               </ul>
             </nav>
             
-            {/* Login Button for Desktop - Updated to match dark blue in the image */}
+            {/* Login Button for Desktop */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,10 +234,10 @@ const Navbar = () => {
           </div>
         </div>
         
-        {/* Mobile Navigation Menu - Only visible when opened */}
+        {/* Mobile Navigation Menu - Using the same gradient as the main navigation */}
         {mobileMenuOpen && (
           <motion.nav 
-            className="md:hidden bg-blue-100 overflow-hidden"
+            className={`md:hidden ${navGradient} overflow-hidden rounded-b-[30px]`}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
