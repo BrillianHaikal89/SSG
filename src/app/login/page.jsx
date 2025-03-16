@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 function SignInPage() {
+  const router = useRouter();
+  
   // =========== STATE MANAGEMENT ===========
   // Login form state
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -51,6 +54,11 @@ function SignInPage() {
     e.preventDefault();
     console.log('Login with:', { phoneNumber, password, rememberMe, isVerified });
     // Implement login logic here
+  }
+
+  // Navigation handler for signup button
+  function navigateToSignup() {
+    router.push('/login/signup');
   }
 
   return (
@@ -223,14 +231,13 @@ function SignInPage() {
         >
           <h2 className="text-3xl font-bold text-white mb-2">Selamat datang</h2>
           <p className="text-white text-sm mb-6">Belum punya akun?</p>
-          <Link href="/login/signup">
-            <button
-              type="button"
-              className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
-            >
-              Daftar
-            </button>
-          </Link>
+          <button
+            type="button"
+            onClick={navigateToSignup}
+            className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
+          >
+            Daftar
+          </button>
         </motion.div>
       </div>
       
@@ -238,14 +245,13 @@ function SignInPage() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-100 p-4 text-center border-t border-gray-200">
         <div className="text-sm text-gray-600">
           Belum punya akun?{" "}
-          <Link href="/signup">
-            <button 
-              type="button"
-              className="text-blue-800 font-medium"
-            >
-              Daftar
-            </button>
-          </Link>
+          <button 
+            type="button"
+            onClick={navigateToSignup}
+            className="text-blue-800 font-medium"
+          >
+            Daftar
+          </button>
         </div>
       </div>
     </div>

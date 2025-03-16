@@ -184,7 +184,7 @@ function SignUpPage() {
           alert('Pendaftaran berhasil! Silakan masuk dengan akun baru Anda.');
           
           // Redirect to login page
-          router.push('/signin');
+          router.push('/login');
         }, 1500);
       } catch (error) {
         setIsLoadingData(false);
@@ -697,7 +697,7 @@ function SignUpPage() {
                 <div className={`w-3 h-3 rounded-full ${signupStep === 2 ? 'bg-white' : 'bg-white/50'}`}></div>
               </div>
             </div>
-            <Link href="/signin">
+            <Link href="/login">
               <button
                 type="button"
                 className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
@@ -713,7 +713,7 @@ function SignUpPage() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-100 p-4 text-center border-t border-gray-200">
         <div className="text-sm text-gray-600">
           Sudah punya akun?{" "}
-          <Link href="/signin">
+          <Link href="/login">
             <button 
               type="button"
               className="text-blue-800 font-medium"
