@@ -18,73 +18,25 @@ function ForgotPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   
-  // Reset Turnstile when step changes
-  useEffect(() => {
-    if (typeof window.turnstile !== 'undefined') {
-      // Reset all turnstile instances
-      window.turnstile.reset();
-      
-      // Render the appropriate turnstile for the current step
-      if (step === 1) {
-        window.turnstile.render('#turnstile-phone', {
-          sitekey: '0x4AAAAAABBBnsl2yEqRVvMU',
-          theme: 'light',
-        });
-      } else if (step === 2) {
-        window.turnstile.render('#turnstile-otp', {
-          sitekey: '0x4AAAAAABBBnsl2yEqRVvMU',
-          theme: 'light',
-        });
-      } else if (step === 3) {
-        window.turnstile.render('#turnstile-reset', {
-          sitekey: '0x4AAAAAABBBnsl2yEqRVvMU',
-          theme: 'light',
-        });
-      }
-    }
-  }, [step]);
-  
-  // Load Cloudflare Turnstile script and handle resets
+  // Load Cloudflare Turnstile script
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);
     
-    // Define callback function for when Turnstile loads
-    window.onloadTurnstileCallback = function () {
-      // Render the widget when the page loads
-      if (typeof window.turnstile !== 'undefined') {
-        window.turnstile.render('#turnstile-phone', {
-          sitekey: '0x4AAAAAABBBnsl2yEqRVvMU',
-          theme: 'light',
-        });
-      }
-    };
-    
     return () => {
       document.body.removeChild(script);
-      delete window.onloadTurnstileCallback;
     };
   }, []);
   
   // Handle phone number submission
   function handlePhoneSubmit(e) {
     e.preventDefault();
-    
-    // Get turnstile token
-    const turnstileResponse = document.getElementById('cf-turnstile-response')?.value;
-    
-    if (!turnstileResponse) {
-      alert('Mohon selesaikan verifikasi keamanan');
-      return;
-    }
-    
     setIsSubmitting(true);
     
-    // Simulate API call to send OTP with turnstile token
-    // In production, you would send the turnstileResponse to your backend
+    // Simulate API call to send OTP
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitStatus('success');
@@ -111,19 +63,9 @@ function ForgotPasswordPage() {
   // Handle OTP verification
   function handleOtpSubmit(e) {
     e.preventDefault();
-    
-    // Get turnstile token
-    const turnstileResponse = document.getElementById('cf-turnstile-response')?.value;
-    
-    if (!turnstileResponse) {
-      alert('Mohon selesaikan verifikasi keamanan');
-      return;
-    }
-    
     setIsSubmitting(true);
     
-    // Simulate API call to verify OTP with turnstile token
-    // In production, you would send the turnstileResponse to your backend
+    // Simulate API call to verify OTP
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitStatus('success');
@@ -146,19 +88,10 @@ function ForgotPasswordPage() {
       return;
     }
     
-    // Get turnstile token
-    const turnstileResponse = document.getElementById('cf-turnstile-response')?.value;
-    
-    if (!turnstileResponse) {
-      alert('Mohon selesaikan verifikasi keamanan');
-      return;
-    }
-    
     setIsSubmitting(true);
     setPasswordError('');
     
-    // Simulate API call to reset password with turnstile token
-    // In production, you would send the turnstileResponse to your backend
+    // Simulate API call to reset password
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitStatus('success');
@@ -211,7 +144,7 @@ function ForgotPasswordPage() {
               
               {/* Cloudflare Turnstile */}
               <div className="mb-6">
-                <div className="cf-turnstile" data-sitekey="0x4AAAAAABBBnsl2yEqRVvMU" id="turnstile-phone"></div>
+                <div className="cf-turnstile" data-sitekey="0x4AAAAAABBBnsl2yEqRVvMU"></div>
               </div>
               
               <div>
@@ -259,11 +192,6 @@ function ForgotPasswordPage() {
                     Kirim ulang
                   </button>
                 </p>
-              </div>
-              
-              {/* Cloudflare Turnstile */}
-              <div className="mb-6">
-                <div className="cf-turnstile" data-sitekey="0x4AAAAAABBBnsl2yEqRVvMU" id="turnstile-otp"></div>
               </div>
               
               <div className="flex space-x-4">
@@ -323,11 +251,6 @@ function ForgotPasswordPage() {
                     {passwordError}
                   </p>
                 )}
-              </div>
-              
-              {/* Cloudflare Turnstile */}
-              <div className="mb-6">
-                <div className="cf-turnstile" data-sitekey="0x4AAAAAABBBnsl2yEqRVvMU" id="turnstile-reset"></div>
               </div>
               
               <div className="flex space-x-4">
