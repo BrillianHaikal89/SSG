@@ -91,3 +91,41 @@ body {
         font-size: 0.875rem;
     }
 }
+
+
+/* Tambahkan style ini ke file CSS global Anda */
+
+
+/* Style untuk input type date */
+
+input[type="date"] {
+    cursor: pointer !important;
+}
+
+
+/* Style untuk select (dropdown) */
+
+select {
+    cursor: pointer !important;
+}
+
+
+/* Jika masih tidak berhasil, tambahkan style ini ke file CSS global */
+
+input[type="date"]:hover,
+input[type="date"]:focus,
+select:hover,
+select:focus {
+    cursor: pointer !important;
+}
+
+
+/* Alternatif menggunakan classes */
+
+.date-input {
+    cursor: pointer !important;
+}
+
+.select-input {
+    cursor: pointer !important;
+}

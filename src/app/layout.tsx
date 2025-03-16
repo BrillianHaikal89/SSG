@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Santri Siap Guna",
-  description: "Website LPM SSG Untuk Santri Yang Siap Guna",
+  description: "Website LPM SSG Yang Santri Yang Siap Guna",
 };
 
 export default function RootLayout({

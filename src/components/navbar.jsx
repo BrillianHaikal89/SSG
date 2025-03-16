@@ -14,7 +14,7 @@ const Navbar = () => {
   const navItems = [
     { name: 'HOME', path: '/' },
     { name: 'ABOUT US', path: '/', isScroll: true, scrollTo: 'profile' },
-    { name: 'PROGRAMS', path: '/programs' },
+    { name: 'ACTIVITY', path: '/activity' },
     { name: 'CONTACT', path: '/contact' }
   ];
   
