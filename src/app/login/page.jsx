@@ -13,8 +13,11 @@ function SignInPage() {
   // Login form state
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   // Load Cloudflare Turnstile script
   useEffect(() => {
@@ -29,20 +32,87 @@ function SignInPage() {
     };
   }, []);
   
+  // Toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+  
   // Social login handlers
   function handleGoogleAuth() {
     console.log('Login with Google');
+    // For demo purposes, redirect to dashboard after Google login
+    redirectToDashboard();
   }
   
   function handleFacebookAuth() {
     console.log('Login with Facebook');
+    // For demo purposes, redirect to dashboard after Facebook login
+    redirectToDashboard();
+  }
+  
+  // Function to redirect to dashboard
+  function redirectToDashboard() {
+    // You can set some authentication state here
+    if (rememberMe) {
+      localStorage.setItem('isLoggedIn', 'true');
+    } else {
+      sessionStorage.setItem('isLoggedIn', 'true');
+    }
+    // Redirect to dashboard
+    router.push('/dashboard');
   }
   
   // Form submissions
   function handleLoginSubmit(e) {
     e.preventDefault();
-    console.log('Login with:', { phoneNumber, password, rememberMe });
-    // Implement login logic here including the turnstile token
+    setIsLoading(true);
+    setLoginError('');
+    
+    // Get registered users from localStorage
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    
+    // Find user with matching phone number
+    const user = registeredUsers.find(user => user.phone === phoneNumber);
+    
+    if (!user) {
+      setLoginError('Nomor HP tidak terdaftar');
+      setIsLoading(false);
+      return;
+    }
+    
+    // Check password
+    if (user.password !== password) {
+      setLoginError('Kata sandi tidak valid');
+      setIsLoading(false);
+      return;
+    }
+    
+    console.log('Login successful:', { phoneNumber, rememberMe });
+    
+    // Simulate API call with delay
+    setTimeout(() => {
+      setIsLoading(false);
+      
+      // Store user data in session/localStorage
+      const userData = {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        lastLogin: new Date().toISOString()
+      };
+      
+      // Store based on remember me setting
+      if (rememberMe) {
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('isLoggedIn', 'true');
+      } else {
+        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+        sessionStorage.setItem('isLoggedIn', 'true');
+      }
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+    }, 1000);
   }
 
   // Navigation handler for signup button
@@ -73,7 +143,7 @@ function SignInPage() {
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" 
-                  fill="#4285F4"/>
+                fill="#4285F4"/>
               </svg>
               Google
             </button>
@@ -85,7 +155,7 @@ function SignInPage() {
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" 
-                  fill="#1877F2"/>
+                fill="#1877F2"/>
               </svg>
               Facebook
             </button>
@@ -103,7 +173,13 @@ function SignInPage() {
           </div>
           
           {/* Login Form */}
-          <form onSubmit={handleLoginSubmit} action="/login" method="POST">
+          <form onSubmit={handleLoginSubmit}>
+            {loginError && (
+              <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm border border-red-200 rounded">
+                {loginError}
+              </div>
+            )}
+            
             <div className="mb-4">
               <label htmlFor="phoneNumber" className="block text-xs font-medium text-gray-500 uppercase mb-1">
                 Nomor HP
@@ -125,17 +201,35 @@ function SignInPage() {
               <label htmlFor="password" className="block text-xs font-medium text-gray-500 uppercase mb-1">
                 Kata Sandi
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800"
-                placeholder="Kata Sandi"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800"
+                  placeholder="Kata Sandi"
+                />
+                <button 
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
             
             {/* Cloudflare Turnstile */}
@@ -168,9 +262,18 @@ function SignInPage() {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800"
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800 disabled:bg-blue-300 disabled:cursor-not-allowed"
               >
-                Masuk
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                  </>
+                ) : 'Masuk'}
               </button>
             </div>
           </form>
