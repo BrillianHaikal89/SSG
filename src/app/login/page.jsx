@@ -5,17 +5,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AuthPage = () => {
+function AuthPage() {
+  // =========== STATE MANAGEMENT ===========
+  // Main UI state
   const [isLogin, setIsLogin] = useState(true);
   const [signupStep, setSignupStep] = useState(1);
   const [isLoadingData, setIsLoadingData] = useState(false);
   
-  // Form state untuk login
+  // Login form state
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [formTouched, setFormTouched] = useState(false);
   
-  // Form state untuk pendaftaran - Step 1 (Data KTP)
+  // Signup form - Step 1 (Personal Data)
   const [name, setName] = useState('');
   const [nik, setNik] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
@@ -25,19 +30,134 @@ const AuthPage = () => {
   const [rt, setRt] = useState('');
   const [rw, setRw] = useState('');
   
-  // Form state untuk pendaftaran - Step 2 (Lokasi & Kontak)
+  // Signup form - Step 2 (Address & Contact)
   const [postalCode, setPostalCode] = useState('');
   const [kelurahan, setKelurahan] = useState('');
   const [kecamatan, setKecamatan] = useState('');
   const [city, setCity] = useState('');
   const [province, setProvince] = useState('');
-  const [email, setEmail] = useState('');
   const [phoneSignup, setPhoneSignup] = useState('');
   const [passwordSignup, setPasswordSignup] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  // Handle verification when user starts typing in login form
+  useEffect(() => {
+    if ((phoneNumber || password) && !formTouched) {
+      setFormTouched(true);
+      triggerVerification();
+    }
+  }, [phoneNumber, password, formTouched]);
   
-  // Contoh database wilayah Indonesia (untuk simulasi)
+  // Trigger human verification process
+  function triggerVerification() {
+    if (!isVerified && !isVerifying) {
+      setIsVerifying(true);
+      // Simulate verification process with a delay
+      const timer = setTimeout(() => {
+        setIsVerified(true);
+        setIsVerifying(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }
+  
+  // Toggle between login and signup modes
+  function toggleAuthMode() {
+    // Reset to initial step for registration flow
+    setSignupStep(1);
+    
+    // Clear form data based on current mode
+    if (isLogin) {
+      // Going to signup - clear signup-related fields
+      setName('');
+      setNik('');
+      setBirthPlace('');
+      setBirthDate('');
+      setGender('');
+      setAddress('');
+      setRt('');
+      setRw('');
+      setPostalCode('');
+      setKelurahan('');
+      setKecamatan('');
+      setCity('');
+      setProvince('');
+      setPhoneSignup('');
+      setPasswordSignup('');
+      setConfirmPassword('');
+      setPasswordError('');
+    } else {
+      // Going to login - clear login-related fields
+      setPhoneNumber('');
+      setPassword('');
+      setRememberMe(false);
+      setIsVerified(false);
+      setIsVerifying(false);
+      setFormTouched(false);
+    }
+    
+    // Toggle the mode last, after all other states are updated
+    setIsLogin(prevMode => !prevMode);
+  }
+  
+  // Social login handlers
+  function handleGoogleAuth() {
+    console.log('Login with Google');
+  }
+  
+  function handleFacebookAuth() {
+    console.log('Login with Facebook');
+  }
+  
+  // Form submissions
+  function handleLoginSubmit(e) {
+    e.preventDefault();
+    console.log('Login with:', { phoneNumber, password, rememberMe, isVerified });
+    // Implement login logic here
+  }
+  
+  function handleSignupStep1(e) {
+    e.preventDefault();
+    console.log('Personal Data:', { name, nik, birthPlace, birthDate, gender, address, rt, rw });
+    setSignupStep(2);
+  }
+  
+  async function handleSignupStep2(e) {
+    e.preventDefault();
+    
+    // Validate password
+    if (!validatePasswords()) {
+      return;
+    }
+    
+    // Complete user data
+    const userData = {
+      // Step 1 data
+      name, nik, birthPlace, birthDate, gender, address, rt, rw,
+      // Step 2 data
+      postalCode, kelurahan, kecamatan, city, province, phone: phoneSignup, password: passwordSignup
+    };
+    
+    console.log('Complete registration data:', userData);
+    
+    // Simulate saving to database
+    try {
+      // Simulate successful registration
+      alert('Registration successful!');
+      setIsLogin(true); // Return to login page
+    } catch (error) {
+      console.error('Error during registration:', error);
+      alert('An error occurred during registration. Please try again.');
+    }
+  }
+  
+  function goBackToStep1() {
+    setSignupStep(1);
+  }
+  
+  // Sample Indonesian region database (for simulation)
   const postalCodeData = {
     "40123": {
       kelurahan: "Sukajadi",
@@ -59,15 +179,15 @@ const AuthPage = () => {
     }
   };
   
-  // Function untuk mengisi data otomatis berdasarkan kode pos
-  const handlePostalCodeChange = (e) => {
+  // Autofill location data based on postal code
+  function handlePostalCodeChange(e) {
     const code = e.target.value;
     setPostalCode(code);
     
     if (code.length === 5) {
       setIsLoadingData(true);
       
-      // Simulasi loading data dari database
+      // Simulate loading data from database
       setTimeout(() => {
         if (postalCodeData[code]) {
           setKelurahan(postalCodeData[code].kelurahan);
@@ -75,7 +195,7 @@ const AuthPage = () => {
           setCity(postalCodeData[code].city);
           setProvince(postalCodeData[code].province);
         } else {
-          // Reset fields jika kode pos tidak ditemukan
+          // Reset fields if postal code not found
           setKelurahan('');
           setKecamatan('');
           setCity('');
@@ -84,129 +204,20 @@ const AuthPage = () => {
         setIsLoadingData(false);
       }, 500);
     }
-  };
+  }
   
-  // Validasi konfirmasi password
-  const validatePasswords = () => {
+  // Validate password confirmation
+  function validatePasswords() {
     if (passwordSignup !== confirmPassword) {
       setPasswordError('Kata sandi tidak cocok');
       return false;
     }
     setPasswordError('');
     return true;
-  };
-  
-  // Fungsi untuk login
-  const handleLoginSubmit = (e) => {
-    e.preventDefault();
-    console.log('Login dengan:', { phoneNumber, password, rememberMe });
-    // Implementasi login di sini
-  };
-  
-  // Fungsi untuk sign up step 1
-  const handleSignupStep1 = (e) => {
-    e.preventDefault();
-    console.log('Data KTP:', { name, nik, birthPlace, birthDate, gender, address, rt, rw });
-    setSignupStep(2);
-  };
-  
-  // Fungsi untuk sign up step 2 dan simpan data
-  const handleSignupStep2 = async (e) => {
-    e.preventDefault();
-    
-    // Validasi password
-    if (!validatePasswords()) {
-      return;
-    }
-    
-    // Data pengguna lengkap
-    const userData = {
-      // Step 1 data
-      name, nik, birthPlace, birthDate, gender, address, rt, rw,
-      // Step 2 data
-      postalCode, kelurahan, kecamatan, city, province, email, phone: phoneSignup, password: passwordSignup
-    };
-    
-    console.log('Data pendaftaran lengkap:', userData);
-    
-    // Simulasi menyimpan ke database
-    try {
-      // Pada implementasi sesungguhnya, gunakan API route untuk menyimpan data
-      // Contoh fetch ke API:
-      /*
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-      
-      if (response.ok) {
-        alert('Pendaftaran berhasil!');
-        setIsLogin(true); // Kembali ke halaman login
-      } else {
-        const data = await response.json();
-        alert(`Gagal mendaftar: ${data.message}`);
-      }
-      */
-      
-      // Simulasi pendaftaran berhasil
-      alert('Pendaftaran berhasil!');
-      setIsLogin(true); // Kembali ke halaman login
-    } catch (error) {
-      console.error('Error saat pendaftaran:', error);
-      alert('Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
-    }
-  };
-  
-  // Fungsi untuk kembali ke step sebelumnya
-  const goBackToStep1 = () => {
-    setSignupStep(1);
-  };
-  
-  // Toggle antara login dan daftar
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setSignupStep(1); // Reset ke step 1 jika beralih mode
-    // Reset form saat beralih mode
-    if (isLogin) {
-      // Reset signup form fields
-      setName('');
-      setNik('');
-      setBirthPlace('');
-      setBirthDate('');
-      setGender('');
-      setAddress('');
-      setRt('');
-      setRw('');
-      setPostalCode('');
-      setKelurahan('');
-      setKecamatan('');
-      setCity('');
-      setProvince('');
-      setEmail('');
-      setPhoneSignup('');
-      setPasswordSignup('');
-      setConfirmPassword('');
-      setPasswordError('');
-    } else {
-      // Reset login form fields
-      setPhoneNumber('');
-      setPassword('');
-      setRememberMe(false);
-    }
-  };
-  
-  // Login dengan social media
-  const handleGoogleAuth = () => {
-    console.log('Login dengan Google');
-  };
-  
-  const handleFacebookAuth = () => {
-    console.log('Login dengan Facebook');
-  };
+  }
 
-  // Field renderer for signup forms
-  const renderField = (id, label, type, value, onChange, placeholder, required = true, maxLength, readOnly = false) => {
+  // Helper component for rendering form fields
+  function renderField(id, label, type, value, onChange, placeholder, required = true, maxLength, readOnly = false) {
     return (
       <div className="mb-3">
         <label htmlFor={id} className="block text-xs font-medium text-gray-500 uppercase mb-1">
@@ -255,10 +266,10 @@ const AuthPage = () => {
         )}
       </div>
     );
-  };
+  }
   
-  // Render tooltip for fields that need explanation
-  const renderFieldWithTooltip = (id, label, type, value, onChange, placeholder, tooltip, required = true, maxLength) => {
+  // Helper component for rendering fields with tooltips
+  function renderFieldWithTooltip(id, label, type, value, onChange, placeholder, tooltip, required = true, maxLength) {
     return (
       <div className="mb-3">
         <div className="flex items-center mb-1">
@@ -293,7 +304,7 @@ const AuthPage = () => {
         />
       </div>
     );
-  };
+  }
 
   return (
     <div className="flex h-screen">
@@ -312,11 +323,12 @@ const AuthPage = () => {
               {isLogin ? "Masuk" : (signupStep === 1 ? "Daftar - Akun" : "Daftar - Data Alamat")}
             </h1>
             
-            {/* Social login hanya tampil pada halaman login */}
+            {/* Social login options - only on login page */}
             {isLogin && (
               <>
                 <div className="flex space-x-4 mb-8">
                   <button 
+                    type="button"
                     onClick={handleGoogleAuth}
                     className="flex items-center justify-center w-1/2 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
@@ -328,6 +340,7 @@ const AuthPage = () => {
                   </button>
                   
                   <button 
+                    type="button"
                     onClick={handleFacebookAuth}
                     className="flex items-center justify-center w-1/2 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
@@ -352,7 +365,7 @@ const AuthPage = () => {
               </>
             )}
             
-            {/* Step indicator untuk pendaftaran */}
+            {/* Signup progress indicator */}
             {!isLogin && (
               <div className="flex mb-4">
                 <div className={`flex-1 text-center pb-2 relative ${signupStep >= 1 ? 'text-blue-800 font-medium' : 'text-gray-400'}`}>
@@ -388,7 +401,7 @@ const AuthPage = () => {
                   />
                 </div>
                 
-                <div className="mb-6">
+                <div className="mb-4">
                   <label htmlFor="password" className="block text-xs font-medium text-gray-500 uppercase mb-1">
                     Kata Sandi
                   </label>
@@ -403,6 +416,44 @@ const AuthPage = () => {
                     className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800"
                     placeholder="Kata Sandi"
                   />
+                </div>
+                
+                {/* Human Verification Section */}
+                <div className="mb-4 border border-gray-300 rounded-md p-3 bg-gray-50">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-700">Let us know you're human</div>
+                    <div className="flex items-center">
+                      <img 
+                        src="/img/Cloudflare_Logo.png" 
+                        alt="Cloudflare" 
+                        className="h-5"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center">
+                    <div className="relative">
+                      <input
+                        id="human_verify"
+                        name="human_verify"
+                        type="checkbox"
+                        checked={isVerified}
+                        onChange={(e) => setIsVerified(e.target.checked)}
+                        className="h-5 w-5 text-blue-800 focus:ring-blue-800 border-gray-300 rounded"
+                        disabled={isVerifying}
+                      />
+                      {isVerifying && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="animate-spin h-4 w-4 text-blue-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <label htmlFor="human_verify" className="ml-2 block text-sm text-gray-700">
+                      Verify you are human
+                    </label>
+                  </div>
                 </div>
                 
                 <div className="flex items-center justify-between mb-6">
@@ -438,7 +489,7 @@ const AuthPage = () => {
               </form>
             ) : (
               <>
-                {/* Signup Step 1 - Data KTP */}
+                {/* Signup Step 1 - Personal Data */}
                 {signupStep === 1 && (
                   <form onSubmit={handleSignupStep1} className="space-y-3">
                     <div className="bg-blue-50 rounded-md p-3 mb-3">
@@ -554,7 +605,7 @@ const AuthPage = () => {
                   </form>
                 )}
                 
-                {/* Signup Step 2 - Alamat & Data Kontak */}
+                {/* Signup Step 2 - Address & Contact */}
                 {signupStep === 2 && (
                   <form onSubmit={handleSignupStep2} className="space-y-3">
                     <div className="bg-blue-50 border-l-4 border-blue-800 p-2 mb-3">
@@ -608,7 +659,7 @@ const AuthPage = () => {
                       
                       {renderField(
                         'kecamatan', 
-                        'Kecamatan', 
+                        'Kecamatan',
                         'text', 
                         kecamatan, 
                         (e) => setKecamatan(e.target.value), 
@@ -648,15 +699,6 @@ const AuthPage = () => {
                     <div className="border-t border-gray-200 my-3 pt-3">
                       <h3 className="text-xs font-medium text-gray-700 mb-2">Data Kontak</h3>
                     </div>
-                    
-                    {renderField(
-                      'email', 
-                      'Email', 
-                      'email', 
-                      email, 
-                      (e) => setEmail(e.target.value), 
-                      'Email'
-                    )}
                     
                     {renderField(
                       'phoneSignup', 
@@ -746,6 +788,7 @@ const AuthPage = () => {
                 <h2 className="text-3xl font-bold text-white mb-2">Selamat datang</h2>
                 <p className="text-white text-sm mb-6">Belum punya akun?</p>
                 <button
+                  type="button"
                   onClick={toggleAuthMode}
                   className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
                 >
@@ -769,6 +812,7 @@ const AuthPage = () => {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={toggleAuthMode}
                   className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
                 >
@@ -781,31 +825,33 @@ const AuthPage = () => {
       </div>
       
       {/* Mobile-only footer for switching modes */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-100 p-4 text-center">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-100 p-4 text-center border-t border-gray-200">
         {isLogin ? (
-          <p className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600">
             Belum punya akun?{" "}
             <button 
+              type="button"
               onClick={toggleAuthMode}
               className="text-blue-800 font-medium"
             >
               Daftar
             </button>
-          </p>
+          </div>
         ) : (
-          <p className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600">
             Sudah punya akun?{" "}
             <button 
+              type="button"
               onClick={toggleAuthMode}
               className="text-blue-800 font-medium"
             >
               Masuk
             </button>
-          </p>
+          </div>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default AuthPage;

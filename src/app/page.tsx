@@ -92,10 +92,10 @@ const HomePage = () => {
                     <span className="text-amber-500">Kepribadian</span><br />
                     <span className="text-white">Menjadi </span>
                     <span className="text-amber-500">Lebih </span>
-                    <span className="text-blue-900">Baik.</span>
+                    <span className="text-blue-950">Baik.</span>
                   </h1>
                   <div className="mt-6">
-                    <p className="text-xl md:text-2xl font-bold text-blue-900">
+                    <p className="text-xl md:text-2xl font-bold text-blue-950">
                       Program Pendidikan dan Latihan
                     </p>
                     <p className="text-base md:text-lg mt-2 text-white">
