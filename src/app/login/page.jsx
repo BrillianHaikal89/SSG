@@ -14,31 +14,20 @@ function SignInPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
   
-  // Handle verification when user starts typing in login form
+  // Load Cloudflare Turnstile script
   useEffect(() => {
-    if ((phoneNumber || password) && !formTouched) {
-      setFormTouched(true);
-      triggerVerification();
-    }
-  }, [phoneNumber, password, formTouched]);
-  
-  // Trigger human verification process
-  function triggerVerification() {
-    if (!isVerified && !isVerifying) {
-      setIsVerifying(true);
-      // Simulate verification process with a delay
-      const timer = setTimeout(() => {
-        setIsVerified(true);
-        setIsVerifying(false);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }
+    const script = document.createElement('script');
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
   
   // Social login handlers
   function handleGoogleAuth() {
@@ -52,8 +41,8 @@ function SignInPage() {
   // Form submissions
   function handleLoginSubmit(e) {
     e.preventDefault();
-    console.log('Login with:', { phoneNumber, password, rememberMe, isVerified });
-    // Implement login logic here
+    console.log('Login with:', { phoneNumber, password, rememberMe });
+    // Implement login logic here including the turnstile token
   }
 
   // Navigation handler for signup button
@@ -114,7 +103,7 @@ function SignInPage() {
           </div>
           
           {/* Login Form */}
-          <form onSubmit={handleLoginSubmit}>
+          <form onSubmit={handleLoginSubmit} action="/login" method="POST">
             <div className="mb-4">
               <label htmlFor="phoneNumber" className="block text-xs font-medium text-gray-500 uppercase mb-1">
                 Nomor HP
@@ -149,42 +138,9 @@ function SignInPage() {
               />
             </div>
             
-            {/* Human Verification Section */}
-            <div className="mb-4 border border-gray-300 rounded-md p-3 bg-gray-50">
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-700">Let us know you're human</div>
-                <div className="flex items-center">
-                  <img 
-                    src="/img/Cloudflare_Logo.png" 
-                    alt="Cloudflare" 
-                    className="h-5"
-                  />
-                </div>
-              </div>
-              <div className="mt-2 flex items-center">
-                <div className="relative">
-                  <input
-                    id="human_verify"
-                    name="human_verify"
-                    type="checkbox"
-                    checked={isVerified}
-                    onChange={(e) => setIsVerified(e.target.checked)}
-                    className="h-5 w-5 text-blue-800 focus:ring-blue-800 border-gray-300 rounded"
-                    disabled={isVerifying}
-                  />
-                  {isVerifying && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg className="animate-spin h-4 w-4 text-blue-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <label htmlFor="human_verify" className="ml-2 block text-sm text-gray-700">
-                  Verify you are human
-                </label>
-              </div>
+            {/* Cloudflare Turnstile */}
+            <div className="mb-4">
+              <div className="cf-turnstile" data-sitekey="0x4AAAAAABBBnsl2yEqRVvMU"></div>
             </div>
             
             <div className="flex items-center justify-between mb-6">
