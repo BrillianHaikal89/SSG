@@ -12,8 +12,8 @@ const Navbar = () => {
   
   // Navigation items with links and scroll properties
   const navItems = [
-    { name: 'HOME', path: '/' },
-    { name: 'ABOUT US', path: '/', isScroll: true, scrollTo: 'profile' },
+    { name: 'HOME', path: '/', isScroll: true, scrollTo: 'home' }, // Added isScroll: true and scrollTo: 'home'
+    { name: 'ABOUT US', path: '/', isScroll: true, scrollTo: 'about' },
     { name: 'ACTIVITY', path: '/activity' },
     { name: 'CONTACT', path: '/contact' }
   ];

@@ -1,13 +1,30 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Navbar from '../components/navbar';
 
 const HomePage = () => {
-  // No longer need profileRef since we removed the profile section
+  // State to track viewport size
+  const [isMobile, setIsMobile] = useState(false);
   
+  // Effect to detect viewport size on mount and when window resizes
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Check initially
+    checkIsMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkIsMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -62,23 +79,67 @@ const HomePage = () => {
       <main>
         {/* Hero section - full screen with background image */}
         <div id="home" className="relative w-full h-screen overflow-hidden">
-          {/* Background image replacing the gradient */}
+          {/* Background image (bghome.png) - behind everything */}
           <div className="absolute inset-0 z-0">
             <Image
               src="/img/bghome.png"
-              alt="Background"
+              alt="Background Pattern"
               fill
               priority
-              style={{ objectFit: 'cover' }}
+              style={{ 
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
             />
           </div>
           
-          {/* Optional overlay to ensure text readability if needed */}
-          <div className="absolute inset-0 bg-black/10 z-10"></div>
+          {/* activity_home.png - on top of bghome.png */}
+          <div className="absolute z-10 inset-0">
+            {isMobile ? (
+              // Mobile version positioned just above the "Baca Selengkapnya" button
+              <div className="absolute bottom-24 left-0 right-0 h-2/5">
+                <Image
+                  src="/img/activity_home.png"
+                  alt="Activity Home"
+                  fill
+                  priority
+                  style={{ 
+                    objectFit: 'contain',
+                    objectPosition: 'center bottom'
+                  }}
+                />
+              </div>
+            ) : (
+              // Desktop version covering the whole area
+              <Image
+                src="/img/activity_home.png"
+                alt="Activity Home"
+                fill
+                priority
+                style={{ 
+                  objectFit: 'cover',
+                  objectPosition: 'center'
+                }}
+              />
+            )}
+          </div>
           
-          {/* Main heading content - centered vertically, left-aligned */}
-          <div className="absolute z-30 inset-0 flex flex-col justify-center px-6 sm:px-8 md:px-20 lg:px-24">
-            <div className="max-w-4xl">
+          {/* Blue pattern overlay */}
+          <div className="absolute inset-0 z-20 opacity-80" 
+               style={{ 
+                 background: 'url(/img/blue-pattern.png)', 
+                 backgroundSize: 'cover',
+                 mixBlendMode: 'overlay'
+               }}>
+          </div>
+          
+          {/* Optional overlay to ensure text readability */}
+          <div className="absolute inset-0 bg-black/10 z-30"></div>
+          
+          {/* Main heading content - adjusted position to center for mobile */}
+          <div className="absolute z-40 inset-0 flex flex-col items-center" 
+               style={{ paddingTop: isMobile ? '40vh' : '12vh' }}>
+            <div className="text-center px-6">
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -88,57 +149,47 @@ const HomePage = () => {
                   variants={itemVariants}
                   className="mb-6"
                 >
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-                    <span className="text-white">Mengubah</span><br />
-                    <span className="text-amber-500">Kepribadian</span><br />
-                    <span className="text-white">Menjadi </span>
+                  <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight`}>
+                    <span className="text-white">Mengubah</span>
+                    {isMobile ? ' ' : <br />}
+                    <span className="text-amber-500">Kepribadian</span>
+                    <span className="text-white"> Menjadi </span>
+                    {isMobile ? ' ' : <br />}
                     <span className="text-amber-500">Lebih </span>
                     <span className="text-blue-950">Baik.</span>
                   </h1>
-                  <div className="mt-6">
-                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-950">
-                      Program Pendidikan dan Latihan
-                    </p>
-                    <p className="text-sm sm:text-base md:text-lg mt-2 text-white">
-                      yang dirancang untuk membentuk generasi muda<br className="hidden sm:block" />
-                      yang berkarakter <span className="text-amber-500 font-bold">BAKU</span>
-                      <span className="text-white"> (</span>
-                      <span className="text-amber-500 font-bold">Baik</span>
-                      <span className="text-white"> & </span>
-                      <span className="text-amber-500 font-bold">Kuat</span>
-                      <span className="text-white">).</span>
-                    </p>
-                  </div>
                 </motion.div>
               </motion.div>
             </div>
           </div>
           
-          {/* Call to action button - bottom left aligned */}
+          {/* "Baca Selengkapnya" button */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="absolute z-30 bottom-16 left-0 w-full px-6 sm:px-8 md:px-20 lg:px-24"
+            className="absolute z-40 bottom-16 left-0 w-full flex justify-center"
           >
-            <div className="max-w-4xl">
-              <motion.button 
-                variants={itemVariants}
-                onClick={scrollToAbout}
-                className="flex items-center space-x-2 bg-gray-300/30 backdrop-blur-sm text-white font-medium py-3 px-6 sm:px-8 rounded-full border border-white/20 cursor-pointer"
-                type="button"
-                aria-label="Baca selengkapnya"
-              >
-                <span>Baca Selengkapnya</span>
-              </motion.button>
-            </div>
+            <motion.button 
+              variants={itemVariants}
+              onClick={scrollToAbout}
+              className="flex items-center space-x-2 bg-gray-300/30 backdrop-blur-sm text-white font-medium py-3 px-6 sm:px-8 rounded-full border border-white/20 cursor-pointer"
+              type="button"
+              aria-label="Baca selengkapnya"
+            >
+              <span>Baca Selengkapnya</span>
+            </motion.button>
           </motion.div>
+          
+          {/* Removed the "Baca Selengkapnya" text from bottom left */}
         </div>
 
         {/* About Us section with orange-bordered image */}
-        <section id="about" className="relative min-h-screen sm:h-screen flex flex-col py-12 px-6 sm:px-8 md:px-16 lg:px-20 overflow-hidden">
-          {/* About Us heading at the top left */}
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-8 sm:mb-12 text-black text-left z-10">ABOUT US.</h2>
+        <section id="about" className="relative min-h-screen sm:h-screen flex flex-col pt-10 pb-12 px-6 sm:px-8 md:px-16 lg:px-20 overflow-hidden">
+          {/* About Us heading with improved positioning for mobile - moved higher */}
+          <div className="relative z-10 -mt-4 mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-black text-left">ABOUT US.</h2>
+          </div>
           
           {/* Background pattern - hidden on mobile, visible on larger screens */}
           <div className="absolute inset-0 z-0 hidden sm:block">
@@ -178,9 +229,9 @@ const HomePage = () => {
                 
                 <div className="w-full sm:w-5/12 flex justify-center sm:justify-end mb-8 sm:mb-0">
                   <div className="relative w-4/5 sm:w-auto overflow-hidden sm:ml-auto" style={{ transform: 'scale(1.254)' }}>
-                    {/* Orange border frame with image and name */}
-                    <div className="border-4 border-amber-500 p-2 sm:p-3">
-                      <div className="relative overflow-hidden bg-white">
+                    {/* Orange border frame with image and name - hidden on mobile, visible on sm and up */}
+                    <div className="hidden sm:block border-4 border-amber-500 p-2 sm:p-3">
+                      <div className="relative overflow-hidden">
                         <Image
                           src="/img/aagym.png"
                           alt="KH. Abdullah Gymnastyar"
@@ -190,7 +241,24 @@ const HomePage = () => {
                         />
                       </div>
                       {/* Name caption below the image */}
-                      <div className="bg-white py-2 sm:py-3 text-center">
+                      <div className="py-2 sm:py-3 text-center">
+                        <p className="font-medium text-gray-800 text-base sm:text-lg">KH. Abdullah Gymnastyar</p>
+                      </div>
+                    </div>
+                    
+                    {/* Mobile version without orange border */}
+                    <div className="block sm:hidden">
+                      <div className="relative overflow-hidden">
+                        <Image
+                          src="/img/aagym.png"
+                          alt="KH. Abdullah Gymnastyar"
+                          width={564}
+                          height={702}
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      {/* Name caption below the image */}
+                      <div className="py-2 sm:py-3 text-center">
                         <p className="font-medium text-gray-800 text-base sm:text-lg">KH. Abdullah Gymnastyar</p>
                       </div>
                     </div>

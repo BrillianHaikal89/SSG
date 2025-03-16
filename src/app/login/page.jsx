@@ -159,7 +159,7 @@ function SignInPage() {
               </div>
               
               <div className="text-sm">
-                <Link href="/forgot-password" className="font-medium text-gray-500 hover:text-gray-700">
+                <Link href="/login/forgot-password" className="font-medium text-gray-500 hover:text-gray-700">
                   Lupa Kata Sandi?
                 </Link>
               </div>
