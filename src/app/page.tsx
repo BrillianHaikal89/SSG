@@ -485,7 +485,7 @@ const HomePage = () => {
                       width="100%"
                       height="180"
                       style={{ border: 0 }}
-                      allowFullScreen=""
+                      allowFullScreen
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                       title="Santri Siap Guna Daarut Tauhiid Location"
