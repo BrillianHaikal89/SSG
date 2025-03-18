@@ -12,10 +12,10 @@ const Navbar = () => {
   
   // Navigation items with links and scroll properties
   const navItems = [
-    { name: 'HOME', path: '/', isScroll: true, scrollTo: 'home' }, // Added isScroll: true and scrollTo: 'home'
+    { name: 'HOME', path: '/', isScroll: true, scrollTo: 'home' },
     { name: 'ABOUT US', path: '/', isScroll: true, scrollTo: 'about' },
     { name: 'ACTIVITY', path: '/activity' },
-    { name: 'CONTACT', path: '/contact' }
+    { name: 'CONTACT', path: '/', isScroll: true, scrollTo: 'contact' } // Changed to use scroll behavior
   ];
   
   // State for mobile menu
@@ -106,7 +106,20 @@ const Navbar = () => {
         // If we're already on the home page, just scroll to the element
         const element = document.getElementById(item.scrollTo);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
+          // Get the height of the navbar for offset calculation
+          const navbarHeight = 64; // Approximated height of navbar in pixels
+          
+          // Get the element's position relative to the viewport
+          const rect = element.getBoundingClientRect();
+          
+          // Calculate the absolute position of the element on the page
+          const elemPosition = rect.top + window.pageYOffset;
+          
+          // Scroll to the element with offset for the navbar
+          window.scrollTo({
+            top: elemPosition - navbarHeight,
+            behavior: 'smooth'
+          });
         }
       } else {
         // If we're on another page, navigate to home with section parameter

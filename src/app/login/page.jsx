@@ -281,7 +281,7 @@ function SignInPage() {
       </motion.div>
       
       {/* Banner Side */}
-      <div className="hidden md:flex md:w-1/2 bg-blue-800 justify-center items-center p-8">
+      <div className="hidden md:flex md:w-1/2 bg-blue-900 justify-center items-center p-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
