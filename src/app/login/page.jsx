@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+
+// Menghilangkan import ApiService dan menggunakan API call langsung
 
 function SignInPage() {
   const router = useRouter();
@@ -15,7 +16,6 @@ function SignInPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [formTouched, setFormTouched] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -28,7 +28,9 @@ function SignInPage() {
     document.body.appendChild(script);
     
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
   
@@ -37,82 +39,62 @@ function SignInPage() {
     setShowPassword(!showPassword);
   };
   
-  // Social login handlers
-  function handleGoogleAuth() {
-    console.log('Login with Google');
-    // For demo purposes, redirect to dashboard after Google login
-    redirectToDashboard();
-  }
-  
-  function handleFacebookAuth() {
-    console.log('Login with Facebook');
-    // For demo purposes, redirect to dashboard after Facebook login
-    redirectToDashboard();
-  }
-  
-  // Function to redirect to dashboard
-  function redirectToDashboard() {
-    // You can set some authentication state here
-    if (rememberMe) {
-      localStorage.setItem('isLoggedIn', 'true');
-    } else {
-      sessionStorage.setItem('isLoggedIn', 'true');
-    }
-    // Redirect to dashboard
-    router.push('/dashboard');
-  }
-  
   // Form submissions
-  function handleLoginSubmit(e) {
+  async function handleLoginSubmit(e) {
     e.preventDefault();
     setIsLoading(true);
     setLoginError('');
     
-    // Get registered users from localStorage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    // Find user with matching phone number
-    const user = registeredUsers.find(user => user.phone === phoneNumber);
-    
-    if (!user) {
-      setLoginError('Nomor HP tidak terdaftar');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Check password
-    if (user.password !== password) {
-      setLoginError('Kata sandi tidak valid');
-      setIsLoading(false);
-      return;
-    }
-    
-    console.log('Login successful:', { phoneNumber, rememberMe });
-    
-    // Simulate API call with delay
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Get turnstile token if it exists
+      const turnstileResponse = document.querySelector('.cf-turnstile') ? 
+        document.querySelector('[name="cf-turnstile-response"]')?.value : null;
       
-      // Store user data in session/localStorage
-      const userData = {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        lastLogin: new Date().toISOString()
-      };
+      // Call login API directly
+      const response = await fetch('http://localhost:3333/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          nomor_hp: phoneNumber,
+          password,
+          turnstileToken: turnstileResponse
+        })
+      });
       
-      // Store based on remember me setting
-      if (rememberMe) {
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        localStorage.setItem('isLoggedIn', 'true');
+      const responseData = await response.json();
+      
+      if (response.ok) {
+        // Store auth data based on "remember me" setting
+        if (rememberMe) {
+          sessionStorage.setItem('authToken', responseData.token);
+          sessionStorage.setItem('userId', responseData.userId);
+        } else {
+          // Only store in session storage (will be cleared when browser is closed)
+          sessionStorage.setItem('authToken', responseData.token);
+          sessionStorage.setItem('userId', responseData.userId);
+        }
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
       } else {
-        sessionStorage.setItem('currentUser', JSON.stringify(userData));
-        sessionStorage.setItem('isLoggedIn', 'true');
+        // Handle specific error cases
+        if (response.status === 401 || response.status === 400) {
+          setLoginError('Nomor HP atau kata sandi tidak valid.');
+        } else if (response.status === 403) {
+          setLoginError('Verifikasi keamanan gagal. Silakan coba lagi.');
+        } else {
+          setLoginError(responseData.message || 'Terjadi kesalahan saat login. Silakan coba lagi.');
+        }
       }
-      
-      // Redirect to dashboard
-      router.push('/dashboard');
-    }, 1000);
+    } catch (error) {
+      console.error('Error during login process:', error);
+      setLoginError('Gagal terhubung ke server. Silakan coba lagi nanti.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   // Navigation handler for signup button
@@ -138,7 +120,6 @@ function SignInPage() {
           <div className="flex space-x-4 mb-8">
             <button 
               type="button"
-              onClick={handleGoogleAuth}
               className="flex items-center justify-center w-1/2 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -150,7 +131,6 @@ function SignInPage() {
             
             <button 
               type="button"
-              onClick={handleFacebookAuth}
               className="flex items-center justify-center w-1/2 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -175,7 +155,7 @@ function SignInPage() {
           {/* Login Form */}
           <form onSubmit={handleLoginSubmit}>
             {loginError && (
-              <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm border border-red-200 rounded">
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm border border-red-200 rounded">
                 {loginError}
               </div>
             )}

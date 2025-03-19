@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 /**
- * Komponen Form Kode Pos yang benar-benar selalu dapat diedit
+ * Component untuk menangani input kode pos dan pengisian alamat otomatis
  */
 const KodePosForm = ({ 
   kodePos, 
@@ -19,7 +19,7 @@ const KodePosForm = ({
   const handleKodePosChange = (e) => {
     const newValue = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
     
-    // Update state kode pos - memastikan selalu bisa diubah
+    // Update kode pos state
     setKodePos(newValue);
     
     // Reset pesan jika panjang kode pos berubah
@@ -28,7 +28,7 @@ const KodePosForm = ({
       setSuccess(false);
     }
     
-    // Jika kode pos 5 digit, cari data
+    // Jika kode pos 5 digit, cari datanya
     if (newValue.length === 5) {
       fetchKodePos(newValue);
     }
@@ -41,36 +41,82 @@ const KodePosForm = ({
     setSuccess(false);
     
     try {
-      // Panggil API kode pos di server port 3333
+      // API call langsung ke server
       const response = await fetch(`http://localhost:3333/api/users/kodepos?kode_pos=${kodePosValue}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
-        },
-        cache: 'no-store'
+        }
       });
       
-      // Jika response OK
       if (response.ok) {
         const data = await response.json();
         console.log("Data kode pos dari server:", data);
         
-        // Isi form dengan data yang diterima
-        setKelurahan(data.kelurahan || "");
+        // Debugging: log struktur data yang diterima
+        console.log("Kelurahan:", data.kelurahan_desa);
+        console.log("Kecamatan:", data.kecamatan);
+        console.log("Kota:", data.kabupaten_kota);
+        console.log("Provinsi:", data.provinsi);
+        
+        // Periksa apakah field ada dan isi dengan benar
+        // Gunakan nilai fallback jika properti tidak ada
+        
+        // Kelurahan - coba beberapa kemungkinan nama properti
+        if (data.kelurahan_desa !== undefined) {
+          setKelurahan(data.kelurahan_desa);
+        } else if (data.kelurahan !== undefined) {
+          setKelurahan(data.kelurahan);
+        } else if (data.desa !== undefined) {
+          setKelurahan(data.desa);
+        } else {
+          setKelurahan("");
+        }
+        
+        // Kecamatan
         setKecamatan(data.kecamatan || "");
-        setKota(data.kota || "");
+        
+        // Kota - coba beberapa kemungkinan nama properti
+        if (data.kabupaten_kota !== undefined) {
+          setKota(data.kabupaten_kota);
+        } else if (data.kota !== undefined) {
+          setKota(data.kota);
+        } else if (data.kabupaten !== undefined) {
+          setKota(data.kabupaten);
+        } else {
+          setKota("");
+        }
+        
+        // Provinsi
         setProvinsi(data.provinsi || "");
         
-        // Set status sukses
-        setSuccess(true);
+        // Set status sukses hanya jika setidaknya ada satu field terisi
+        if (data.kelurahan_desa || data.kelurahan || data.kecamatan || 
+            data.kabupaten_kota || data.kota || data.provinsi) {
+          setSuccess(true);
+        } else {
+          setError("Format data kode pos tidak sesuai. Harap isi alamat secara manual.");
+        }
       } else {
-        // Jika server merespons dengan error
+        // Jika server merespon dengan error
         console.error(`Server responded with status: ${response.status}`);
-        setError("Data kode pos tidak ditemukan. Silakan isi alamat secara manual.");
+        setError("Data kode pos tidak ditemukan. Harap isi alamat secara manual.");
+        
+        // Reset field alamat jika kode pos tidak ditemukan
+        setKelurahan("");
+        setKecamatan("");
+        setKota("");
+        setProvinsi("");
       }
     } catch (error) {
-      console.error("Error saat mengambil data kode pos:", error);
+      console.error("Error fetching postal code data:", error);
       setError("Gagal terhubung ke server. Silakan isi alamat secara manual.");
+      
+      // Reset field alamat jika terjadi error
+      setKelurahan("");
+      setKecamatan("");
+      setKota("");
+      setProvinsi("");
     } finally {
       setLoading(false);
     }
@@ -80,7 +126,7 @@ const KodePosForm = ({
     <div className="mt-3">
       <div className="mb-3">
         <label htmlFor="kodePos" className="block text-xs font-medium text-gray-500 uppercase mb-1">
-          Kode Pos <span className="text-red-500">*</span>
+          KODE POS <span className="text-red-500">*</span>
         </label>
         <input
           id="kodePos"
@@ -91,7 +137,6 @@ const KodePosForm = ({
           className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm"
           maxLength="5"
           disabled={loading}
-          // Pastikan tidak ada atribut readOnly
         />
       </div>
       

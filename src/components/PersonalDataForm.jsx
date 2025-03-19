@@ -27,7 +27,7 @@ const PersonalDataForm = ({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Nama sesuai KTP"
-        tooltip="Gunakan nama lengkap sesuai yang tertera pada KTP Anda, tanpa singkatan."
+        tooltip="Gunakan nama lengkap Anda seperti yang tertera pada kartu identitas, tanpa singkatan."
         formSubmitted={formSubmitted}
         formErrors={formErrors}
       />
@@ -39,7 +39,7 @@ const PersonalDataForm = ({
         value={nik}
         onChange={(e) => setNik(e.target.value)}
         placeholder="Nomor NIK"
-        tooltip="Nomor Induk Kependudukan (NIK) terdiri dari 16 digit angka yang tertera pada KTP Anda."
+        tooltip="Nomor Induk Kependudukan (NIK) terdiri dari 16 digit yang tertera pada kartu identitas Anda."
         maxLength={16}
         formSubmitted={formSubmitted}
         formErrors={formErrors}
@@ -86,7 +86,7 @@ const PersonalDataForm = ({
           ]}
         />
         
-        {/* Field golongan darah */}
+        {/* Blood Type field */}
         <FormField
           id="bloodType"
           label="Golongan Darah"
@@ -109,7 +109,7 @@ const PersonalDataForm = ({
       
       <FormField
         id="address"
-        label="Alamat (Sesuai KTP)"
+        label="Alamat (sesuai KTP)"
         type="textarea"
         value={address}
         onChange={(e) => setAddress(e.target.value)}

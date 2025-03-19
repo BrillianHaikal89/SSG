@@ -29,13 +29,19 @@ const AddressContactForm = ({
     showConfirmPassword, setShowConfirmPassword 
   } = passwordVisibility;
 
+  // Fungsi untuk cek apakah field alamat harus dibaca saja
+  // Jangan set read-only jika nilai kosong
+  const isFieldReadOnly = (value) => {
+    return value !== null && value !== undefined && value !== "";
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <InfoAlert message="Masukkan kode pos untuk mengisi data kelurahan, kecamatan, kota, dan provinsi secara otomatis." />
       
-      {/* Bagian Alamat */}
+      {/* Address Section */}
       <div className="mb-4">
-        {/* Kode Pos - implementasi sederhana yang selalu bisa diubah */}
+        {/* Postal Code Form */}
         <KodePosForm
           kodePos={kodePos}
           setKodePos={setKodePos}
@@ -55,6 +61,9 @@ const AddressContactForm = ({
             placeholder="Kelurahan"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(kelurahan) ? "bg-gray-50" : ""}
           />
           
           <FormField
@@ -66,19 +75,25 @@ const AddressContactForm = ({
             placeholder="Kecamatan"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(kecamatan) ? "bg-gray-50" : ""}
           />
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <FormField
             id="kota"
-            label="Kota"
+            label="Kota/Kabupaten"
             type="text"
             value={kota}
             onChange={(e) => setKota(e.target.value)}
-            placeholder="Kota / Kabupaten"
+            placeholder="Kota/Kabupaten"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(kota) ? "bg-gray-50" : ""}
           />
           
           <FormField
@@ -90,16 +105,19 @@ const AddressContactForm = ({
             placeholder="Provinsi"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(provinsi) ? "bg-gray-50" : ""}
           />
         </div>
       </div>
       
-      {/* Pembatas antara Kode Pos dan Data Kontak */}
+      {/* Divider between Postal Code and Contact Data */}
       <div className="border-t border-gray-300 my-4"></div>
       
-      {/* Bagian Data Kontak */}
+      {/* Contact Data Section */}
       <div className="mt-4">
-        <h3 className="text-md font-medium text-gray-700 mb-3">Data Kontak</h3>
+        <h3 className="text-md font-medium text-gray-700 mb-3">Informasi Kontak</h3>
         
         <FormField
           id="nomorTelepon"
@@ -152,7 +170,7 @@ const AddressContactForm = ({
         </div>
         <div className="ml-2 text-sm">
           <label htmlFor="persetujuanSyarat" className="font-medium text-gray-700">
-            Saya menyetujui <a href="#" className="text-blue-800">syarat dan ketentuan</a> yang berlaku
+            Saya menyetujui <a href="#" className="text-blue-800">syarat dan ketentuan</a>
           </label>
           {formSubmitted && formErrors.persetujuanSyarat && (
             <p className="mt-1 text-xs text-red-500">{formErrors.persetujuanSyarat}</p>
