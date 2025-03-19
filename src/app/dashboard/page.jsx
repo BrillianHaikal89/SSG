@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
-function SSGDashboardPage() {
+export default function SSGDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('beranda');
   const [userData, setUserData] = useState(null);
@@ -102,6 +102,11 @@ function SSGDashboardPage() {
     
     // Redirect to login page
     router.push('/login');
+  };
+  
+  // Handle navigation to profile
+  const navigateToProfile = () => {
+    router.push('/dashboard/profile');
   };
 
   // Render the appropriate icon for quick links
@@ -208,9 +213,12 @@ function SSGDashboardPage() {
                   </span>
                 )}
               </button>
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold">
+              <button 
+                onClick={navigateToProfile}
+                className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold cursor-pointer transition-transform hover:scale-105"
+              >
                 {userData.name.charAt(0)}
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -227,9 +235,12 @@ function SSGDashboardPage() {
         <div className="bg-yellow-400 rounded-lg shadow-md mb-4">
           <div className="p-4 rounded-t-lg">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-yellow-500 font-bold text-xl mr-4">
+              <button 
+                onClick={navigateToProfile} 
+                className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-yellow-500 font-bold text-xl mr-4 cursor-pointer transition-transform hover:scale-105"
+              >
                 {userData.name.charAt(0)}
-              </div>
+              </button>
               <div>
                 <h2 className="text-lg font-medium">Assalamu'alaikum, {userData.name}</h2>
                 <p className="text-sm">{userData.level}</p>
@@ -408,7 +419,7 @@ function SSGDashboardPage() {
           <span className="text-xs mt-1">Tugas</span>
         </button>
         <button 
-          onClick={() => setActiveTab('profile')}
+          onClick={() => navigateToProfile()}
           className={`flex flex-col items-center px-3 py-1 ${activeTab === 'profile' ? 'text-blue-700' : 'text-gray-500'}`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -420,5 +431,3 @@ function SSGDashboardPage() {
     </div>
   );
 }
-
-export default SSGDashboardPage;
