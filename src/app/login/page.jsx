@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
-// Menghilangkan import ApiService dan menggunakan API call langsung
-
 function SignInPage() {
   const router = useRouter();
   
@@ -18,6 +16,16 @@ function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check if user is already logged in on mount, and redirect if so
+  useEffect(() => {
+    const authToken = sessionStorage.getItem('authToken');
+    const userId = sessionStorage.getItem('userId');
+    
+    if (authToken && userId) {
+      router.push('/dashboard');
+    }
+  }, [router]);
   
   // Load Cloudflare Turnstile script
   useEffect(() => {
@@ -67,15 +75,10 @@ function SignInPage() {
       const responseData = await response.json();
       
       if (response.ok) {
-        // Store auth data based on "remember me" setting
-        if (rememberMe) {
-          sessionStorage.setItem('authToken', responseData.token);
-          sessionStorage.setItem('userId', responseData.userId);
-        } else {
-          // Only store in session storage (will be cleared when browser is closed)
-          sessionStorage.setItem('authToken', responseData.token);
-          sessionStorage.setItem('userId', responseData.userId);
-        }
+        // Store auth data in sessionStorage (will be cleared when browser is closed)
+        // Always store token in sessionStorage for security
+        sessionStorage.setItem('authToken', responseData.token);
+        sessionStorage.setItem('userId', responseData.userId);
         
         // Redirect to dashboard
         router.push('/dashboard');
