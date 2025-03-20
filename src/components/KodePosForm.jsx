@@ -41,8 +41,11 @@ const KodePosForm = ({
     setSuccess(false);
     
     try {
-      // API call langsung ke server
-      const response = await fetch(`http://localhost:3333/api/users/kodepos?kode_pos=${kodePosValue}`, {
+      // Gunakan URL relatif atau API_URL dari environment variable
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = `${apiUrl}/api/users/kodepos?kode_pos=${kodePosValue}`;
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
