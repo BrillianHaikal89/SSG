@@ -194,7 +194,7 @@ export default function SSGDashboardPage() {
             <div className="relative mb-3">
               <input 
                 type="text" 
-                placeholder="Cari apa kita lek" 
+                placeholder="Pencarian..." 
                 className="w-full bg-gray-100 rounded-lg px-4 py-2 pl-3 pr-10 focus:outline-none shadow-sm"
               />
               <button className="absolute right-3 top-2">
