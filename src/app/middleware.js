@@ -13,9 +13,6 @@ export default function middleware(request) {
         path === '/login/signup' ||
         path === '/login/forgot-password';
 
-    // Check if there is an authentication token in the request cookies
-    const token = request.cookies.get('authToken') ? .value || '';
-
     // Redirect logic
     if (isProtectedRoute && !token) {
         // If trying to access a protected route without a token, redirect to login
