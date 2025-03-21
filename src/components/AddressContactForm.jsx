@@ -41,7 +41,11 @@ const AddressContactForm = ({
       
       {/* Address Section */}
       <div className="mb-4">
+<<<<<<< HEAD
+        {/* Postal Code - simple implementation that can always be changed */}
+=======
         {/* Postal Code Form */}
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
         <KodePosForm
           kodePos={kodePos}
           setKodePos={setKodePos}
