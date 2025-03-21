@@ -2,21 +2,37 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
-function SSGDashboardPage() {
+export default function SSGDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('beranda');
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Fetch user data from localStorage on component mount
+  // Notification state
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
+  
+  // Check authentication on component mount
   useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
+    const checkAuthentication = () => {
+      // Look for auth token in sessionStorage
+      const authToken = sessionStorage.getItem('authToken');
+      const userId = sessionStorage.getItem('userId');
+      
+      // If no auth token or userId exists, redirect to login
+      if (!authToken || !userId) {
+        console.log("No valid authentication found, redirecting to login");
+        router.push('/login');
+        return;
+      }
+      
+      // If authenticated, fetch user data
+      fetchUserData();
+    };
     
+<<<<<<< HEAD
     if (!isLoggedIn) {
       // Redirect to login page if not logged in
       router.push('/login');
@@ -90,10 +106,58 @@ function SSGDashboardPage() {
     }
     
     setLoading(false);
+=======
+    checkAuthentication();
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
   }, [router]);
+
+  // Effect to hide notification after some time
+  useEffect(() => {
+    if (showNotification) {
+      const timer = setTimeout(() => {
+        setShowNotification(false);
+      }, 3000); // Hide after 3 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showNotification]);
+
+  // Fetch user data
+  const fetchUserData = () => {
+    try {
+      // Mock data
+      setUserData({
+        name: 'Muhammad Brilian Haikal',
+        level: 'Pleton 20',
+        taskCompleted: 40,
+        taskTotal: 50,
+        completionRate: 70,
+        notifications: 3,
+        quranProgress: {
+          juz: 5,
+          surah: 'Al-Baqarah',
+          page: 21,
+          lastRead: '15 Maret 2025',
+        }
+      });
+      
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      setNotificationType('error');
+      setNotificationMessage('Gagal memuat data pengguna. Silakan coba lagi.');
+      setShowNotification(true);
+      
+      // Redirect after showing error
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
+    }
+  };
 
   // Handle logout
   const handleLogout = () => {
+<<<<<<< HEAD
     // Clear user data
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('currentUser');
@@ -163,6 +227,46 @@ function SSGDashboardPage() {
         );
     }
   }
+=======
+    try {
+      // Show success notification
+      setNotificationType('success');
+      setNotificationMessage('Logout berhasil! Mengalihkan ke halaman login...');
+      setShowNotification(true);
+      
+      // Add a slight delay before clearing session and redirecting
+      setTimeout(() => {
+        // Attempt to clear session storage
+        try {
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('userId');
+          router.push('/login');
+        } catch (error) {
+          console.error("Error during logout process:", error);
+          // Show error notification if session storage clearing fails
+          setNotificationType('error');
+          setNotificationMessage('Gagal logout. Silakan coba lagi.');
+          setShowNotification(true);
+        }
+      }, 3000);
+    } catch (error) {
+      console.error("Error during logout process:", error);
+      // Show error notification
+      setNotificationType('error');
+      setNotificationMessage('Gagal logout. Silakan coba lagi.');
+      setShowNotification(true);
+    }
+  };
+  
+  // Navigation functions
+  const navigateToProfile = () => {
+    router.push('/dashboard/profile');
+  };
+  
+  const navigateToPresensi = () => {
+    router.push('/dashboard/presensi');
+  };
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
 
   if (loading) {
     return (
@@ -180,6 +284,34 @@ function SSGDashboardPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* Custom notification - Centered at top */}
+      {showNotification && (
+        <div 
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-md shadow-lg z-50 flex items-center transition-all duration-300 ${
+            notificationType === 'success' ? 'bg-green-100 text-green-800 border-l-4 border-green-500' : 'bg-red-100 text-red-800 border-l-4 border-red-500'
+          }`}
+        >
+          {notificationType === 'success' ? (
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          <span>{notificationMessage}</span>
+          <button 
+            className="ml-2 text-gray-500 hover:text-gray-700"
+            onClick={() => setShowNotification(false)}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
       {/* Header */}
       <header className="bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-3">
@@ -194,12 +326,12 @@ function SSGDashboardPage() {
               />
               <h1 className="text-xl font-bold">SANTRI SIAP GUNA</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <button 
                 onClick={() => console.log('Notifications')}
                 className="relative p-1"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {userData.notifications > 0 && (
@@ -208,15 +340,34 @@ function SSGDashboardPage() {
                   </span>
                 )}
               </button>
+<<<<<<< HEAD
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold">
                 {userData.name.charAt(0)}
               </div>
+=======
+              <button 
+                onClick={handleLogout}
+                className="p-1 text-white hover:text-gray-200 transition-colors"
+                title="Logout"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+              <button 
+                onClick={navigateToProfile}
+                className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold cursor-pointer transition-transform hover:scale-105"
+              >
+                {userData.name.charAt(0)}
+              </button>
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
+<<<<<<< HEAD
       <motion.main 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -258,6 +409,29 @@ function SSGDashboardPage() {
           {/* Left section - Jadwal */}
           <div className="flex rounded-lg overflow-hidden shadow-md flex-grow">
             <div className="bg-blue-900 text-white p-4 w-40">
+=======
+      <div className="flex-grow container mx-auto px-4 py-4 pb-20">
+        {/* Progress MY Card */}
+        <div className="bg-white rounded-lg shadow-sm mb-4 p-4">
+          <h3 className="text-sm font-medium mb-2">Progres MY</h3>
+          <div className="mb-2 flex justify-between text-xs text-gray-600">
+            <span>Diselesaikan: {userData.taskCompleted}/{userData.taskTotal}</span>
+            <span>{userData.completionRate}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-orange-400 h-2.5 rounded-full" 
+              style={{width: `${userData.completionRate}%`}}
+            ></div>
+          </div>
+        </div>
+
+        {/* Jadwal and Search Row */}
+        <div className="flex flex-col md:flex-row gap-3 mb-4">
+          {/* Jadwal Card */}
+          <div className="flex rounded-lg overflow-hidden shadow-sm flex-grow">
+            <div className="bg-blue-900 text-white p-4 w-48 flex flex-col justify-center">
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
               <h3 className="text-sm font-semibold">Jadwal Hari ini</h3>
               <p className="text-xs mt-1">Selasa, 18 Maret</p>
             </div>
@@ -286,6 +460,7 @@ function SSGDashboardPage() {
                   Lihat Jadwal
                 </button>
               </div>
+<<<<<<< HEAD
             </div>
           </div>
 
@@ -313,10 +488,12 @@ function SSGDashboardPage() {
                 <p className="text-xs text-gray-700">Kegiatan Bakti Sosial di Masjid Agung Sumedang</p>
                 <p className="text-xs text-gray-500 mt-1">15 Maret 2025</p>
               </div>
+=======
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
             </div>
           </div>
-        </div>
 
+<<<<<<< HEAD
         {/* Quick Links */}
         <div className="bg-white rounded-lg shadow-md mb-6 p-4">
           <h2 className="text-lg font-medium mb-4">Akses Cepat</h2>
@@ -375,42 +552,224 @@ function SSGDashboardPage() {
           onClick={() => setActiveTab('beranda')}
           className={`flex flex-col items-center px-3 py-1 ${activeTab === 'beranda' ? 'text-blue-700' : 'text-gray-500'}`}
         >
+=======
+          {/* Search Box */}
+          <div className="flex flex-col w-full md:w-80">
+            <div className="relative mb-3">
+              <input 
+                type="text" 
+                placeholder="Pencarian..." 
+                className="w-full bg-gray-100 rounded-lg px-4 py-2 pl-3 pr-10 focus:outline-none shadow-sm"
+              />
+              <button className="absolute right-3 top-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Pengumuman Section */}
+        <div className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
+          <h3 className="font-bold text-sm">Pengumuman</h3>
+          
+          {/* First announcement */}
+          <div className="mt-2 p-3 bg-white rounded-lg mb-2">
+            <p className="font-medium text-sm">Kerja Bakti Sosial</p>
+            <p className="text-xs text-gray-700">Kegiatan Bakti Sosial di Masjid Agung Sumedang</p>
+            <p className="text-xs text-gray-500 mt-1">15 Maret 2025</p>
+          </div>
+          
+          {/* Second announcement */}
+          <div className="mt-2 p-3 bg-white rounded-lg">
+            <p className="font-medium text-sm">Kerja Bakti Sosial</p>
+            <p className="text-xs text-gray-700">Kegiatan Bakti Sosial di Masjid Agung Sumedang</p>
+            <p className="text-xs text-gray-500 mt-1">15 Maret 2025</p>
+          </div>
+        </div>
+
+        {/* Quick Access */}
+        <div className="bg-white rounded-lg shadow-sm mb-4 p-4">
+          <h3 className="font-medium text-sm mb-4">Akses Cepat</h3>
+          <div className="grid grid-cols-4 gap-4">
+            {/* Rundown */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">Rundown</span>
+            </div>
+            
+            {/* Tugas */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">Tugas</span>
+            </div>
+            
+            {/* Al-Quran */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">Al-Quran</span>
+            </div>
+            
+            {/* BAP/LAJ */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">BAP/LAJ</span>
+            </div>
+            
+            {/* Presensi */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1" onClick={navigateToPresensi}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">Presensi</span>
+            </div>
+            
+            {/* Nilai */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">Nilai</span>
+            </div>
+            
+            {/* MY */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">MY</span>
+            </div>
+            
+            {/* E-Card */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-600">E-Card</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Al-Quran */}
+        <div className="bg-green-50 rounded-lg shadow-sm mb-6 p-4">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-700 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-medium">Progress Al-Quran</h2>
+            </div>
+            <button className="bg-green-500 text-white px-4 py-1 rounded-lg text-sm font-medium">
+              Lanjutkan Membaca
+            </button>
+          </div>
+          
+          <div className="flex mb-2">
+            <div className="grid grid-cols-3 gap-4 w-full">
+              <div>
+                <p className="text-xs text-gray-500">Juz</p>
+                <p className="font-medium">5</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Surat</p>
+                <p className="font-medium">Al-Baqarah</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Halaman</p>
+                <p className="font-medium">21</p>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-xs text-gray-500">
+            Terakhir Dibaca: 15 Maret 2025
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex justify-around items-center px-4 py-2">
+        <button className="flex flex-col items-center px-3 py-1 text-blue-700">
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span className="text-xs mt-1">Beranda</span>
         </button>
+<<<<<<< HEAD
         <button 
           onClick={() => setActiveTab('quran')}
           className={`flex flex-col items-center px-3 py-1 ${activeTab === 'quran' ? 'text-blue-700' : 'text-gray-500'}`}
         >
+=======
+        <button className="flex flex-col items-center px-3 py-1 text-gray-500">
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           <span className="text-xs mt-1">Al-Quran</span>
         </button>
+<<<<<<< HEAD
         <button 
           onClick={() => setActiveTab('jadwal')}
           className={`flex flex-col items-center px-3 py-1 ${activeTab === 'jadwal' ? 'text-blue-700' : 'text-gray-500'}`}
         >
+=======
+        <button className="flex flex-col items-center px-3 py-1 text-gray-500" onClick={navigateToPresensi}>
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span className="text-xs mt-1">Jadwal</span>
+          <span className="text-xs mt-1">Presensi</span>
         </button>
+<<<<<<< HEAD
         <button 
           onClick={() => setActiveTab('tugas')}
           className={`flex flex-col items-center px-3 py-1 ${activeTab === 'tugas' ? 'text-blue-700' : 'text-gray-500'}`}
         >
+=======
+        <button className="flex flex-col items-center px-3 py-1 text-gray-500">
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
           </svg>
           <span className="text-xs mt-1">Tugas</span>
         </button>
+<<<<<<< HEAD
         <button 
           onClick={() => setActiveTab('profile')}
           className={`flex flex-col items-center px-3 py-1 ${activeTab === 'profile' ? 'text-blue-700' : 'text-gray-500'}`}
         >
+=======
+        <button className="flex flex-col items-center px-3 py-1 text-gray-500" onClick={navigateToProfile}>
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
@@ -420,5 +779,3 @@ function SSGDashboardPage() {
     </div>
   );
 }
-
-export default SSGDashboardPage;

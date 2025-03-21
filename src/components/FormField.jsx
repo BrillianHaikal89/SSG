@@ -12,6 +12,10 @@ const FormField = ({
   readOnly = false,
   formSubmitted,
   formErrors,
+<<<<<<< HEAD
+=======
+  additionalClassName = "", // Tambahkan prop untuk kelas tambahan
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
   options = [] // Add options parameter for dropdown
 }) => {
   const hasError = formSubmitted && formErrors[id];
@@ -29,7 +33,7 @@ const FormField = ({
           value={value}
           onChange={onChange}
           rows={2}
-          className={`appearance-none block w-full px-3 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm`}
+          className={`appearance-none block w-full px-3 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm ${readOnly ? 'bg-gray-100' : ''} ${additionalClassName}`}
           placeholder={placeholder}
           maxLength={maxLength}
           readOnly={readOnly}
@@ -41,7 +45,8 @@ const FormField = ({
           required={required}
           value={value}
           onChange={onChange}
-          className={`appearance-none block w-full px-3 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm`}
+          className={`appearance-none block w-full px-3 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm ${readOnly ? 'bg-gray-100' : ''} ${additionalClassName}`}
+          disabled={readOnly}
         >
           {options.length > 0 ? (
             options.map((option, index) => (
@@ -65,7 +70,7 @@ const FormField = ({
           required={required}
           value={value}
           onChange={onChange}
-          className={`appearance-none block w-full px-3 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm`}
+          className={`appearance-none block w-full px-3 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm ${readOnly ? 'bg-gray-100' : ''} ${additionalClassName}`}
           placeholder={placeholder}
           maxLength={maxLength}
           readOnly={readOnly}

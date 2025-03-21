@@ -29,13 +29,23 @@ const AddressContactForm = ({
     showConfirmPassword, setShowConfirmPassword 
   } = passwordVisibility;
 
+  // Fungsi untuk cek apakah field alamat harus dibaca saja
+  // Jangan set read-only jika nilai kosong
+  const isFieldReadOnly = (value) => {
+    return value !== null && value !== undefined && value !== "";
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <InfoAlert message="Masukkan kode pos untuk mengisi data kelurahan, kecamatan, kota, dan provinsi secara otomatis." />
       
       {/* Address Section */}
       <div className="mb-4">
+<<<<<<< HEAD
         {/* Postal Code - simple implementation that can always be changed */}
+=======
+        {/* Postal Code Form */}
+>>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
         <KodePosForm
           kodePos={kodePos}
           setKodePos={setKodePos}
@@ -55,6 +65,9 @@ const AddressContactForm = ({
             placeholder="Kelurahan"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(kelurahan) ? "bg-gray-50" : ""}
           />
           
           <FormField
@@ -66,6 +79,9 @@ const AddressContactForm = ({
             placeholder="Kecamatan"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(kecamatan) ? "bg-gray-50" : ""}
           />
         </div>
         
@@ -79,6 +95,9 @@ const AddressContactForm = ({
             placeholder="Kota/Kabupaten"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(kota) ? "bg-gray-50" : ""}
           />
           
           <FormField
@@ -90,6 +109,9 @@ const AddressContactForm = ({
             placeholder="Provinsi"
             formSubmitted={formSubmitted}
             formErrors={formErrors}
+            // Biarkan field dapat diedit meskipun terisi otomatis
+            readOnly={false}
+            additionalClassName={isFieldReadOnly(provinsi) ? "bg-gray-50" : ""}
           />
         </div>
       </div>
