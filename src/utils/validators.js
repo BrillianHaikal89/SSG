@@ -1,80 +1,140 @@
-// src/utils/validators.js
-
-// Validate Step 1 form fields
-export const validateStep1 = (formData) => {
-    const { name, nik, birthPlace, birthDate, gender, bloodType, address, rt, rw } = formData;
+/**
+ * Validates the first step of the signup form (Personal Data)
+ * @param {Object} data - Form data for step 1
+ * @returns {Object} - Validation errors (empty if no errors)
+ */
+export function validateStep1(data) {
     const errors = {};
 
-    if (!name.trim()) errors.name = 'Nama lengkap wajib diisi';
-    if (!nik.trim()) errors.nik = 'NIK wajib diisi';
-    else if (nik.length !== 16 || !/^\d+$/.test(nik)) errors.nik = 'NIK harus terdiri dari 16 digit angka';
+    // Name validation
+    if (!data.name || data.name.trim() === '') {
+        errors.name = "Name is required";
+    } else if (data.name.length < 3) {
+        errors.name = "Name must be at least 3 characters";
+    }
 
-    if (!birthPlace.trim()) errors.birthPlace = 'Tempat lahir wajib diisi';
-    if (!birthDate) errors.birthDate = 'Tanggal lahir wajib diisi';
-    else {
-        const birthDateObj = new Date(birthDate);
-        const today = new Date();
-        const minAgeDate = new Date(today);
-        minAgeDate.setFullYear(today.getFullYear() - 17); // Minimum 17 years old
+    // NIK validation
+    if (!data.nik || data.nik.trim() === '') {
+        errors.nik = "NIK is required";
+    } else if (!/^\d{16}$/.test(data.nik)) {
+        errors.nik = "NIK must be exactly 16 digits";
+    }
 
-        if (birthDateObj > minAgeDate) {
-            errors.birthDate = 'Anda harus berusia minimal 17 tahun';
+    // Birth Place validation
+    if (!data.birthPlace || data.birthPlace.trim() === '') {
+        errors.birthPlace = "Birth place is required";
+    }
+
+    // Birth Date validation
+    if (!data.birthDate) {
+        errors.birthDate = "Birth date is required";
+    } else {
+        const birthDate = new Date(data.birthDate);
+        const minDate = new Date();
+        minDate.setFullYear(minDate.getFullYear() - 100); // 100 years ago
+
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() - 17); // Must be at least 17 years old
+
+        if (birthDate < minDate || birthDate > maxDate) {
+            errors.birthDate = "Birth date must be between 17 and 100 years ago";
         }
     }
 
-    if (!gender) errors.gender = 'Jenis kelamin wajib dipilih';
-    if (!bloodType) errors.bloodType = 'Golongan darah wajib dipilih';
-    if (!address.trim()) errors.address = 'Alamat wajib diisi';
-    if (!rt.trim()) errors.rt = 'RT wajib diisi';
-    if (!rw.trim()) errors.rw = 'RW wajib diisi';
+    // Gender validation
+    if (!data.gender) {
+        errors.gender = "Gender is required";
+    }
+
+    // Blood Type validation
+    if (!data.bloodType) {
+        errors.bloodType = "Blood type is required";
+    }
+
+    // Address validation
+    if (!data.address || data.address.trim() === '') {
+        errors.address = "Address is required";
+    } else if (data.address.length < 5) {
+        errors.address = "Address must be at least 5 characters";
+    }
+
+    // RT validation
+    if (!data.rt || data.rt.trim() === '') {
+        errors.rt = "RT is required";
+    } else if (!/^\d{1,3}$/.test(data.rt)) {
+        errors.rt = "RT must be 1-3 digits";
+    }
+
+    // RW validation
+    if (!data.rw || data.rw.trim() === '') {
+        errors.rw = "RW is required";
+    } else if (!/^\d{1,3}$/.test(data.rw)) {
+        errors.rw = "RW must be 1-3 digits";
+    }
 
     return errors;
-};
+}
 
-// Validate Step 2 form fields
-export const validateStep2 = (formData) => {
-    const {
-        postalCode,
-        kelurahan,
-        kecamatan,
-        city,
-        province,
-        phoneSignup,
-        passwordSignup,
-        confirmPassword,
-        termsAccepted
-    } = formData;
-
+/**
+ * Validates the second step of the signup form (Address & Contact)
+ * @param {Object} data - Form data for step 2
+ * @returns {Object} - Validation errors (empty if no errors)
+ */
+export function validateStep2(data) {
     const errors = {};
 
-    if (!postalCode.trim()) errors.postalCode = 'Kode pos wajib diisi';
-    else if (postalCode.length !== 5 || !/^\d+$/.test(postalCode)) errors.postalCode = 'Kode pos harus terdiri dari 5 digit angka';
-
-    if (!kelurahan.trim()) errors.kelurahan = 'Kelurahan/Desa wajib diisi';
-    if (!kecamatan.trim()) errors.kecamatan = 'Kecamatan wajib diisi';
-    if (!city.trim()) errors.city = 'Kabupaten/Kota wajib diisi';
-    if (!province.trim()) errors.province = 'Provinsi wajib diisi';
-
-    if (!phoneSignup.trim()) errors.phoneSignup = 'Nomor HP wajib diisi';
-    else if (!/^08\d{8,11}$/.test(phoneSignup)) {
-        errors.phoneSignup = 'Nomor HP harus diawali dengan 08 dan terdiri dari 10-13 digit';
+    // Postal Code validation
+    if (!data.postalCode || data.postalCode.trim() === '') {
+        errors.kodePos = "Postal code is required";
+    } else if (!/^\d{5}$/.test(data.postalCode)) {
+        errors.kodePos = "Postal code must be 5 digits";
     }
 
-    if (!passwordSignup) errors.passwordSignup = 'Kata sandi wajib diisi';
-    else if (passwordSignup.length < 8) {
-        errors.passwordSignup = 'Kata sandi minimal 8 karakter';
-    } else if (!/[A-Z]/.test(passwordSignup) || !/[a-z]/.test(passwordSignup) || !/[0-9]/.test(passwordSignup)) {
-        errors.passwordSignup = 'Kata sandi harus mengandung huruf besar, huruf kecil, dan angka';
+    // Kelurahan validation
+    if (!data.kelurahan || data.kelurahan.trim() === '') {
+        errors.kelurahan = "Kelurahan is required";
     }
 
-    if (!confirmPassword) errors.confirmPassword = 'Konfirmasi kata sandi wajib diisi';
-    else if (passwordSignup !== confirmPassword) {
-        errors.confirmPassword = 'Kata sandi tidak cocok';
+    // Kecamatan validation
+    if (!data.kecamatan || data.kecamatan.trim() === '') {
+        errors.kecamatan = "Kecamatan is required";
     }
 
-    if (!termsAccepted) {
-        errors.termsAccepted = 'Anda harus menyetujui syarat dan ketentuan';
+    // City validation
+    if (!data.city || data.city.trim() === '') {
+        errors.kota = "City is required";
+    }
+
+    // Province validation
+    if (!data.province || data.province.trim() === '') {
+        errors.provinsi = "Province is required";
+    }
+
+    // Phone validation
+    if (!data.phoneSignup || data.phoneSignup.trim() === '') {
+        errors.nomorTelepon = "Phone number is required";
+    } else if (!/^08\d{8,11}$/.test(data.phoneSignup)) {
+        errors.nomorTelepon = "Phone number must start with 08 and have 10-13 digits";
+    }
+
+    // Password validation
+    if (!data.passwordSignup || data.passwordSignup.trim() === '') {
+        errors.kataSandi = "Password is required";
+    } else if (data.passwordSignup.length < 8) {
+        errors.kataSandi = "Password must be at least 8 characters";
+    }
+
+    // Confirm Password validation
+    if (!data.confirmPassword || data.confirmPassword.trim() === '') {
+        errors.konfirmasiKataSandi = "Please confirm your password";
+    } else if (data.confirmPassword !== data.passwordSignup) {
+        errors.konfirmasiKataSandi = "Passwords do not match";
+    }
+
+    // Terms acceptance validation
+    if (!data.termsAccepted) {
+        errors.persetujuanSyarat = "You must accept the terms and conditions";
     }
 
     return errors;
-};
+}

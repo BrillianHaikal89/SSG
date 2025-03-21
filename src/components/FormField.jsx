@@ -12,7 +12,7 @@ const FormField = ({
   readOnly = false,
   formSubmitted,
   formErrors,
-  options = [] // Tambahkan parameter options untuk dropdown
+  options = [] // Add options parameter for dropdown
 }) => {
   const hasError = formSubmitted && formErrors[id];
   
@@ -48,11 +48,11 @@ const FormField = ({
               <option key={index} value={option.value}>{option.label}</option>
             ))
           ) : (
-            // Fallback untuk kompatibilitas dengan kode lama
+            // Fallback for compatibility with old code
             <>
-              <option value="">Pilih Jenis Kelamin</option>
-              <option value="L">Laki-laki</option>
-              <option value="P">Perempuan</option>
+              <option value="">Select Gender</option>
+              <option value="L">Male</option>
+              <option value="P">Female</option>
             </>
           )}
         </select>

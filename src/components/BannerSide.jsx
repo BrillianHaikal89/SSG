@@ -19,7 +19,7 @@ const BannerSide = ({ signupStep }) => {
           </h2>
           <p className="text-white text-sm mb-6">
             {signupStep === 1 
-              ? "Lengkapi data diri Anda sesuai KTP" 
+              ? "Lengkapi data diri Anda sesuai dengan KTP" 
               : "Lengkapi alamat dan data kontak Anda"}
           </p>
           <div className="mb-6">

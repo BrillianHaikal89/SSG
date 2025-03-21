@@ -587,7 +587,7 @@ const HomePage = () => {
         {/* Optional footer with copyright */}
         <footer className="bg-gray-800 py-4 text-center text-white text-sm">
           <p>
-            © {new Date().getFullYear()} LPM DT Peduli. All Rights Reserved.
+            © {new Date().getFullYear()} LPM DT Peduli Santri Siap Guna (SSG). All Rights Reserved.
           </p>
         </footer>
       </main>

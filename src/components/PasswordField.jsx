@@ -24,7 +24,7 @@ const PasswordField = ({
           id={id}
           name={id}
           type={isVisible ? "text" : "password"}
-          autoComplete={id === 'passwordSignup' ? 'new-password' : 'current-password'}
+          autoComplete={id === 'kataSandi' ? 'new-password' : 'current-password'}
           required={required}
           value={value}
           onChange={onChange}
