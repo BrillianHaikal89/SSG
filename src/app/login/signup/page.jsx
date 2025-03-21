@@ -2,17 +2,50 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-// Components
-import ProgressIndicator from '../../../components/ProgressIndicator';
-import PersonalDataForm from '../../../components/PersonalDataForm';
-import AddressContactForm from '../../../components/AddressContactForm';
-import BannerSide from '../../../components/BannerSide';
-import MobileFooter from '../../../components/MobileFooter';
+import dynamic from 'next/dynamic';
 
 // Utilities
 import { validateStep1, validateStep2 } from '../../../utils/validators';
-// Menghilangkan import ApiService
+
+// Create component wrappers to safely handle the additionalClassName issue
+const SafeComponentWrapper = (Component) => {
+  return function WrappedComponent(props) {
+    // Ensure additionalClassName is always defined
+    const safeProps = { 
+      ...props, 
+      additionalClassName: props.additionalClassName || '',
+      className: props.className || ''
+    };
+    
+    return <Component {...safeProps} />;
+  };
+};
+
+// Dynamically import components with the wrapper
+const ProgressIndicator = dynamic(() => 
+  import('../../../components/ProgressIndicator').then(mod => SafeComponentWrapper(mod.default)), 
+  { ssr: false }
+);
+
+const PersonalDataForm = dynamic(() => 
+  import('../../../components/PersonalDataForm').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
+
+const AddressContactForm = dynamic(() => 
+  import('../../../components/AddressContactForm').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
+
+const BannerSide = dynamic(() => 
+  import('../../../components/BannerSide').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
+
+const MobileFooter = dynamic(() => 
+  import('../../../components/MobileFooter').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -48,6 +81,122 @@ export default function SignUpPage() {
   const [kataSandi, setKataSandi] = useState('');
   const [konfirmasiKataSandi, setKonfirmasiKataSandi] = useState('');
   const [persetujuanSyarat, setPersetujuanSyarat] = useState(false);
+  
+  // Add fetchKodePos function
+  const fetchKodePos = async (postalCode) => {
+    if (!postalCode || postalCode.length !== 5) {
+      return null;
+    }
+    
+    setIsLoadingData(true);
+    
+    try {
+      // Try the first API endpoint
+      let response = await fetch(`http://localhost:3333/api/location/postal-code/${postalCode}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      // If first endpoint fails with 404, try alternative endpoint
+      if (response.status === 404) {
+        console.log('First endpoint returned 404, trying alternative endpoint');
+        response = await fetch(`http://localhost:3333/api/lokasi/kode-pos/${postalCode}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        // Check for different possible response structures
+        const locationData = data.data || data.result || data;
+        
+        if (locationData) {
+          // Update form with location data, handling different possible field names
+          setKelurahan(locationData.kelurahan_desa || locationData.kelurahan || locationData.desa || '');
+          setKecamatan(locationData.kecamatan || '');
+          setKota(locationData.kabupaten_kota || locationData.kota || locationData.kabupaten || '');
+          setProvinsi(locationData.provinsi || '');
+          return locationData;
+        }
+      } else {
+        console.error('Error fetching postal code data:', response.status, response.statusText);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching postal code data:', error);
+      return null;
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+  
+  // Handle postal code change
+  const handleKodePosChange = async (e) => {
+    const postalCode = e.target.value.trim();
+    setKodePos(postalCode);
+    
+    // Only fetch data if the postal code is complete (5 digits)
+    if (postalCode.length === 5) {
+      try {
+        const result = await fetchKodePos(postalCode);
+        
+        if (!result) {
+          // If no data was found for this postal code, clear the location fields and show an error
+          setKelurahan('');
+          setKecamatan('');
+          setKota('');
+          setProvinsi('');
+          setFormErrors(prev => ({
+            ...prev,
+            kodePos: "Kode pos tidak ditemukan. Silakan masukkan kode pos yang valid atau isi data lokasi secara manual."
+          }));
+        } else {
+          // Clear any previous postal code error if the lookup was successful
+          setFormErrors(prev => {
+            const newErrors = {...prev};
+            delete newErrors.kodePos;
+            return newErrors;
+          });
+        }
+      } catch (error) {
+        console.error("Error in handleKodePosChange:", error);
+        setFormErrors(prev => ({
+          ...prev,
+          kodePos: "Terjadi kesalahan saat mengambil data lokasi. Silakan isi data lokasi secara manual."
+        }));
+      }
+    } else if (postalCode.length > 0 && postalCode.length < 5) {
+      // Show a hint that kode pos should be 5 digits
+      setFormErrors(prev => ({
+        ...prev,
+        kodePos: postalCode.length < 5 ? "Kode pos harus 5 digit." : null
+      }));
+      
+      // Clear address fields if postal code is incomplete
+      setKelurahan('');
+      setKecamatan('');
+      setKota('');
+      setProvinsi('');
+    } else {
+      // Clear kodePos error if field is empty
+      setFormErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors.kodePos;
+        return newErrors;
+      });
+      
+      // Clear address fields if postal code is empty
+      setKelurahan('');
+      setKecamatan('');
+      setKota('');
+      setProvinsi('');
+    }
+  };
   
   // Periksa apakah NIK sudah terdaftar
   const isNIKAlreadyRegistered = async (nikValue) => {
@@ -228,7 +377,7 @@ export default function SignUpPage() {
          </h1>
          
          {/* Indikator progres pendaftaran */}
-         <ProgressIndicator currentStep={signupStep} />
+         {typeof window !== 'undefined' && <ProgressIndicator currentStep={signupStep} />}
          
          {/* Tampilkan error server jika ada */}
          {formErrors.server && (
@@ -238,7 +387,7 @@ export default function SignUpPage() {
          )}
          
          {/* Langkah 1 Pendaftaran - Data Pribadi */}
-         {signupStep === 1 && (
+         {signupStep === 1 && typeof window !== 'undefined' && (
            <PersonalDataForm 
              formData={{ name, nik, birthPlace, birthDate, gender, bloodType, address, rt, rw }}
              setters={{ 
@@ -252,7 +401,7 @@ export default function SignUpPage() {
          )}
          
          {/* Langkah 2 Pendaftaran - Data Alamat & Kontak */}
-         {signupStep === 2 && (
+         {signupStep === 2 && typeof window !== 'undefined' && (
            <AddressContactForm
              formData={{ 
                kodePos, kelurahan, kecamatan, kota, provinsi,
@@ -271,17 +420,19 @@ export default function SignUpPage() {
              isLoadingData={isLoadingData}
              goBackToStep1={goBackToStep1}
              handleSubmit={handleSignupStep2}
-             postalCodeReadOnly={!!kelurahan && !!kecamatan && !!kota && !!provinsi}
+             postalCodeReadOnly={false}
+             handleKodePosChange={handleKodePosChange}
+             fetchKodePos={fetchKodePos}
            />
          )}
        </div>
      </div>
      
      {/* Banner Side */}
-     <BannerSide signupStep={signupStep} />
+     {typeof window !== 'undefined' && <BannerSide signupStep={signupStep} />}
      
      {/* Mobile-only footer for login link */}
-     <MobileFooter />
+     {typeof window !== 'undefined' && <MobileFooter />}
    </div>
  );
 }
