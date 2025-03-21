@@ -10,7 +10,7 @@
 
 body {
     color: rgb(var(--foreground-rgb));
-    background: linear-gradient( to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+    background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
     overflow-x: hidden;
 }
 
@@ -93,9 +93,6 @@ body {
 }
 
 
-/* Tambahkan style ini ke file CSS global Anda */
-
-
 /* Style untuk input type date */
 
 input[type="date"] {
@@ -110,16 +107,6 @@ select {
 }
 
 
-/* Jika masih tidak berhasil, tambahkan style ini ke file CSS global */
-
-input[type="date"]:hover,
-input[type="date"]:focus,
-select:hover,
-select:focus {
-    cursor: pointer !important;
-}
-
-
 /* Alternatif menggunakan classes */
 
 .date-input {
@@ -128,4 +115,142 @@ select:focus {
 
 .select-input {
     cursor: pointer !important;
+}
+
+
+/* E-Card Print Styles */
+
+@media print {
+    @page {
+        size: 85mm 54mm landscape;
+        margin: 0;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+    /* Hide everything except the card being printed */
+    body * {
+        visibility: hidden;
+    }
+    .print-card,
+    .print-card * {
+        visibility: visible;
+    }
+    .print-card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 85mm;
+        height: 54mm;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+    }
+    /* QR code sizing for print */
+    .front-qr {
+        width: 25mm !important;
+        height: 25mm !important;
+    }
+    .back-qr {
+        width: 15mm !important;
+        height: 15mm !important;
+    }
+    /* Hide navigational elements */
+    header,
+    footer,
+    nav,
+    aside,
+    .print-hidden {
+        display: none !important;
+    }
+}
+
+
+/* E-Card Component Styles */
+
+.e-card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.e-card {
+    background-color: #0d2c54;
+    color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.e-card-front {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    width: 340px;
+    height: 216px;
+}
+
+.e-card-back {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    width: 340px;
+    height: 216px;
+    position: relative;
+}
+
+.qr-container-front {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    margin-right: 1rem;
+}
+
+.qr-container-back {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.user-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.e-card-divider {
+    margin: 2rem 0;
+    width: 100%;
+    max-width: 340px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.print-button {
+    background-color: #0d2c54;
+    color: white;
+    font-weight: 700;
+    padding: 0.5rem 2rem;
+    border-radius: 0.375rem;
+    transition-property: background-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.print-button:hover {
+    background-color: #0a2647;
+}
+
+@media (max-width: 768px) {
+    .e-card-front,
+    .e-card-back {
+        width: 100%;
+        max-width: 340px;
+    }
+    .e-card-container {
+        padding: 0 1rem;
+    }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,11 @@ function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Notification state
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
   
   // Check if user is already logged in on mount, and redirect if so
   useEffect(() => {
@@ -75,26 +80,46 @@ function SignInPage() {
       const responseData = await response.json();
       
       if (response.ok) {
+        // Show success notification
+        setNotificationType('success');
+        setNotificationMessage('Login berhasil! Mengalihkan ke dashboard...');
+        setShowNotification(true);
+        
         // Store auth data in sessionStorage (will be cleared when browser is closed)
         // Always store token in sessionStorage for security
         sessionStorage.setItem('authToken', responseData.token);
         sessionStorage.setItem('userId', responseData.userId);
         
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Add a slight delay before redirecting to allow the notification to be visible
+        setTimeout(() => {
+          // Redirect to dashboard
+          router.push('/dashboard');
+        }, 1500);
       } else {
         // Handle specific error cases
         if (response.status === 401 || response.status === 400) {
           setLoginError('Nomor HP atau kata sandi tidak valid.');
+          setNotificationType('error');
+          setNotificationMessage('Nomor HP atau kata sandi tidak valid.');
+          setShowNotification(true);
         } else if (response.status === 403) {
           setLoginError('Verifikasi keamanan gagal. Silakan coba lagi.');
+          setNotificationType('error');
+          setNotificationMessage('Verifikasi keamanan gagal.');
+          setShowNotification(true);
         } else {
           setLoginError(responseData.message || 'Terjadi kesalahan saat login. Silakan coba lagi.');
+          setNotificationType('error');
+          setNotificationMessage('Terjadi kesalahan saat login.');
+          setShowNotification(true);
         }
       }
     } catch (error) {
       console.error('Error during login process:', error);
       setLoginError('Gagal terhubung ke server. Silakan coba lagi nanti.');
+      setNotificationType('error');
+      setNotificationMessage('Gagal terhubung ke server. Silakan coba lagi nanti.');
+      setShowNotification(true);
     } finally {
       setIsLoading(false);
     }
@@ -105,8 +130,47 @@ function SignInPage() {
     router.push('/login/signup');
   }
 
+  // Effect to hide notification after some time
+  useEffect(() => {
+    if (showNotification) {
+      const timer = setTimeout(() => {
+        setShowNotification(false);
+      }, 3000); // Hide after 3 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showNotification]);
+
   return (
     <div className="flex h-screen">
+      {/* Custom notification - Centered at top */}
+      {showNotification && (
+        <div 
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-md shadow-lg z-50 flex items-center transition-all duration-300 ${
+            notificationType === 'success' ? 'bg-green-100 text-green-800 border-l-4 border-green-500' : 'bg-red-100 text-red-800 border-l-4 border-red-500'
+          }`}
+        >
+          {notificationType === 'success' ? (
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          <span>{notificationMessage}</span>
+          <button 
+            className="ml-2 text-gray-500 hover:text-gray-700"
+            onClick={() => setShowNotification(false)}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
       {/* Form Side */}
       <motion.div 
         initial={{ opacity: 0, x: -20 }}

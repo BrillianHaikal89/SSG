@@ -9,6 +9,11 @@ export default function SSGDashboardPage() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   
+  // Notification state
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
+  
   // Check authentication on component mount
   useEffect(() => {
     const checkAuthentication = () => {
@@ -29,6 +34,17 @@ export default function SSGDashboardPage() {
     
     checkAuthentication();
   }, [router]);
+
+  // Effect to hide notification after some time
+  useEffect(() => {
+    if (showNotification) {
+      const timer = setTimeout(() => {
+        setShowNotification(false);
+      }, 3000); // Hide after 3 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showNotification]);
 
   // Fetch user data
   const fetchUserData = () => {
@@ -52,15 +68,47 @@ export default function SSGDashboardPage() {
       setLoading(false);
     } catch (error) {
       console.error("Error loading user data:", error);
-      router.push('/login');
+      setNotificationType('error');
+      setNotificationMessage('Gagal memuat data pengguna. Silakan coba lagi.');
+      setShowNotification(true);
+      
+      // Redirect after showing error
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
     }
   };
 
   // Handle logout
   const handleLogout = () => {
-    sessionStorage.removeItem('authToken');
-    sessionStorage.removeItem('userId');
-    router.push('/login');
+    try {
+      // Show success notification
+      setNotificationType('success');
+      setNotificationMessage('Logout berhasil! Mengalihkan ke halaman login...');
+      setShowNotification(true);
+      
+      // Add a slight delay before clearing session and redirecting
+      setTimeout(() => {
+        // Attempt to clear session storage
+        try {
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('userId');
+          router.push('/login');
+        } catch (error) {
+          console.error("Error during logout process:", error);
+          // Show error notification if session storage clearing fails
+          setNotificationType('error');
+          setNotificationMessage('Gagal logout. Silakan coba lagi.');
+          setShowNotification(true);
+        }
+      }, 3000);
+    } catch (error) {
+      console.error("Error during logout process:", error);
+      // Show error notification
+      setNotificationType('error');
+      setNotificationMessage('Gagal logout. Silakan coba lagi.');
+      setShowNotification(true);
+    }
   };
   
   // Navigation functions
@@ -88,6 +136,34 @@ export default function SSGDashboardPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* Custom notification - Centered at top */}
+      {showNotification && (
+        <div 
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-md shadow-lg z-50 flex items-center transition-all duration-300 ${
+            notificationType === 'success' ? 'bg-green-100 text-green-800 border-l-4 border-green-500' : 'bg-red-100 text-red-800 border-l-4 border-red-500'
+          }`}
+        >
+          {notificationType === 'success' ? (
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          <span>{notificationMessage}</span>
+          <button 
+            className="ml-2 text-gray-500 hover:text-gray-700"
+            onClick={() => setShowNotification(false)}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
       {/* Header */}
       <header className="bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-3">
