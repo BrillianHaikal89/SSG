@@ -2,16 +2,50 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-// Components
-import ProgressIndicator from '../../../components/ProgressIndicator';
-import PersonalDataForm from '../../../components/PersonalDataForm';
-import AddressContactForm from '../../../components/AddressContactForm';
-import BannerSide from '../../../components/BannerSide';
-import MobileFooter from '../../../components/MobileFooter';
+import dynamic from 'next/dynamic';
 
 // Utilities
 import { validateStep1, validateStep2 } from '../../../utils/validators';
+
+// Create component wrappers to safely handle the additionalClassName issue
+const SafeComponentWrapper = (Component) => {
+  return function WrappedComponent(props) {
+    // Ensure additionalClassName is always defined
+    const safeProps = { 
+      ...props, 
+      additionalClassName: props.additionalClassName || '',
+      className: props.className || ''
+    };
+    
+    return <Component {...safeProps} />;
+  };
+};
+
+// Dynamically import components with the wrapper
+const ProgressIndicator = dynamic(() => 
+  import('../../../components/ProgressIndicator').then(mod => SafeComponentWrapper(mod.default)), 
+  { ssr: false }
+);
+
+const PersonalDataForm = dynamic(() => 
+  import('../../../components/PersonalDataForm').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
+
+const AddressContactForm = dynamic(() => 
+  import('../../../components/AddressContactForm').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
+
+const BannerSide = dynamic(() => 
+  import('../../../components/BannerSide').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
+
+const MobileFooter = dynamic(() => 
+  import('../../../components/MobileFooter').then(mod => SafeComponentWrapper(mod.default)),
+  { ssr: false }
+);
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -48,7 +82,7 @@ export default function SignUpPage() {
   const [konfirmasiKataSandi, setKonfirmasiKataSandi] = useState('');
   const [persetujuanSyarat, setPersetujuanSyarat] = useState(false);
   
-  // Add fetchKodePos function that was missing
+  // Add fetchKodePos function
   const fetchKodePos = async (postalCode) => {
     if (!postalCode || postalCode.length !== 5) {
       return null;
@@ -91,7 +125,6 @@ export default function SignUpPage() {
         }
       } else {
         console.error('Error fetching postal code data:', response.status, response.statusText);
-        // Don't show alert here, just log the error
       }
       return null;
     } catch (error) {
@@ -102,7 +135,7 @@ export default function SignUpPage() {
     }
   };
   
-  // Handle postal code change with improved error handling
+  // Handle postal code change
   const handleKodePosChange = async (e) => {
     const postalCode = e.target.value.trim();
     setKodePos(postalCode);
@@ -344,7 +377,7 @@ export default function SignUpPage() {
          </h1>
          
          {/* Indikator progres pendaftaran */}
-         <ProgressIndicator currentStep={signupStep} />
+         {typeof window !== 'undefined' && <ProgressIndicator currentStep={signupStep} />}
          
          {/* Tampilkan error server jika ada */}
          {formErrors.server && (
@@ -354,7 +387,7 @@ export default function SignUpPage() {
          )}
          
          {/* Langkah 1 Pendaftaran - Data Pribadi */}
-         {signupStep === 1 && (
+         {signupStep === 1 && typeof window !== 'undefined' && (
            <PersonalDataForm 
              formData={{ name, nik, birthPlace, birthDate, gender, bloodType, address, rt, rw }}
              setters={{ 
@@ -364,12 +397,11 @@ export default function SignUpPage() {
              formErrors={formErrors}
              formSubmitted={formSubmitted}
              handleSubmit={handleSignupStep1}
-             additionalClassName="" // Add empty additionalClassName prop
            />
          )}
          
          {/* Langkah 2 Pendaftaran - Data Alamat & Kontak */}
-         {signupStep === 2 && (
+         {signupStep === 2 && typeof window !== 'undefined' && (
            <AddressContactForm
              formData={{ 
                kodePos, kelurahan, kecamatan, kota, provinsi,
@@ -391,17 +423,16 @@ export default function SignUpPage() {
              postalCodeReadOnly={false}
              handleKodePosChange={handleKodePosChange}
              fetchKodePos={fetchKodePos}
-             additionalClassName="" // Add empty additionalClassName prop
            />
          )}
        </div>
      </div>
      
      {/* Banner Side */}
-     <BannerSide signupStep={signupStep} additionalClassName="" />
+     {typeof window !== 'undefined' && <BannerSide signupStep={signupStep} />}
      
      {/* Mobile-only footer for login link */}
-     <MobileFooter additionalClassName="" />
+     {typeof window !== 'undefined' && <MobileFooter />}
    </div>
  );
 }
