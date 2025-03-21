@@ -351,7 +351,7 @@ const Presensi = () => {
           <div className={isMobile ? 'text-center' : ''}>
             <h2 className="text-lg font-medium">Kehadiran</h2>
             <p className="font-bold mt-1">
-              0 DARI 12 SESI
+              0 DARI 16 SESI
             </p>
           </div>
           
