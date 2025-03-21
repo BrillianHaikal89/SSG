@@ -12,10 +12,7 @@ const FormField = ({
   readOnly = false,
   formSubmitted,
   formErrors,
-<<<<<<< HEAD
-=======
-  additionalClassName = "", // Tambahkan prop untuk kelas tambahan
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
+  
   options = [] // Add options parameter for dropdown
 }) => {
   const hasError = formSubmitted && formErrors[id];

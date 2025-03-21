@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 
 /**
-<<<<<<< HEAD
  * Component for handling postal code input and automatic address lookup
-=======
-<<<<<<< HEAD
- * Component for handling postal code input and automatic address lookup
-=======
- * Component untuk menangani input kode pos dan pengisian alamat otomatis
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
  */
 const KodePosForm = ({ 
   kodePos, 
@@ -27,15 +19,7 @@ const KodePosForm = ({
   const handleKodePosChange = (e) => {
     const newValue = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
     
-<<<<<<< HEAD
     // Update postal code state - ensure it can always be changed
-=======
-<<<<<<< HEAD
-    // Update postal code state - ensure it can always be changed
-=======
-    // Update kode pos state
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
     setKodePos(newValue);
     
     // Reset messages if postal code length changes
@@ -44,15 +28,7 @@ const KodePosForm = ({
       setSuccess(false);
     }
     
-<<<<<<< HEAD
     // If postal code is 5 digits, look up the data
-=======
-<<<<<<< HEAD
-    // If postal code is 5 digits, look up the data
-=======
-    // Jika kode pos 5 digit, cari datanya
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
     if (newValue.length === 5) {
       fetchKodePos(newValue);
     }
@@ -65,21 +41,8 @@ const KodePosForm = ({
     setSuccess(false);
     
     try {
-<<<<<<< HEAD
       // Call postal code API on server port 3333
       const response = await fetch(`http://localhost:3333/api/users/kodepos?kode_pos=${kodePosValue}`, {
-=======
-<<<<<<< HEAD
-      // Call postal code API on server port 3333
-      const response = await fetch(`http://localhost:3333/api/users/kodepos?kode_pos=${kodePosValue}`, {
-=======
-      // Gunakan URL relatif atau API_URL dari environment variable
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const url = `${apiUrl}/api/users/kodepos?kode_pos=${kodePosValue}`;
-      
-      const response = await fetch(url, {
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
         method: 'GET',
         headers: {
           'Accept': 'application/json'
@@ -87,58 +50,17 @@ const KodePosForm = ({
         cache: 'no-store'
       });
       
-<<<<<<< HEAD
       // If response is OK
-=======
-<<<<<<< HEAD
-      // If response is OK
-=======
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
       if (response.ok) {
         const data = await response.json();
         console.log("Postal code data from server:", data);
         
-<<<<<<< HEAD
         // Fill form with received data
         setKelurahan(data.kelurahan || "");
-=======
-<<<<<<< HEAD
-        // Fill form with received data
-        setKelurahan(data.kelurahan || "");
-=======
-        // Debugging: log struktur data yang diterima
-        console.log("Kelurahan:", data.kelurahan_desa);
-        console.log("Kecamatan:", data.kecamatan);
-        console.log("Kota:", data.kabupaten_kota);
-        console.log("Provinsi:", data.provinsi);
-        
-        // Periksa apakah field ada dan isi dengan benar
-        // Gunakan nilai fallback jika properti tidak ada
-        
-        // Kelurahan - coba beberapa kemungkinan nama properti
-        if (data.kelurahan_desa !== undefined) {
-          setKelurahan(data.kelurahan_desa);
-        } else if (data.kelurahan !== undefined) {
-          setKelurahan(data.kelurahan);
-        } else if (data.desa !== undefined) {
-          setKelurahan(data.desa);
-        } else {
-          setKelurahan("");
-        }
-        
-        // Kecamatan
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
         setKecamatan(data.kecamatan || "");
         setKota(data.kota || "");
         setProvinsi(data.provinsi || "");
         
-<<<<<<< HEAD
-        // Set success status
-        setSuccess(true);
-=======
-<<<<<<< HEAD
         // Set success status
         setSuccess(true);
       } else {
@@ -149,34 +71,6 @@ const KodePosForm = ({
     } catch (error) {
       console.error("Error fetching postal code data:", error);
       setError("Failed to connect to server. Please fill address manually.");
-=======
-        // Set status sukses hanya jika setidaknya ada satu field terisi
-        if (data.kelurahan_desa || data.kelurahan || data.kecamatan || 
-            data.kabupaten_kota || data.kota || data.provinsi) {
-          setSuccess(true);
-        } else {
-          setError("Format data kode pos tidak sesuai. Harap isi alamat secara manual.");
-        }
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
-      } else {
-        // If server responds with error
-        console.error(`Server responded with status: ${response.status}`);
-        setError("Data kode pos tidak ditemukan. Harap isi alamat secara manual.");
-      }
-    } catch (error) {
-      console.error("Error fetching postal code data:", error);
-<<<<<<< HEAD
-      setError("Failed to connect to server. Please fill address manually.");
-=======
-      setError("Gagal terhubung ke server. Silakan isi alamat secara manual.");
-      
-      // Reset field alamat jika terjadi error
-      setKelurahan("");
-      setKecamatan("");
-      setKota("");
-      setProvinsi("");
->>>>>>> e4729c3d41ac09e84dc10988fd1e49c3ab87948a
->>>>>>> 4621c0f682f4cfb379b9c07cbda6034b1bdd4fc7
     } finally {
       setLoading(false);
     }
