@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import useAuthStore from '../../stores/authStore';
 
-function SignInPage() {
+export default function SignInPage() {
   const router = useRouter();
   
   // =========== STATE MANAGEMENT ===========
+  // Get Zustand store functions
+  const { login, checkAuth } = useAuthStore();
+  
   // Login form state
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -16,21 +20,29 @@ function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   
   // Notification state
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
   
+  // Handle client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+    
+    // Debug the current state when component mounts
+    console.log("Login page mounted, auth store state:", useAuthStore.getState());
+  }, []);
+  
   // Check if user is already logged in on mount, and redirect if so
   useEffect(() => {
-    const authToken = sessionStorage.getItem('authToken');
-    const userId = sessionStorage.getItem('userId');
-    
-    if (authToken && userId) {
+    // Only run this check on the client side
+    if (isClient && checkAuth()) {
+      console.log("Already authenticated, redirecting to dashboard");
       router.push('/dashboard');
     }
-  }, [router]);
+  }, [checkAuth, router, isClient]);
   
   // Load Cloudflare Turnstile script
   useEffect(() => {
@@ -85,14 +97,42 @@ function SignInPage() {
         setNotificationMessage('Login berhasil! Mengalihkan ke dashboard...');
         setShowNotification(true);
         
-        // Store auth data in sessionStorage (will be cleared when browser is closed)
-        // Always store token in sessionStorage for security
-        sessionStorage.setItem('authToken', responseData.token);
-        sessionStorage.setItem('userId', responseData.userId);
+        console.log("Login successful, response data:", responseData);
+        
+        // Prepare user data with fallback for name if not provided from API
+        let userData = responseData.user || { nomor_hp: phoneNumber };
+        
+        // If API doesn't provide a name, set a default name based on phone number
+        if (!userData.nama && !userData.name) {
+          userData = {
+            ...userData,
+            nama: `User ${phoneNumber.substring(phoneNumber.length - 4)}`,
+            name: `User ${phoneNumber.substring(phoneNumber.length - 4)}`
+          };
+        }
+        
+        // Ensure both name and nama properties exist
+        if (userData.nama && !userData.name) {
+          userData.name = userData.nama;
+        } else if (userData.name && !userData.nama) {
+          userData.nama = userData.name;
+        }
+        
+        // Store user data in Zustand store
+        login(userData, responseData.token, responseData.userId);
+        
+        // Save to localStorage/sessionStorage as well for backup
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+        
+        // Verify the store was updated correctly
+        console.log("Store state after login:", useAuthStore.getState());
         
         // Add a slight delay before redirecting to allow the notification to be visible
+        // and ensure store is properly updated
         setTimeout(() => {
           // Redirect to dashboard
+          console.log("Redirecting to dashboard after login");
           router.push('/dashboard');
         }, 1500);
       } else {
@@ -115,7 +155,7 @@ function SignInPage() {
         }
       }
     } catch (error) {
-      console.error('Error during login process:', error);
+      console.error("Error during login process:", error);
       setLoginError('Gagal terhubung ke server. Silakan coba lagi nanti.');
       setNotificationType('error');
       setNotificationMessage('Gagal terhubung ke server. Silakan coba lagi nanti.');
@@ -142,7 +182,7 @@ function SignInPage() {
   }, [showNotification]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen font-sans">
       {/* Custom notification - Centered at top */}
       {showNotification && (
         <div 
@@ -363,5 +403,3 @@ function SignInPage() {
     </div>
   );
 }
-
-export default SignInPage;

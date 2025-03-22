@@ -1,24 +1,36 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import useAuthStore from '../../stores/authStore';
 
 const ProfileHeader = () => {
   const [userData, setUserData] = useState(null);
-
+  const [isClient, setIsClient] = useState(false);
+  
+  // Handle client-side rendering
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setIsClient(true);
+  }, []);
+  
+  useEffect(() => {
+    if (isClient) {
       try {
-        // Get user data from localStorage or sessionStorage
-        const storedUserData = JSON.parse(localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || '{}');
+        // Get user data from Zustand store
+        const userFromStore = useAuthStore.getState().user;
+        console.log("User data from store:", userFromStore);
+        
+        // Extract user data, prioritizing store values
+        const phoneNumber = userFromStore?.nomor_hp || '081234567890';
+        const userName = userFromStore?.nama || userFromStore?.name || phoneNumber || 'User';
         
         setUserData({
-          name: storedUserData.name || 'Muhammad Brilian Haikal',
-          level: storedUserData.level || 'Pleton 20',
-          email: storedUserData.email || 'brilian@example.com',
-          phone: storedUserData.phone || '081234567890',
+          name: userName,
+          level: userFromStore?.level || 'Pleton 20',
+          email: userFromStore?.email || `${phoneNumber.replace(/[^0-9]/g, '')}@example.com`,
+          phone: phoneNumber,
         });
       } catch (error) {
-        console.error("Error parsing user data:", error);
+        console.error("Error getting user data:", error);
         setUserData({
           name: 'Pengguna',
           level: 'Pleton 20',
@@ -27,10 +39,15 @@ const ProfileHeader = () => {
         });
       }
     }
-  }, []);
+  }, [isClient]);
 
-  if (!userData) {
-    return <div>Loading user data...</div>;
+  if (!isClient || !userData) {
+    return (
+      <div className="bg-white rounded-lg shadow-md mb-6 p-6 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800"></div>
+        <p className="ml-2">Loading user data...</p>
+      </div>
+    );
   }
 
   return (

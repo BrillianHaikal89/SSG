@@ -4,6 +4,9 @@ export default function middleware(request) {
     // Get the pathname of the request
     const path = request.nextUrl.pathname;
 
+    // Get auth token from cookies
+    const token = request.cookies.get('authToken') ? .value;
+
     // Define which paths are protected (require authentication)
     const isProtectedRoute = path.startsWith('/dashboard');
 

@@ -3,37 +3,45 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import useAuthStore from '../../stores/authStore';
 
 export default function SSGDashboardPage() {
   const router = useRouter();
+  const { user, userId, logout, checkAuth } = useAuthStore();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   
   // Notification state
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
   
+  // Handle client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+    
+    // Debug the current state when component mounts
+    console.log("Dashboard page mounted, auth store state:", useAuthStore.getState());
+  }, []);
+  
   // Check authentication on component mount
   useEffect(() => {
-    const checkAuthentication = () => {
-      // Look for auth token in sessionStorage
-      const authToken = sessionStorage.getItem('authToken');
-      const userId = sessionStorage.getItem('userId');
+    if (isClient) {
+      // Check if authenticated using Zustand store
+      const isAuthorized = checkAuth();
+      console.log("Dashboard auth check result:", isAuthorized);
       
-      // If no auth token or userId exists, redirect to login
-      if (!authToken || !userId) {
-        console.log("No valid authentication found, redirecting to login");
+      if (!isAuthorized) {
+        console.log("Not authenticated, redirecting to login from dashboard");
         router.push('/login');
         return;
       }
       
       // If authenticated, fetch user data
       fetchUserData();
-    };
-    
-    checkAuthentication();
-  }, [router]);
+    }
+  }, [router, checkAuth, isClient]);
 
   // Effect to hide notification after some time
   useEffect(() => {
@@ -49,9 +57,21 @@ export default function SSGDashboardPage() {
   // Fetch user data
   const fetchUserData = () => {
     try {
-      // Mock data
+      // If we already have basic user data in the Zustand store, use it
+      const storeUser = useAuthStore.getState().user;
+      
+      console.log("Store user data:", storeUser);
+      
+      // Extract name from store data - first try to get nomor_hp for display
+      const userPhone = storeUser?.nomor_hp || '08212651023';
+      const userName = storeUser?.nama || storeUser?.name || userPhone;
+      
+      // Mock data - in a real app, this would come from an API call
+      // Merge any existing user data from Zustand store with additional dashboard data
       setUserData({
-        name: 'Muhammad Brilian Haikal',
+        ...storeUser,
+        name: userName, 
+        phone: userPhone,
         level: 'Pleton 20',
         taskCompleted: 40,
         taskTotal: 50,
@@ -79,7 +99,7 @@ export default function SSGDashboardPage() {
     }
   };
 
-  // Handle logout
+  // Handle logout using Zustand store
   const handleLogout = () => {
     try {
       // Show success notification
@@ -89,19 +109,10 @@ export default function SSGDashboardPage() {
       
       // Add a slight delay before clearing session and redirecting
       setTimeout(() => {
-        // Attempt to clear session storage
-        try {
-          sessionStorage.removeItem('authToken');
-          sessionStorage.removeItem('userId');
-          router.push('/login');
-        } catch (error) {
-          console.error("Error during logout process:", error);
-          // Show error notification if session storage clearing fails
-          setNotificationType('error');
-          setNotificationMessage('Gagal logout. Silakan coba lagi.');
-          setShowNotification(true);
-        }
-      }, 3000);
+        // Call logout function from Zustand store
+        logout();
+        router.push('/login');
+      }, 1500);
     } catch (error) {
       console.error("Error during logout process:", error);
       // Show error notification
@@ -120,7 +131,8 @@ export default function SSGDashboardPage() {
     router.push('/dashboard/presensi');
   };
 
-  if (loading) {
+  // If we're server-side or still loading, show a loading spinner
+  if (!isClient || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
@@ -135,7 +147,7 @@ export default function SSGDashboardPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
       {/* Custom notification - Centered at top */}
       {showNotification && (
         <div 
@@ -164,7 +176,7 @@ export default function SSGDashboardPage() {
         </div>
       )}
       
-      {/* Header */}
+      {/* Header with SANTRI SIAP GUNA */}
       <header className="bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
@@ -201,16 +213,25 @@ export default function SSGDashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
-              <button 
-                onClick={navigateToProfile}
-                className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold cursor-pointer transition-transform hover:scale-105"
-              >
-                {userData.name.charAt(0)}
-              </button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* User Greeting Card - Now below SANTRI SIAP GUNA */}
+      <div className="bg-orange-400 text-white p-4">
+        <div className="container mx-auto px-4 py-2 flex items-center">
+          <div className="flex-shrink-0 mr-4">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-orange-500 font-bold text-xl">
+              {userData.name ? userData.name.charAt(0).toUpperCase() : 'M'}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">Assalamu'alaikum, {userData.phone}</h2>
+            <p className="text-sm">{userData.level}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 py-4 pb-20">
@@ -407,21 +428,21 @@ export default function SSGDashboardPage() {
             <div className="grid grid-cols-3 gap-4 w-full">
               <div>
                 <p className="text-xs text-gray-500">Juz</p>
-                <p className="font-medium">5</p>
+                <p className="font-medium">{userData.quranProgress.juz}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Surat</p>
-                <p className="font-medium">Al-Baqarah</p>
+                <p className="font-medium">{userData.quranProgress.surah}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Halaman</p>
-                <p className="font-medium">21</p>
+                <p className="font-medium">{userData.quranProgress.page}</p>
               </div>
             </div>
           </div>
           
           <p className="text-xs text-gray-500">
-            Terakhir Dibaca: 15 Maret 2025
+            Terakhir Dibaca: {userData.quranProgress.lastRead}
           </p>
         </div>
       </div>

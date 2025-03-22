@@ -4,30 +4,42 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import useAuthStore from '../../stores/authStore';
 
 const ProfileLayout = ({ children }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const { checkAuth } = useAuthStore();
+
+  // Handle client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
-    
-    if (!isLoggedIn) {
-      // Redirect to login page if not logged in
-      router.push('/login');
-      return;
+    if (isClient) {
+      // Check if user is logged in using Zustand store
+      const isAuthenticated = checkAuth();
+      console.log("Profile layout auth check result:", isAuthenticated);
+      
+      if (!isAuthenticated) {
+        // Redirect to login page if not authenticated
+        console.log("Not authenticated, redirecting to login from profile");
+        router.push('/login');
+        return;
+      }
+      
+      setLoading(false);
     }
-    
-    setLoading(false);
-  }, [router]);
+  }, [router, checkAuth, isClient]);
 
   // Handle back button
   const handleBack = () => {
     router.push('/dashboard');
   };
 
-  if (loading) {
+  if (!isClient || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
