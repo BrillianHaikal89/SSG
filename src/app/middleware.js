@@ -5,7 +5,7 @@ export default function middleware(request) {
     const path = request.nextUrl.pathname;
 
     // Get auth token from cookies
-    const token = request.cookies.get('authToken') ? .value;
+    const token = request.cookies.get('authToken') ? request.cookies.get('authToken').value : null;
 
     // Define which paths are protected (require authentication)
     const isProtectedRoute = path.startsWith('/dashboard');
