@@ -3,17 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:3333/api';
 
 const Dashboard = () => {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   
-  // State for selected surah and ayat
+  // State for Quran data
+  const [surahList, setSurahList] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState("");
   const [selectedAyat, setSelectedAyat] = useState("");
-  const [searchText, setSearchText] = useState("");
-  const [quranContent, setQuranContent] = useState("");
+  const [quranContent, setQuranContent] = useState([]);
+  const [surahDetails, setSurahDetails] = useState(null);
+  
+  // UI states
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const [currentHal, setCurrentHal] = useState(1);
   const [currentJuz, setCurrentJuz] = useState(1);
   
@@ -22,29 +30,187 @@ const Dashboard = () => {
     setIsClient(true);
   }, []);
   
-  // Dummy data for Surah selection
-  const surahList = [
-    { id: 1, name: "Al-Fatihah", arabicName: "الفاتحة", totalAyat: 7 },
-    { id: 2, name: "Al-Baqarah", arabicName: "البقرة", totalAyat: 286 },
-    { id: 3, name: "Ali 'Imran", arabicName: "آل عمران", totalAyat: 200 },
-    { id: 4, name: "An-Nisa", arabicName: "النساء", totalAyat: 176 },
-    { id: 5, name: "Al-Ma'idah", arabicName: "المائدة", totalAyat: 120 },
-    { id: 6, name: "Al-An'am", arabicName: "الأنعام", totalAyat: 165 },
-    { id: 7, name: "Al-A'raf", arabicName: "الأعراف", totalAyat: 206 },
-    { id: 8, name: "Al-Anfal", arabicName: "الأنفال", totalAyat: 75 },
-    { id: 9, name: "At-Tawbah", arabicName: "التوبة", totalAyat: 129 },
-    { id: 10, name: "Yunus", arabicName: "يونس", totalAyat: 109 },
-  ];
+  // Fetch list of surahs on component mount
+  useEffect(() => {
+    if (isClient) {
+      fetchSurahList();
+    }
+  }, [isClient]);
+  
+  // Fetch surah list from the API
+  const fetchSurahList = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/quran/surahs`);
+      
+      if (response.status === 200) {
+        setSurahList(response.data);
+      } else {
+        setError('Failed to fetch surah list');
+        // Fall back to hardcoded dummy data if API fails
+        setSurahList([
+          { no_surat: 1, nm_surat: "Al-Fatihah", arti_surat: "Pembukaan", jml_ayat: 7 },
+          { no_surat: 2, nm_surat: "Al-Baqarah", arti_surat: "Sapi Betina", jml_ayat: 286 },
+          // Add more fallback data here if needed
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching surah list:", error);
+      setError('Failed to connect to the server. Please try again later.');
+      
+      // Fallback to hardcoded data
+      setSurahList([
+        { no_surat: 1, nm_surat: "Al-Fatihah", arti_surat: "Pembukaan", jml_ayat: 7 },
+        { no_surat: 2, nm_surat: "Al-Baqarah", arti_surat: "Sapi Betina", jml_ayat: 286 },
+        { no_surat: 3, nm_surat: "Ali 'Imran", arti_surat: "Keluarga Imran", jml_ayat: 200 },
+        { no_surat: 4, nm_surat: "An-Nisa", arti_surat: "Wanita", jml_ayat: 176 },
+        { no_surat: 5, nm_surat: "Al-Ma'idah", arti_surat: "Hidangan", jml_ayat: 120 },
+        { no_surat: 6, nm_surat: "Al-An'am", arti_surat: "Binatang Ternak", jml_ayat: 165 },
+        { no_surat: 7, nm_surat: "Al-A'raf", arti_surat: "Tempat Tertinggi", jml_ayat: 206 },
+        { no_surat: 8, nm_surat: "Al-Anfal", arti_surat: "Harta Rampasan Perang", jml_ayat: 75 },
+        { no_surat: 9, nm_surat: "At-Tawbah", arti_surat: "Pengampunan", jml_ayat: 129 },
+        { no_surat: 10, nm_surat: "Yunus", arti_surat: "Nabi Yunus", jml_ayat: 109 },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch surah details including metadata
+  const fetchSurahDetails = async (surahId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/quran/surah/${surahId}`);
+      
+      if (response.status === 200) {
+        setSurahDetails(response.data);
+        
+        // Update juz and page information
+        if (response.data.ayahs && response.data.ayahs.length > 0) {
+          setCurrentJuz(response.data.ayahs[0].no_juz || 1);
+          setCurrentHal(response.data.ayahs[0].no_hal || 1);
+        }
+      } else {
+        setError('Failed to fetch surah details');
+      }
+    } catch (error) {
+      console.error("Error fetching surah details:", error);
+      setError('Failed to load surah details');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch specific ayat or range of ayat
+  const fetchAyat = async (surahId, ayatId = null) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let url = `${API_BASE_URL}/quran/surah/${surahId}/ayat`;
+      if (ayatId) {
+        url += `/${ayatId}`;
+      }
+      
+      const response = await axios.get(url);
+      
+      if (response.status === 200) {
+        // Format the data for display
+        setQuranContent(response.data);
+        
+        // Update juz and page if data is available
+        if (response.data && response.data.length > 0) {
+          setCurrentJuz(response.data[0].no_juz || 1);
+          setCurrentHal(response.data[0].no_hal || 1);
+        }
+      } else {
+        setError('Failed to fetch Quranic verses');
+      }
+    } catch (error) {
+      console.error("Error fetching ayat:", error);
+      setError('Failed to load Quranic verses');
+      
+      // Fallback for testing - showing a sample verse
+      if (surahId === "1") {
+        setQuranContent([{
+          no_surat: 1,
+          no_ayat: 1,
+          arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+          tafsir: "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang."
+        }]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch verses by juz
+  const fetchJuz = async (juzId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/quran/juz/${juzId}`);
+      
+      if (response.status === 200) {
+        setQuranContent(response.data);
+        
+        // Update the current juz
+        setCurrentJuz(juzId);
+        
+        // Update the first page from returned data
+        if (response.data && response.data.length > 0) {
+          setCurrentHal(response.data[0].no_hal || 1);
+        }
+      } else {
+        setError('Failed to fetch juz data');
+      }
+    } catch (error) {
+      console.error("Error fetching juz:", error);
+      setError('Failed to load juz data');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Search the Quran for specific text
+  const searchQuran = async (searchQuery) => {
+    if (!searchQuery.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/quran/search`, {
+        params: { q: searchQuery }
+      });
+      
+      if (response.status === 200) {
+        setQuranContent(response.data);
+      } else {
+        setError('Search failed');
+      }
+    } catch (error) {
+      console.error("Error searching Quran:", error);
+      setError('Failed to complete search');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Generate ayat options based on selected surah
   const generateAyatOptions = () => {
     if (!selectedSurah) return [];
     
-    const selectedSurahData = surahList.find(s => s.id === parseInt(selectedSurah));
-    if (!selectedSurahData) return [];
+    const surah = surahList.find(s => s.no_surat === parseInt(selectedSurah));
+    if (!surah) return [];
     
     const ayatOptions = [];
-    for (let i = 1; i <= selectedSurahData.totalAyat; i++) {
+    for (let i = 1; i <= surah.jml_ayat; i++) {
       ayatOptions.push({ value: i.toString(), label: i.toString() });
     }
     return ayatOptions;
@@ -52,14 +218,53 @@ const Dashboard = () => {
   
   // Handle surah selection change
   const handleSurahChange = (e) => {
-    setSelectedSurah(e.target.value);
-    // Reset selected ayat when surah changes
+    const surahId = e.target.value;
+    setSelectedSurah(surahId);
     setSelectedAyat("");
+    
+    if (surahId) {
+      // Fetch surah details
+      fetchSurahDetails(surahId);
+      // Fetch all ayahs of the surah
+      fetchAyat(surahId);
+    } else {
+      // Clear content if no surah is selected
+      setQuranContent([]);
+      setSurahDetails(null);
+    }
   };
   
   // Handle ayat selection change
   const handleAyatChange = (e) => {
-    setSelectedAyat(e.target.value);
+    const ayatId = e.target.value;
+    setSelectedAyat(ayatId);
+    
+    if (selectedSurah && ayatId) {
+      // Fetch specific ayat
+      fetchAyat(selectedSurah, ayatId);
+    } else if (selectedSurah) {
+      // If no specific ayat is selected, fetch all ayahs of the surah
+      fetchAyat(selectedSurah);
+    }
+  };
+  
+  // Handle juz selection
+  const handleJuzChange = (e) => {
+    const juzId = e.target.value;
+    setCurrentJuz(parseInt(juzId));
+    
+    if (juzId) {
+      fetchJuz(juzId);
+    }
+  };
+  
+  // Handle page selection
+  const handlePageChange = (e) => {
+    const pageId = e.target.value;
+    setCurrentHal(parseInt(pageId));
+    
+    // In a real implementation, we would fetch verses by page number
+    // For now, we'll just update the state
   };
   
   // Handle search input change
@@ -71,8 +276,7 @@ const Dashboard = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchText.trim()) {
-      console.log(`Searching for: ${searchText}`);
-      // Implement actual search functionality here
+      searchQuran(searchText);
     }
   };
   
@@ -80,70 +284,6 @@ const Dashboard = () => {
   const navigateToDashboard = () => {
     router.push('/dashboard');
   };
-  
-  // Handle page change
-  const handlePageChange = (e) => {
-    setCurrentHal(parseInt(e.target.value));
-  };
-  
-  // Handle juz change
-  const handleJuzChange = (e) => {
-    setCurrentJuz(parseInt(e.target.value));
-  };
-  
-  // Fetch Quran content (simulated)
-  useEffect(() => {
-    if (selectedSurah && selectedAyat) {
-      setLoading(true);
-      
-      // Simulate API call with timeout
-      setTimeout(() => {
-        // This is placeholder content - replace with actual API call
-        if (selectedSurah === "1") {
-          const arabicText = `
-          بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-
-          ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ
-
-          ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-
-          مَٰلِكِ يَوْمِ ٱلدِّينِ
-
-          إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ
-
-          ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ
-
-          صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ
-          `;
-          setQuranContent(arabicText);
-        } else if (selectedSurah === "2") {
-          const arabicText = `
-          بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-
-          الٓمٓ
-
-          ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ
-
-          ٱلَّذِينَ يُؤْمِنُونَ بِٱلْغَيْبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ وَمِمَّا رَزَقْنَٰهُمْ يُنفِقُونَ
-
-          وَٱلَّذِينَ يُؤْمِنُونَ بِمَآ أُنزِلَ إِلَيْكَ وَمَآ أُنزِلَ مِن قَبْلِكَ وَبِٱلْءَاخِرَةِ هُمْ يُوقِنُونَ
-
-          أُو۟لَٰٓئِكَ عَلَىٰ هُدًى مِّن رَّبِّهِمْ ۖ وَأُو۟لَٰٓئِكَ هُمُ ٱلْمُفْلِحُونَ
-          `;
-          setQuranContent(arabicText);
-        } else {
-          setQuranContent(`بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\n[Surah content for ${selectedSurah}:${selectedAyat} would appear here]`);
-        }
-        
-        // Update juz and hal based on selection
-        // For this example, we're setting mock values based on the surah
-        setCurrentJuz(Math.ceil(parseInt(selectedSurah) / 3));
-        setCurrentHal(parseInt(selectedSurah) * 2);
-        
-        setLoading(false);
-      }, 800);
-    }
-  }, [selectedSurah, selectedAyat]);
 
   if (!isClient) {
     return (
@@ -200,8 +340,8 @@ const Dashboard = () => {
                 >
                   <option value="">Pilih Surat</option>
                   {surahList.map(surah => (
-                    <option key={surah.id} value={surah.id}>
-                      {surah.id}. {surah.name} ({surah.arabicName})
+                    <option key={surah.no_surat} value={surah.no_surat}>
+                      {surah.no_surat}. {surah.nm_surat} ({surah.arti_surat})
                     </option>
                   ))}
                 </select>
@@ -265,7 +405,7 @@ const Dashboard = () => {
                   className="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
                 >
                   <option value="">Hal</option>
-                  {Array.from({ length: 30 }, (_, i) => (
+                  {Array.from({ length: 604 }, (_, i) => (
                     <option key={i+1} value={i+1}>{i+1}</option>
                   ))}
                 </select>
@@ -309,25 +449,43 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 py-6">
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
+            <p>{error}</p>
+          </div>
+        )}
+        
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
           </div>
-        ) : selectedSurah && selectedAyat ? (
+        ) : quranContent && quranContent.length > 0 ? (
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold mb-2">
-                {surahList.find(s => s.id === parseInt(selectedSurah))?.name || 'Surah'}
+                {surahDetails ? surahDetails.nm_surat : 
+                  (surahList.find(s => s.no_surat === parseInt(selectedSurah))?.nm_surat || 'Surah')}
               </h2>
+              {surahDetails && (
+                <p className="text-md text-gray-700 mb-2">{surahDetails.arti_surat}</p>
+              )}
               <p className="text-sm text-gray-600">
                 Juz {currentJuz} • Halaman {currentHal}
               </p>
             </div>
-            <div className="text-right text-2xl leading-loose rtl" dir="rtl">
-              {quranContent.split('\n').map((line, index) => (
-                <p key={index} className={`mb-4 ${line.trim() ? '' : 'hidden'}`}>
-                  {line.trim()}
-                </p>
+            
+            <div className="space-y-6">
+              {quranContent.map((ayat, index) => (
+                <div key={`${ayat.no_surat}-${ayat.no_ayat}`} className="ayat-item">
+                  <div className="flex items-start">
+                    <span className="ayat-number">{ayat.no_ayat}</span>
+                    <div className="flex-1">
+                      <p className="arab">{ayat.arab}</p>
+                      {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
