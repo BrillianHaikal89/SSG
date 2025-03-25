@@ -254,3 +254,260 @@ select {
         padding: 0 1rem;
     }
 }
+
+
+/* ============================== */
+
+
+/* STYLE KHUSUS UNTUK AL-QURAN   */
+
+
+/* ============================== */
+
+
+/* Font Arab untuk Al-Quran */
+
+@font-face {
+    font-family: 'font-arabic';
+    src: url('/fonts/lpmq.ttf') format('truetype');
+}
+
+
+/* Style untuk teks Arab dan terjemahan */
+
+.font-arabic {
+    font-family: 'font-arabic', 'Traditional Arabic', Arial, sans-serif;
+}
+
+.arab {
+    direction: rtl;
+    font-family: 'font-arabic', 'Traditional Arabic', Arial, sans-serif;
+    font-size: 28px;
+    line-height: 185%;
+    font-weight: normal;
+    text-align: right;
+    padding: 10px 0px 5px 0px;
+}
+
+.translation {
+    line-height: 150%;
+    padding: 10px 0px;
+    font-size: 16px;
+}
+
+.ayat-item {
+    border-bottom: 1px solid #CCCCCC;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.ayat-number {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 4px;
+    background-color: #e5f7ed;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    line-height: 24px;
+}
+
+
+/* Audio player styling */
+
+audio {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 4px;
+    margin: 8px 0;
+}
+
+
+/* Scroll to top button */
+
+#btn-back-to-top {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    display: block;
+    z-index: 99;
+    border: none;
+    outline: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 50%;
+    font-size: 18px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+#btn-back-to-top:hover {
+    background-color: #43a047;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Loading spinner */
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #09f;
+    animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* Search form styling */
+
+.search-form {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-form input[type="text"] {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.search-form input[type="text"]:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    outline: none;
+}
+
+.search-form button[type="submit"] {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.search-form button[type="submit"]:hover {
+    background: #43a047;
+}
+
+
+/* Quran progress section */
+
+.quran-progress {
+    background-color: #e8f5e9;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.quran-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.quran-progress-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.quran-progress-item p:first-child {
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.quran-progress-item p:last-child {
+    font-weight: 500;
+    font-size: 16px;
+}
+
+
+/* Surah selector */
+
+.surah-selector {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.surah-selector:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    outline: none;
+}
+
+
+/* Bottom navigation */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    background-color: white;
+    border-top: 1px solid #eee;
+    padding: 8px 0;
+    z-index: 100;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+    color: #888;
+    transition: all 0.3s;
+}
+
+.bottom-nav-item.active {
+    color: #4CAF50;
+}
+
+.bottom-nav-item svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+}
+
+.bottom-nav-item span {
+    font-size: 12px;
+}
