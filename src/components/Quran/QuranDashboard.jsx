@@ -98,9 +98,6 @@ const QuranDashboard = () => {
         searchText={searchText}
         handleSearchChange={handleSearchChange}
         handleSearch={handleSearch}
-        searchText={searchText}
-        handleSearchChange={handleSearchChange}
-        handleSearch={handleSearch}
       />
 
       {/* Desktop Controls */}
@@ -115,6 +112,9 @@ const QuranDashboard = () => {
         handlePageChange={handlePageChange}
         currentJuz={currentJuz}
         handleJuzChange={handleJuzChange}
+        searchText={searchText}
+        handleSearchChange={handleSearchChange}
+        handleSearch={handleSearch}
       />
 
       {/* Information Bar */}
@@ -133,8 +133,6 @@ const QuranDashboard = () => {
           currentHal={currentHal}
         />
       </div>
-
-      {/* Removed the duplicate search bar that was at the bottom */}
 
       {/* Scroll to Top Button */}
       {showScrollTop && (
