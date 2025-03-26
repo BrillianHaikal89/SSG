@@ -31,6 +31,7 @@ const useQuran = () => {
             const data = await quranApi.getSurahList();
             setSurahList(data);
         } catch (error) {
+            console.error(error);
             setError('Failed to fetch surah list');
         } finally {
             setLoading(false);
@@ -52,6 +53,7 @@ const useQuran = () => {
                 setCurrentHal(data.ayahs[0].no_hal ? data.ayahs[0].no_hal.toString() : "");
             }
         } catch (error) {
+            console.error(error);
             setError('Failed to fetch surah details');
         } finally {
             setLoading(false);
@@ -78,6 +80,7 @@ const useQuran = () => {
             // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
+            console.error(error);
             setError('Failed to fetch Quranic verses');
         } finally {
             setLoading(false);
@@ -121,6 +124,7 @@ const useQuran = () => {
             // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
+            console.error(error);
             setError('Failed to load page data');
         } finally {
             setLoading(false);
@@ -158,6 +162,7 @@ const useQuran = () => {
             // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
+            console.error(error);
             setError('Failed to load juz data');
         } finally {
             setLoading(false);
@@ -184,6 +189,7 @@ const useQuran = () => {
             // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
+            console.error(error);
             setError('Failed to complete search');
         } finally {
             setLoading(false);
