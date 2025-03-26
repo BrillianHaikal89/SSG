@@ -2,12 +2,12 @@ import React from 'react';
 
 const AyatSelector = ({ value, onChange, ayatOptions, disabled }) => {
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <select
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-gray-200 disabled:text-gray-500"
+        className="block w-full h-10 appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-gray-200 disabled:text-gray-500"
         aria-label="Select Ayat"
       >
         <option value="">Ayat</option>

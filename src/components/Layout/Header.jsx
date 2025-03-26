@@ -11,19 +11,19 @@ const Header = () => {
 
   return (
     <header className="bg-blue-900 text-white sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3">
+      <div className="container mx-auto px-3 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Image 
               src="/img/logossg_white.png" 
               alt="Logo Santri Siap Guna" 
-              width={36} 
-              height={36} 
+              width={28} 
+              height={28} 
               className="mr-2"
             />
             <h1 className="text-xl font-bold">SANTRI SIAP GUNA</h1>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center">
             <button 
               onClick={navigateToDashboard}
               className="text-white"

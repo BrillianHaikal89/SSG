@@ -7,7 +7,6 @@ import InfoBar from '../Layout/InfoBar';
 import MobileControls from './Controls/MobileControls';
 import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
-import SearchBar from './Controls/SearchBar';
 import useQuran from '../../hooks/useQuran';
 
 const QuranDashboard = () => {
@@ -79,7 +78,7 @@ const QuranDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-blue-100">
       {/* Header */}
       <Header />
 
@@ -117,11 +116,11 @@ const QuranDashboard = () => {
         handleSearch={handleSearch}
       />
 
-      {/* Information Bar */}
+      {/* Information Bar - Now positioned after controls */}
       <InfoBar />
 
       {/* Main Content */}
-      <div className="flex-grow container mx-auto px-4 py-6">
+      <div className="flex-grow container mx-auto px-3 py-4">
         <QuranContent 
           loading={loading}
           error={error}

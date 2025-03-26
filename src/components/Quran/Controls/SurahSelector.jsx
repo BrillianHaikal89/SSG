@@ -2,11 +2,11 @@ import React from 'react';
 
 const SurahSelector = ({ value, onChange, surahList, isMobile }) => {
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <select
         value={value}
         onChange={onChange}
-        className="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
+        className="block w-full h-10 appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
         aria-label="Select Surah"
       >
         <option value="">Pilih Surat</option>

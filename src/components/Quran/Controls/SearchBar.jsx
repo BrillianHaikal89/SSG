@@ -8,7 +8,7 @@ const SearchBar = ({ value, onChange, onSubmit }) => {
         value={value}
         onChange={onChange}
         placeholder="Cari di Al-Qur'an"
-        className="flex-1 appearance-none border rounded-l py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500"
+        className="flex-1 appearance-none border border-gray-300 rounded-l py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500"
         aria-label="Search Quran"
       />
       <button
