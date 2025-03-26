@@ -133,7 +133,7 @@ export default function SSGDashboardPage() {
 
   // Navigation function for Al-Quran
   const navigateToAlQuran = () => {
-    router.push('/dashboard/Al-Quran');
+    router.push('/dashboard/Quran');
   };
 
   // If we're server-side or still loading, show a loading spinner
