@@ -31,13 +31,13 @@ export function validateStep1(data) {
     } else {
         const birthDate = new Date(data.birthDate);
         const minDate = new Date();
-        minDate.setFullYear(minDate.getFullYear() - 100); // 100 tahun yang lalu
+        minDate.setFullYear(minDate.getFullYear() - 50); // 100 tahun yang lalu
 
         const maxDate = new Date();
         maxDate.setFullYear(maxDate.getFullYear() - 17); // Minimal berumur 17 tahun
 
         if (birthDate < minDate || birthDate > maxDate) {
-            errors.birthDate = "Tanggal lahir harus antara 17 hingga 100 tahun yang lalu";
+            errors.birthDate = "Tanggal lahir harus antara 17 hingga 50 tahun yang lalu";
         }
     }
 

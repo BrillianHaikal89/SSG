@@ -8,9 +8,6 @@ import useAuthStore from '../../stores/authStore';
 
 export default function SignInPage() {
   const router = useRouter();
-  
-  // =========== STATE MANAGEMENT ===========
-  // Get Zustand store functions
   const { login, checkAuth } = useAuthStore();
   
   // Login form state
@@ -25,140 +22,80 @@ export default function SignInPage() {
   // Notification state
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
+  const [notificationType, setNotificationType] = useState('success');
   
-  // Handle client-side rendering
   useEffect(() => {
     setIsClient(true);
-    
-    // Debug the current state when component mounts
     console.log("Login page mounted, auth store state:", useAuthStore.getState());
   }, []);
   
-  // Check if user is already logged in on mount, and redirect if so
   useEffect(() => {
-    // Only run this check on the client side
     if (isClient && checkAuth()) {
       console.log("Already authenticated, redirecting to dashboard");
       router.push('/dashboard');
     }
   }, [checkAuth, router, isClient]);
   
-  // Load Cloudflare Turnstile script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
-  
-  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
   
-  // Form submissions
   async function handleLoginSubmit(e) {
     e.preventDefault();
     setIsLoading(true);
     setLoginError('');
     
     try {
-      // Get turnstile token if it exists
-      const turnstileResponse = document.querySelector('.cf-turnstile') ? 
-        document.querySelector('[name="cf-turnstile-response"]')?.value : null;
+      console.log('Login attempt:', { phoneNumber, password });
       
-      // Call login API directly
       const response = await fetch('http://localhost:3333/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        credentials: 'include', // Penting untuk mengirim cookies
         body: JSON.stringify({
           nomor_hp: phoneNumber,
-          password,
-          turnstileToken: turnstileResponse
+          password
         })
       });
       
+      console.log('Response status:', response.status);
       const responseData = await response.json();
+      console.log('Response data:', responseData);
       
       if (response.ok) {
-        // Show success notification
         setNotificationType('success');
         setNotificationMessage('Login berhasil! Mengalihkan ke dashboard...');
         setShowNotification(true);
         
-        console.log("Login successful, response data:", responseData);
+        const userData = {
+          nomor_hp: phoneNumber,
+          name: `User ${phoneNumber.substring(phoneNumber.length - 4)}`,
+          nama: `User ${phoneNumber.substring(phoneNumber.length - 4)}`,
+          userId: responseData.userId
+        };
         
-        // Prepare user data with fallback for name if not provided from API
-        let userData = responseData.user || { nomor_hp: phoneNumber };
-        
-        // If API doesn't provide a name, set a default name based on phone number
-        if (!userData.nama && !userData.name) {
-          userData = {
-            ...userData,
-            nama: `User ${phoneNumber.substring(phoneNumber.length - 4)}`,
-            name: `User ${phoneNumber.substring(phoneNumber.length - 4)}`
-          };
-        }
-        
-        // Ensure both name and nama properties exist
-        if (userData.nama && !userData.name) {
-          userData.name = userData.nama;
-        } else if (userData.name && !userData.nama) {
-          userData.nama = userData.name;
-        }
-        
-        // Store user data in Zustand store
         login(userData, responseData.token, responseData.userId);
         
-        // Save to localStorage/sessionStorage as well for backup
         localStorage.setItem('currentUser', JSON.stringify(userData));
         sessionStorage.setItem('currentUser', JSON.stringify(userData));
         
-        // Verify the store was updated correctly
-        console.log("Store state after login:", useAuthStore.getState());
-        
-        // Add a slight delay before redirecting to allow the notification to be visible
-        // and ensure store is properly updated
         setTimeout(() => {
-          // Redirect to dashboard
-          console.log("Redirecting to dashboard after login");
           router.push('/dashboard');
         }, 1500);
       } else {
-        // Handle specific error cases
-        if (response.status === 401 || response.status === 400) {
-          setLoginError('Nomor HP atau kata sandi tidak valid.');
-          setNotificationType('error');
-          setNotificationMessage('Nomor HP atau kata sandi tidak valid.');
-          setShowNotification(true);
-        } else if (response.status === 403) {
-          setLoginError('Verifikasi keamanan gagal. Silakan coba lagi.');
-          setNotificationType('error');
-          setNotificationMessage('Verifikasi keamanan gagal.');
-          setShowNotification(true);
-        } else {
-          setLoginError(responseData.message || 'Terjadi kesalahan saat login. Silakan coba lagi.');
-          setNotificationType('error');
-          setNotificationMessage('Terjadi kesalahan saat login.');
-          setShowNotification(true);
-        }
+        setLoginError(responseData.message || 'Login gagal');
+        setNotificationType('error');
+        setNotificationMessage(responseData.message || 'Login gagal');
+        setShowNotification(true);
       }
     } catch (error) {
-      console.error("Error during login process:", error);
-      setLoginError('Gagal terhubung ke server. Silakan coba lagi nanti.');
+      console.error("Login error:", error);
+      setLoginError('Gagal terhubung ke server');
       setNotificationType('error');
-      setNotificationMessage('Gagal terhubung ke server. Silakan coba lagi nanti.');
+      setNotificationMessage('Gagal terhubung ke server');
       setShowNotification(true);
     } finally {
       setIsLoading(false);
