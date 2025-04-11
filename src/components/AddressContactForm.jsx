@@ -11,18 +11,22 @@ const AddressContactForm = ({
   isLoadingData,
   goBackToStep1,
   handleSubmit,
-  handleKodePosChange
+  handleKodePosChange,
+  addressFromStep1,
+  handleSameAddressChange
 }) => {
   const { 
     alamatDomisili, rtDomisili, rwDomisili, kodePosStep2, 
     kelurahanStep2, kecamatanStep2, kotaStep2, provinsiStep2,
-    email, nomorHp, aktivasi, kataSandi, konfirmasiKataSandi, persetujuanSyarat
+    email, nomorHp, kataSandi, konfirmasiKataSandi, persetujuanSyarat,
+    isSameAddress
   } = formData;
   
   const { 
     setAlamatDomisili, setRtDomisili, setRwDomisili, setKodePosStep2,
     setKelurahanStep2, setKecamatanStep2, setKotaStep2, setProvinsiStep2,
-    setEmail, setNomorHp, setAktivasi, setKataSandi, setKonfirmasiKataSandi, setPersetujuanSyarat
+    setEmail, setNomorHp, setKataSandi, setKonfirmasiKataSandi, setPersetujuanSyarat,
+    setIsSameAddress
   } = setters;
   
   const { 
@@ -45,7 +49,7 @@ const AddressContactForm = ({
             </div>
           </div>
           <div className="flex justify-between w-full max-w-md mt-1 text-xs">
-          <span className="text-gray-400">Data Pribadi</span>
+            <span className="text-gray-400">Data Pribadi</span>
             <span className="text-blue-900 font-medium">Data Alamat</span>
           </div>
         </div>
@@ -58,6 +62,20 @@ const AddressContactForm = ({
           />
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            {/* Same Address Checkbox */}
+            <div className="flex items-start mb-2">
+              <input
+                id="isSameAddress"
+                type="checkbox"
+                checked={isSameAddress}
+                onChange={handleSameAddressChange}
+                className="mr-2 mt-1"
+              />
+              <label htmlFor="isSameAddress" className="text-sm">
+                Alamat domisili sama dengan alamat KTP
+              </label>
+            </div>
+
             <FormField
               id="alamatDomisili"
               label="ALAMAT DOMISILI"
@@ -67,6 +85,8 @@ const AddressContactForm = ({
               onChange={(e) => setAlamatDomisili(e.target.value)}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
+              readOnly={isSameAddress}
+              additionalClassName={isSameAddress ? "bg-gray-100" : ""}
             />
             
             <div className="grid grid-cols-2 gap-4">
@@ -80,6 +100,8 @@ const AddressContactForm = ({
                 maxLength={3}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
+                readOnly={isSameAddress}
+                additionalClassName={isSameAddress ? "bg-gray-100" : ""}
               />
               
               <FormField
@@ -92,6 +114,8 @@ const AddressContactForm = ({
                 maxLength={3}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
+                readOnly={isSameAddress}
+                additionalClassName={isSameAddress ? "bg-gray-100" : ""}
               />
             </div>
             
@@ -105,6 +129,8 @@ const AddressContactForm = ({
               maxLength={5}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
+              readOnly={isSameAddress}
+              additionalClassName={isSameAddress ? "bg-gray-100" : ""}
             />
             
             {isLoadingData && (
@@ -127,8 +153,8 @@ const AddressContactForm = ({
                 onChange={(e) => setKelurahanStep2(e.target.value)}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
-                readOnly={kelurahanStep2 ? true : false}
-                additionalClassName={kelurahanStep2 ? "bg-gray-100" : ""}
+                readOnly={kelurahanStep2 || isSameAddress}
+                additionalClassName={(kelurahanStep2 || isSameAddress) ? "bg-gray-100" : ""}
               />
               
               <FormField
@@ -140,8 +166,8 @@ const AddressContactForm = ({
                 onChange={(e) => setKecamatanStep2(e.target.value)}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
-                readOnly={kecamatanStep2 ? true : false}
-                additionalClassName={kecamatanStep2 ? "bg-gray-100" : ""}
+                readOnly={kecamatanStep2 || isSameAddress}
+                additionalClassName={(kecamatanStep2 || isSameAddress) ? "bg-gray-100" : ""}
               />
             </div>
             
@@ -155,8 +181,8 @@ const AddressContactForm = ({
                 onChange={(e) => setKotaStep2(e.target.value)}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
-                readOnly={kotaStep2 ? true : false}
-                additionalClassName={kotaStep2 ? "bg-gray-100" : ""}
+                readOnly={kotaStep2 || isSameAddress}
+                additionalClassName={(kotaStep2 || isSameAddress) ? "bg-gray-100" : ""}
               />
               
               <FormField
@@ -168,8 +194,8 @@ const AddressContactForm = ({
                 onChange={(e) => setProvinsiStep2(e.target.value)}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
-                readOnly={provinsiStep2 ? true : false}
-                additionalClassName={provinsiStep2 ? "bg-gray-100" : ""}
+                readOnly={provinsiStep2 || isSameAddress}
+                additionalClassName={(provinsiStep2 || isSameAddress) ? "bg-gray-100" : ""}
               />
             </div>
 
@@ -195,17 +221,6 @@ const AddressContactForm = ({
               placeholder="Nomor HP"
               value={nomorHp}
               onChange={(e) => setNomorHp(e.target.value.replace(/\D/g, '').slice(0, 13))}
-              formSubmitted={formSubmitted}
-              formErrors={formErrors}
-            />
-            
-            <FormField
-              id="aktivasi"
-              label="AKTIVASI"
-              type="text"
-              placeholder="Pekerjaan/Mahasiswa/Yang lainnya"
-              value={aktivasi}
-              onChange={(e) => setAktivasi(e.target.value)}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
             />

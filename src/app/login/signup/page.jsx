@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PersonalDataForm from '../../../components/PersonalDataForm';
 import AddressContactForm from '../../../components/AddressContactForm';
+import BannerSide from '../../../components/BannerSide';
+import MobileFooter from '../../../components/MobileFooter';
 
 const SignupPage = () => {
   const router = useRouter();
@@ -35,6 +37,7 @@ const SignupPage = () => {
   const [provinsi, setProvinsi] = useState('');
   
   // Address & Contact Data (Step 2)
+  const [isSameAddress, setIsSameAddress] = useState(false);
   const [alamatDomisili, setAlamatDomisili] = useState('');
   const [rtDomisili, setRtDomisili] = useState('');
   const [rwDomisili, setRwDomisili] = useState('');
@@ -45,12 +48,39 @@ const SignupPage = () => {
   const [provinsiStep2, setProvinsiStep2] = useState('');
   const [email, setEmail] = useState('');
   const [nomorHp, setNomorHp] = useState('');
-  const [aktivasi, setAktivasi] = useState('');
   const [kataSandi, setKataSandi] = useState('');
   const [konfirmasiKataSandi, setKonfirmasiKataSandi] = useState('');
   const [persetujuanSyarat, setPersetujuanSyarat] = useState(false);
   
-  // Handle postal code lookup (reusable function)
+  // Handle Same Address Checkbox
+  const handleSameAddressChange = (e) => {
+    const isChecked = e.target.checked;
+    setIsSameAddress(isChecked);
+    
+    if (isChecked) {
+      // Copy address data from Step 1 to Step 2
+      setAlamatDomisili(address);
+      setRtDomisili(rt);
+      setRwDomisili(rw);
+      setKodePosStep2(kodePos);
+      setKelurahanStep2(kelurahan);
+      setKecamatanStep2(kecamatan);
+      setKotaStep2(kota);
+      setProvinsiStep2(provinsi);
+    } else {
+      // Clear the fields if unchecked
+      setAlamatDomisili('');
+      setRtDomisili('');
+      setRwDomisili('');
+      setKodePosStep2('');
+      setKelurahanStep2('');
+      setKecamatanStep2('');
+      setKotaStep2('');
+      setProvinsiStep2('');
+    }
+  };
+  
+  // Generic function to handle postal code lookup
   const handleKodePosLookup = async (postalCode, setters) => {
     if (!postalCode || postalCode.length !== 5) {
       // Clear address fields if postal code is incomplete
@@ -106,6 +136,36 @@ const SignupPage = () => {
     }
   };
   
+  // Handle postal code change for Step 1
+  const handleKodePosChangeStep1 = (e) => {
+    const newValue = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
+    setKodePos(newValue);
+    
+    handleKodePosLookup(newValue, {
+      setKelurahan,
+      setKecamatan,
+      setKota,
+      setProvinsi,
+      errorKey: 'kodePos'
+    });
+  };
+  
+  // Handle postal code change for Step 2
+  const handleKodePosChangeStep2 = (e) => {
+    if (isSameAddress) return; // Don't allow changes if same address is checked
+    
+    const newValue = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
+    setKodePosStep2(newValue);
+    
+    handleKodePosLookup(newValue, {
+      setKelurahan: setKelurahanStep2,
+      setKecamatan: setKecamatanStep2,
+      setKota: setKotaStep2,
+      setProvinsi: setProvinsiStep2,
+      errorKey: 'kodePosStep2'
+    });
+  };
+  
   // Handle Step 1 submission (Personal Data)
   const handleStep1Submit = (e) => {
     e.preventDefault();
@@ -134,6 +194,11 @@ const SignupPage = () => {
       // Proceed to step 2
       setSignupStep(2);
       setFormSubmitted(false);
+      
+      // If same address is checked, copy address from step 1
+      if (isSameAddress) {
+        handleSameAddressChange({ target: { checked: true } });
+      }
     }
   };
   
@@ -154,7 +219,6 @@ const SignupPage = () => {
     if (!provinsiStep2) errors.provinsiStep2 = "Provinsi harus diisi";
     if (!email) errors.email = "Email harus diisi";
     if (!nomorHp) errors.nomorHp = "Nomor HP harus diisi";
-    if (!aktivasi) errors.aktivasi = "Aktivasi harus diisi";
     if (!kataSandi) errors.kataSandi = "Kata sandi harus diisi";
     if (kataSandi !== konfirmasiKataSandi) errors.konfirmasiKataSandi = "Konfirmasi kata sandi tidak cocok";
     if (!persetujuanSyarat) errors.persetujuanSyarat = "Anda harus menyetujui syarat dan ketentuan";
@@ -193,10 +257,7 @@ const SignupPage = () => {
           provinsi_domisili: provinsiStep2,
           email: email,
           nomor_hp: nomorHp,
-          aktivasi: aktivasi,
-          password: kataSandi,
-          // Default values
-          agama: 'Islam'
+          password: kataSandi
         };
         
         // Send registration request to server
@@ -244,34 +305,6 @@ const SignupPage = () => {
     setSignupStep(1);
     setFormSubmitted(false);
   };
-  
-  // Handle postal code change for Step 1
-  const handleKodePosChangeStep1 = (e) => {
-    const newValue = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
-    setKodePos(newValue);
-    
-    handleKodePosLookup(newValue, {
-      setKelurahan,
-      setKecamatan,
-      setKota,
-      setProvinsi,
-      errorKey: 'kodePos'
-    });
-  };
-  
-  // Handle postal code change for Step 2
-  const handleKodePosChangeStep2 = (e) => {
-    const newValue = e.target.value.replace(/[^0-9]/g, '').substring(0, 5);
-    setKodePosStep2(newValue);
-    
-    handleKodePosLookup(newValue, {
-      setKelurahan: setKelurahanStep2,
-      setKecamatan: setKecamatanStep2,
-      setKota: setKotaStep2,
-      setProvinsi: setProvinsiStep2,
-      errorKey: 'kodePosStep2'
-    });
-  };
 
   return (
     <div className="flex min-h-screen">
@@ -298,12 +331,14 @@ const SignupPage = () => {
             formData={{ 
               alamatDomisili, rtDomisili, rwDomisili, kodePosStep2, 
               kelurahanStep2, kecamatanStep2, kotaStep2, provinsiStep2,
-              email, nomorHp, aktivasi, kataSandi, konfirmasiKataSandi, persetujuanSyarat
+              email, nomorHp, kataSandi, konfirmasiKataSandi, persetujuanSyarat,
+              isSameAddress
             }}
             setters={{ 
               setAlamatDomisili, setRtDomisili, setRwDomisili, setKodePosStep2,
               setKelurahanStep2, setKecamatanStep2, setKotaStep2, setProvinsiStep2,
-              setEmail, setNomorHp, setAktivasi, setKataSandi, setKonfirmasiKataSandi, setPersetujuanSyarat
+              setEmail, setNomorHp, setKataSandi, setKonfirmasiKataSandi, setPersetujuanSyarat,
+              setIsSameAddress
             }}
             passwordVisibility={{
               showPassword, setShowPassword,
@@ -315,50 +350,19 @@ const SignupPage = () => {
             goBackToStep1={goBackToStep1}
             handleSubmit={handleStep2Submit}
             handleKodePosChange={handleKodePosChangeStep2}
+            addressFromStep1={{
+              address, rt, rw, kodePos, kelurahan, kecamatan, kota, provinsi
+            }}
+            handleSameAddressChange={handleSameAddressChange}
           />
         )}
       </div>
       
       {/* Right side - Blue banner */}
-      <div className="hidden md:flex md:w-1/2 bg-blue-900 justify-center items-center p-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-white mb-2">
-            {signupStep === 1 ? "Gabung Sekarang" : "Satu Langkah Lagi"}
-          </h2>
-          <p className="text-white text-sm mb-6">
-            {signupStep === 1 
-              ? "Lengkapi data diri anda sesuai KTP" 
-              : "Lengkapi alamat dan kontak anda"}
-          </p>
-          
-          <div className="flex justify-center space-x-2 mb-8">
-            <div className={`w-3 h-3 rounded-full ${signupStep === 1 ? 'bg-white' : 'bg-white/50'}`}></div>
-            <div className={`w-3 h-3 rounded-full ${signupStep === 2 ? 'bg-white' : 'bg-white/50'}`}></div>
-          </div>
-          
-          <button
-            type="button"
-            className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
-            onClick={() => router.push('/login')}
-          >
-            Sudah punya akun? Masuk
-          </button>
-        </div>
-      </div>
+      <BannerSide signupStep={signupStep} />
       
       {/* Mobile-only footer for login link */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-100 p-4 text-center border-t border-gray-200">
-        <div className="text-sm text-gray-600">
-          Sudah punya akun?{" "}
-          <button 
-            type="button"
-            className="text-blue-800 font-medium"
-            onClick={() => router.push('/login')}
-          >
-            Masuk
-          </button>
-        </div>
-      </div>
+      <MobileFooter />
     </div>
   );
 };
