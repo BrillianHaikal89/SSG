@@ -34,6 +34,29 @@ const AddressContactForm = ({
     showConfirmPassword, setShowConfirmPassword 
   } = passwordVisibility;
 
+  // Format nomor HP untuk mengganti awalan 0 dengan 62
+  const handlePhoneNumberChange = (e) => {
+    let value = e.target.value;
+    
+    // Hapus karakter non-digit
+    value = value.replace(/\D/g, '');
+    
+    // Jika nomor dimulai dengan "0", ubah menjadi "62"
+    if (value.startsWith('0')) {
+      value = '62' + value.substring(1);
+    }
+    
+    // Jika nomor belum diawali dengan "62" dan tidak kosong, tambahkan "62"
+    if (!value.startsWith('62') && value.length > 0) {
+      value = '62' + value;
+    }
+    
+    // Batasi panjang maksimal (13 digit setelah kode negara)
+    value = value.slice(0, 15);
+    
+    setNomorHp(value);
+  };
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
@@ -214,16 +237,29 @@ const AddressContactForm = ({
               formErrors={formErrors}
             />
             
-            <FormField
-              id="nomorHp"
-              label="NOMOR HP"
-              type="tel"
-              placeholder="Nomor HP"
-              value={nomorHp}
-              onChange={(e) => setNomorHp(e.target.value.replace(/\D/g, '').slice(0, 13))}
-              formSubmitted={formSubmitted}
-              formErrors={formErrors}
-            />
+            {/* Nomor HP dengan penanganan khusus untuk format 62 */}
+            <div className="mb-3">
+              <label htmlFor="nomorHp" className="block text-xs font-medium text-gray-500 uppercase mb-1">
+                NOMOR HP <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="nomorHp"
+                  name="nomorHp"
+                  type="tel"
+                  value={nomorHp}
+                  onChange={handlePhoneNumberChange}
+                  placeholder="Contoh: 628123456789"
+                  className={`appearance-none block w-full px-3 py-2 border ${formSubmitted && formErrors.nomorHp ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm`}
+                />
+              </div>
+              {formSubmitted && formErrors.nomorHp && (
+                <p className="mt-1 text-xs text-red-500">{formErrors.nomorHp}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Nomor HP diawali dengan 62 (kode negara Indonesia)
+              </p>
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="mb-3">
