@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
@@ -8,7 +8,54 @@ import useAuthStore from '../../../stores/authStore';
 export default function MutabahYaumiyahPage() {
   const router = useRouter();
   const { user, userId } = useAuthStore();
+  const [currentDateTime, setCurrentDateTime] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
+  
+  // State for selected date
+  const [selectedDate, setSelectedDate] = useState(today);
+  
+  // Generate past 7 days dates for selection
+  const [dateOptions, setDateOptions] = useState([]);
+
+  useEffect(() => {
+    // Generate array of past 7 days + today
+    const generateDateOptions = () => {
+      const options = [];
+      const currentDate = new Date();
+      
+      // Add today
+      options.push({
+        value: currentDate.toISOString().split('T')[0],
+        label: formatDateForDisplay(currentDate)
+      });
+      
+      // Add past 7 days
+      for (let i = 1; i <= 7; i++) {
+        const pastDate = new Date();
+        pastDate.setDate(currentDate.getDate() - i);
+        options.push({
+          value: pastDate.toISOString().split('T')[0],
+          label: formatDateForDisplay(pastDate)
+        });
+      }
+      
+      return options;
+    };
+    
+    setDateOptions(generateDateOptions());
+  }, []);
+
+  const formatDateForDisplay = (date) => {
+    return date.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   const [formData, setFormData] = useState({
     date: today,
@@ -27,6 +74,90 @@ export default function MutabahYaumiyahPage() {
     menyimak_mq_pagi: 0
   });
 
+  // Update current date and time only on client-side
+  useEffect(() => {
+    // Only run on client-side
+    setCurrentDateTime(new Date());
+
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Handle date change
+  const handleDateChange = (e) => {
+    const newDate = e.target.value;
+    setSelectedDate(newDate);
+    setFormData(prev => ({
+      ...prev,
+      date: newDate
+    }));
+    
+    // Check for existing data
+    checkExistingData(newDate);
+  };
+  
+  // Function to check if data exists for selected date
+  const checkExistingData = async (date) => {
+    try {
+      // First check localStorage for offline data
+      const storageKey = `mutabaah_${user?.userId}_${date}`;
+      const localData = localStorage.getItem(storageKey);
+      
+      if (localData) {
+        try {
+          const parsedData = JSON.parse(localData);
+          setFormData(parsedData);
+          toast.info('Data ditemukan dari penyimpanan lokal');
+          return;
+        } catch (parseError) {
+          console.error('Error parsing local data:', parseError);
+        }
+      }
+      
+      // Reset form but keep the date
+      setFormData({
+        date: date,
+        sholat_wajib: 0,
+        sholat_tahajud: 0,
+        sholat_dhuha: 0,
+        sholat_rawatib: 0,
+        sholat_sunnah_lainnya: 0,
+        tilawah_quran: 0,
+        terjemah_quran: 0,
+        shaum_sunnah: 0,
+        shodaqoh: 0,
+        dzikir_pagi_petang: 0,
+        istighfar_1000x: 0,
+        sholawat_100x: 0,
+        menyimak_mq_pagi: 0
+      });
+      
+    } catch (error) {
+      console.error('Error checking existing data:', error);
+      
+      // In case of error, reset the form but keep the date
+      setFormData({
+        date: date,
+        sholat_wajib: 0,
+        sholat_tahajud: 0,
+        sholat_dhuha: 0,
+        sholat_rawatib: 0,
+        sholat_sunnah_lainnya: 0,
+        tilawah_quran: 0,
+        terjemah_quran: 0,
+        shaum_sunnah: 0,
+        shodaqoh: 0,
+        dzikir_pagi_petang: 0,
+        istighfar_1000x: 0,
+        sholawat_100x: 0,
+        menyimak_mq_pagi: 0
+      });
+    }
+  };
+
   const handleInputChange = (field, value) => {
     // Convert input to number and ensure it's not negative
     const numValue = Math.max(0, parseInt(value) || 0);
@@ -36,37 +167,138 @@ export default function MutabahYaumiyahPage() {
     }));
   };
 
-  const handleRouteBacke = () =>{
+  const handleRouteBack = () => {
     router.push('/dashboard');
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (isSubmitting) {
+      return; // Prevent multiple submissions
+    }
+    
+    setIsSubmitting(true);
+    
     try {
-      const response = await fetch('http://localhost:3333/api/users/input-my', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Save to localStorage as a fallback
+      const storageKey = `mutabaah_${user?.userId}_${formData.date}`;
+      localStorage.setItem(storageKey, JSON.stringify(formData));
+      
+      try {
+        const requestData = {
           user_id: user?.userId,
           ...formData
-        }),
-      });
+        };
+        
+        console.log("Submitting data:", requestData);
+        
+        const response = await fetch('http://localhost:3333/api/users/input-my', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+          credentials: 'include',
+        });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || 'Gagal menyimpan data');
+        console.log("Response status:", response.status);
+        
+        let result = {};
+        let responseText = '';
+        
+        try {
+          // First try to get the response as text
+          responseText = await response.text();
+          console.log("Raw response:", responseText);
+          
+          // Try to parse as JSON if possible
+          if (responseText) {
+            try {
+              result = JSON.parse(responseText);
+              console.log("Parsed JSON result:", result);
+            } catch (jsonError) {
+              console.error("Failed to parse JSON:", jsonError);
+              // Keep the result as empty object, text is already saved
+            }
+          }
+        } catch (responseError) {
+          console.error("Error getting response:", responseError);
+        }
+        
+        if (!response.ok) {
+          // If we get here, there was an HTTP error
+          console.error('Server returned error status:', response.status);
+          
+          // Try to get a message from the response
+          let errorMessage = 'Terjadi kesalahan server. Silakan coba lagi nanti.';
+          
+          if (result && typeof result === 'object') {
+            if (result.message) {
+              errorMessage = result.message;
+            } else if (result.error) {
+              errorMessage = result.error;
+            }
+          }
+          
+          // Check if it's a database error
+          if (responseText.includes('ECONNREFUSED') || 
+              responseText.includes('database') ||
+              response.status === 500) {
+            toast.success('Data telah disimpan di browser Anda. Server database sedang tidak tersedia.');
+            router.push('/dashboard');
+            return;
+          }
+          
+          throw new Error(errorMessage);
+        }
+        
+        // Success path
+        toast.success(result.message || 'Data Mutabaah Yaumiyah berhasil disimpan!');
+        router.push('/dashboard');
+        
+      } catch (apiError) {
+        // Handle network errors or failed requests
+        console.error('API call error:', apiError);
+        
+        if (apiError.message.includes('Failed to fetch') || 
+            apiError.message.includes('NetworkError') ||
+            apiError.message.includes('Network request failed')) {
+          toast.warning('Server tidak tersedia. Data telah disimpan sementara di browser Anda.');
+          router.push('/dashboard');
+          return;
+        }
+        
+        throw apiError; // Re-throw for the outer catch block
       }
       
-      toast.success(result.message || 'Data Mutabaah Yaumiyah berhasil disimpan!');
-      router.push('/dashboard');
     } catch (error) {
-      toast.error(error.message || 'Gagal menyimpan data');
-      console.error('Error:', error);
+      console.error('Complete error:', error);
+      toast.error(error.message || 'Gagal menyimpan data. Silakan coba lagi.');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Format time with leading zeros
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit'
+    });
+  };
+
+  // Format date in Indonesian locale
+  const formatDate = (date) => {
+    if (!date) return '';
+    return date.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -77,21 +309,36 @@ export default function MutabahYaumiyahPage() {
           <h1 className="text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
           <p className="text-center mt-2">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium mt-1">{user?.name || 'Pengguna'}</p>
+          
+          {/* Real-time Date and Time */}
+          {currentDateTime && (
+            <div className="text-center mt-2">
+              <p className="text-sm">{formatDate(currentDateTime)}</p>
+              <p className="text-lg font-bold">{formatTime(currentDateTime)}</p>
+            </div>
+          )}
         </div>
 
         <div className="p-6">
-          {/* Form Tanggal */}
+          {/* Date Selection */}
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
-              Tanggal
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Pilih Tanggal Input:
             </label>
-            <input
-              type="date"
-              id="date"
-              value={formData.date}
-              onChange={(e) => setFormData({...formData, date: e.target.value})}
+            <select
+              value={selectedDate}
+              onChange={handleDateChange}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
+            >
+              {dateOptions.map((option, index) => (
+                <option key={index} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-gray-500 italic mt-1">
+              Pilih tanggal untuk mengisi data Mutaba'ah Yaumiyah yang terlewat (hingga 7 hari ke belakang).
+            </p>
           </div>
 
           {/* Bagian 1.1 - Sholat Wajib dan Sunnah */}
@@ -155,16 +402,22 @@ export default function MutabahYaumiyahPage() {
           <div className="flex justify-end mt-6">
             <button
               onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 mr-8"
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+              } text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 mr-8`}
             >
-              Simpan
+              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
             </button>
 
             <button
-              onClick={handleRouteBacke}
-              className="bg-red-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150"
+              onClick={handleRouteBack}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+              } text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150`}
             >
-              kembali
+              Kembali
             </button>
           </div>
         </div>

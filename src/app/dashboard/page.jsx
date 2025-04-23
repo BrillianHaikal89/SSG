@@ -117,7 +117,7 @@ export default function SSGDashboardPage() {
     try {
       // Show success notification
       setNotificationType('success');
-      setNotificationMessage('Logout berhasil! Mengalihkan ke halaman login...');
+      setNotificationMessage('Logout berhasil!');
       setShowNotification(true);
       
       // Add a slight delay before clearing session and redirecting

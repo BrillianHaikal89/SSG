@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
-const RequiredDocumentsForm = () => {``
+const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran'];
@@ -47,35 +47,59 @@ const RequiredDocumentsForm = () => {``
       description: "Unggah foto KTP/Kartu Pelajar",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "ktp" // Backend field name
+      backendType: "ktp"
     },
     pasFoto: {
       label: "Pas Foto",
       description: "Unggah pas foto terbaru (3x4, latar belakang merah/biru)",
       formats: "JPG atau PNG",
       maxSize: "1MB",
-      backendType: "pas_foto" // Backend field name
+      backendType: "pas_foto"
     },
     suratIzin: {
       label: "Surat Izin Orang Tua/Wali",
       description: "Unggah surat izin yang telah ditandatangani",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "surat_izin" // Backend field name
+      backendType: "surat_izin"
     },
     suratSehat: {
       label: "Surat Keterangan Sehat",
       description: "Unggah surat keterangan sehat dari dokter",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "surat_kesehatan" // Backend field name
+      backendType: "surat_kesehatan"
     },
     buktiPembayaran: {
       label: "Bukti Pembayaran",
       description: "Unggah bukti transfer atau pembayaran",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "bukti_pembayaran" // Backend field name
+      backendType: "bukti_pembayaran"
+    }
+  };
+
+  // Separate function to safely store document metadata
+  const safelyStoreDocumentMetadata = (documentType, file, dataUrl) => {
+    try {
+      const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
+      
+      // Store only essential metadata, not the full data URL
+      const metadata = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        uploadDate: new Date().toISOString(),
+        // Store a truncated preview or hash instead of full data URL
+        preview: dataUrl ? dataUrl.substring(0, 100) : null
+      };
+
+      currentDocs[documentType] = metadata;
+      localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
+    } catch (error) {
+      console.error('Error storing document metadata:', error);
+      // Optional: Show a toast or handle the error
+      toast.error('Tidak dapat menyimpan metadata dokumen');
     }
   };
 
@@ -123,7 +147,7 @@ const RequiredDocumentsForm = () => {``
         toast.success(result.message || "Semua dokumen berhasil dikirim!");
         
         // Clear localStorage and state after successful submission
-        localStorage.removeItem('requiredDocuments');
+        localStorage.removeItem('requiredDocumentsMetadata');
         setDocuments({
           ktp: null,
           pasFoto: null,
@@ -149,61 +173,63 @@ const RequiredDocumentsForm = () => {``
     }
   };
 
- // Load documents from localStorage on component mount
-useEffect(() => {
-  const fetchUserDocuments = async () => {
-    try {
-      const res = await fetch(`http://localhost:3333/api/users/user-files?userId=${user.userId}`);
-      if (!res.ok) throw new Error("Gagal mengambil data dokumen");
+  // Load documents from localStorage on component mount
+  useEffect(() => {
+    // Attempt to load metadata from localStorage
+    const storedMetadata = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
+    
+    const fetchUserDocuments = async () => {
+      try {
+        const res = await fetch(`http://localhost:3333/api/users/user-files?userId=${user.userId}`);
+        if (!res.ok) throw new Error("Gagal mengambil data dokumen");
 
-      const data = await res.json();
-      const initialPreviews = { ...previews };
-      const initialDocuments = { ...documents };
+        const data = await res.json();
+        const initialPreviews = { ...previews };
+        const initialDocuments = { ...documents };
 
-      // Periksa apakah respons memiliki array 'files'
-      if (data.files && Array.isArray(data.files)) {
-        // Loop melalui files yang diterima dari API
-        data.files.forEach(file => {
-          // Mapping dari backend file_type ke docType di frontend
-          const backendToFrontendMap = {
-            'ktp': 'ktp',
-            'pas_foto': 'pasFoto',
-            'surat_izin': 'suratIzin',
-            'surat_kesehatan': 'suratSehat',
-            'bukti_pembayaran': 'buktiPembayaran'
-          };
-
-          const frontendDocType = backendToFrontendMap[file.file_type];
-          
-          if (frontendDocType) {
-            initialPreviews[frontendDocType] = file.drive_link;
-            initialDocuments[frontendDocType] = {
-              name: file.file_name,
-              type: file.file_name.endsWith('.pdf') ? 'application/pdf' : 
-                   file.file_name.endsWith('.png') ? 'image/png' : 
-                   file.file_name.endsWith('.jpg') || file.file_name.endsWith('.jpeg') ? 'image/jpeg' : 
-                   'application/octet-stream',
-              fromServer: true,
-              url: file.drive_link
+        // Periksa apakah respons memiliki array 'files'
+        if (data.files && Array.isArray(data.files)) {
+          // Loop melalui files yang diterima dari API
+          data.files.forEach(file => {
+            // Mapping dari backend file_type ke docType di frontend
+            const backendToFrontendMap = {
+              'ktp': 'ktp',
+              'pas_foto': 'pasFoto',
+              'surat_izin': 'suratIzin',
+              'surat_kesehatan': 'suratSehat',
+              'bukti_pembayaran': 'buktiPembayaran'
             };
-          }
-        });
 
-        setPreviews(initialPreviews);
-        setDocuments(initialDocuments);
+            const frontendDocType = backendToFrontendMap[file.file_type];
+            
+            if (frontendDocType) {
+              initialPreviews[frontendDocType] = file.drive_link;
+              initialDocuments[frontendDocType] = {
+                name: file.file_name,
+                type: file.file_name.endsWith('.pdf') ? 'application/pdf' : 
+                     file.file_name.endsWith('.png') ? 'image/png' : 
+                     file.file_name.endsWith('.jpg') || file.file_name.endsWith('.jpeg') ? 'image/jpeg' : 
+                     'application/octet-stream',
+                fromServer: true,
+                url: file.drive_link
+              };
+            }
+          });
+
+          setPreviews(initialPreviews);
+          setDocuments(initialDocuments);
+        }
+      } catch (err) {
+        console.error("Fetch document error:", err);
       }
-    } catch (err) {
-      console.error("Fetch document error:", err);
+    };
+
+    // Panggil fetchUserDocuments jika user sudah login
+    if (user?.userId) {
+      fetchUserDocuments();
     }
-  };
-
-  // Panggil fetchUserDocuments jika user sudah login
-  if (user?.userId) {
-    fetchUserDocuments();
-  }
-}, [user]);
-  
-
+  }, [user]);
+    
   const handleFileChange = (e, documentType) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -220,18 +246,8 @@ useEffect(() => {
       
       setPreviews(prev => ({ ...prev, [documentType]: dataUrl }));
   
-      // Save to localStorage
-      const currentDocs = JSON.parse(localStorage.getItem('requiredDocuments') || '{}');
-      localStorage.setItem('requiredDocuments', JSON.stringify({
-        ...currentDocs,
-        [documentType]: {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          uploadDate: new Date().toISOString(),
-          dataUrl: dataUrl
-        }
-      }));
+      // Use the new safe metadata storage method
+      safelyStoreDocumentMetadata(documentType, file, dataUrl);
     };
   
     reader.readAsDataURL(file);
@@ -250,10 +266,15 @@ useEffect(() => {
       [documentType]: null
     }));
     
-    // Update localStorage
-    const currentDocs = JSON.parse(localStorage.getItem('requiredDocuments') || '{}');
+    // Update localStorage metadata
+    const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
     delete currentDocs[documentType];
-    localStorage.setItem('requiredDocuments', JSON.stringify(currentDocs));
+    
+    try {
+      localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
+    } catch (error) {
+      console.error('Error updating localStorage:', error);
+    }
     
     // Clear file input
     if (fileInputRefs[documentType].current) {
@@ -329,41 +350,82 @@ useEffect(() => {
         {/* Document preview/info */}
         {documents[currentDocType] && (
           <div className="mt-3">
-            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-              <div className="flex items-center">
-                {previews[currentDocType] && documents[currentDocType].type.startsWith('image/') && (
-                  <img 
-                    src={previews[currentDocType]} 
-                    className="w-12 h-12 rounded-md mr-3" 
-                    alt={documentTypes[currentDocType].label}
-                  />
-                )}
-                <div>
-                  <p className="text-sm font-medium">
-                    {documents[currentDocType].name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatFileSize(documents[currentDocType].size)} • 
-                    {new Date().toLocaleDateString('id-ID')}
-                  </p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  {/* Icon sesuai dengan tipe file */}
+                  <div className="p-2 bg-blue-100 rounded-md text-blue-600">
+                    {documents[currentDocType].type.startsWith('image/') ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M416l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {documents[currentDocType].name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatFileSize(documents[currentDocType].size)} • {new Date().toLocaleDateString('id-ID')}
+                    </p>
+                  </div>
                 </div>
+                
+                <button 
+                  onClick={() => handleDeleteDocument(currentDocType)}
+                  className="p-1 hover:bg-red-100 rounded-full text-red-500 hover:text-red-700 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
+              
+              {/* Preview section */}
               {previews[currentDocType] && (
-  <div className="mt-4">
-    {typeof previews[currentDocType] === 'string' && (
-      <a href={previews[currentDocType]} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-        Lihat Dokumen
-      </a>
-    )}
-  </div>
-)}
-
-              <button 
-                onClick={() => handleDeleteDocument(currentDocType)}
-                className="text-red-500 hover:text-red-700 text-sm"
-              >
-                Hapus
-              </button>
+                <div className="mt-2">
+                  {/* Preview for images */}
+                  {documents[currentDocType].type.startsWith('image/') && (
+                    <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
+                      <img 
+                        src={previews[currentDocType]} 
+                        className="w-full h-auto max-h-64 object-contain mx-auto" 
+                        alt={documentTypes[currentDocType].label}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Preview for PDF and other files */}
+                  {!documents[currentDocType].type.startsWith('image/') && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                  )}
+                  
+                  {/* View Document Button */}
+                  <div className="mt-3 flex justify-center">
+                    <a 
+                      href={typeof previews[currentDocType] === 'string' ? previews[currentDocType] : '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Lihat Dokumen
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
