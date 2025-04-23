@@ -13,6 +13,10 @@ export default function SSGDashboardPage() {
   const [isClient, setIsClient] = useState(false);
   // const { verify } = useAuthStore();
 
+  const navigateToMY = () => {
+    router.push('/dashboard/my'); // Ganti dengan route yang sesuai
+  };
+
   useEffect(() => {
     if (verify === 0) {
       router.replace('/verify-otp');
@@ -401,7 +405,7 @@ export default function SSGDashboardPage() {
             </div>
             
             {/* MY */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center" onClick={navigateToMY}>
               <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />

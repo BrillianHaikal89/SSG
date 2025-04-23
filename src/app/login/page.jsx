@@ -105,8 +105,6 @@ const normalizedUser = {
 
 // Update auth store
 login(normalizedUser, token, userId);
-
-  
       // Show success notification
       setNotificationType('success');
       setNotificationMessage(`${responseData.message}`);

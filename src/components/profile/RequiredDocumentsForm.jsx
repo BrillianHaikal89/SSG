@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
-const RequiredDocumentsForm = () => {
+const RequiredDocumentsForm = () => {``
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran'];
@@ -149,51 +149,60 @@ const RequiredDocumentsForm = () => {
     }
   };
 
-  // Load documents from localStorage on component mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedDocuments = JSON.parse(localStorage.getItem('requiredDocuments') || '{}');
-        
-        const initialPreviews = { ...previews };
-        const initialDocuments = { ...documents };
-        
-        // Load both previews and document metadata from localStorage
-        Object.keys(documentTypes).forEach(type => {
-          if (storedDocuments[type]?.dataUrl) {
-            initialPreviews[type] = storedDocuments[type].dataUrl;
-            
-            // Create a File object from stored data if possible
-            if (storedDocuments[type].dataUrl && storedDocuments[type].name && storedDocuments[type].type) {
-              // Convert dataURL to Blob
-              const dataUrlParts = storedDocuments[type].dataUrl.split(',');
-              const contentType = dataUrlParts[0].split(':')[1].split(';')[0];
-              const byteString = atob(dataUrlParts[1]);
-              const arrayBuffer = new ArrayBuffer(byteString.length);
-              const uint8Array = new Uint8Array(arrayBuffer);
-              
-              for (let i = 0; i < byteString.length; i++) {
-                uint8Array[i] = byteString.charCodeAt(i);
-              }
-              
-              const blob = new Blob([arrayBuffer], { type: contentType });
-              const file = new File([blob], storedDocuments[type].name, { 
-                type: storedDocuments[type].type,
-                lastModified: new Date().getTime()
-              });
-              
-              initialDocuments[type] = file;
-            }
+ // Load documents from localStorage on component mount
+useEffect(() => {
+  const fetchUserDocuments = async () => {
+    try {
+      const res = await fetch(`http://localhost:3333/api/users/user-files?userId=${user.userId}`);
+      if (!res.ok) throw new Error("Gagal mengambil data dokumen");
+
+      const data = await res.json();
+      const initialPreviews = { ...previews };
+      const initialDocuments = { ...documents };
+
+      // Periksa apakah respons memiliki array 'files'
+      if (data.files && Array.isArray(data.files)) {
+        // Loop melalui files yang diterima dari API
+        data.files.forEach(file => {
+          // Mapping dari backend file_type ke docType di frontend
+          const backendToFrontendMap = {
+            'ktp': 'ktp',
+            'pas_foto': 'pasFoto',
+            'surat_izin': 'suratIzin',
+            'surat_kesehatan': 'suratSehat',
+            'bukti_pembayaran': 'buktiPembayaran'
+          };
+
+          const frontendDocType = backendToFrontendMap[file.file_type];
+          
+          if (frontendDocType) {
+            initialPreviews[frontendDocType] = file.drive_link;
+            initialDocuments[frontendDocType] = {
+              name: file.file_name,
+              type: file.file_name.endsWith('.pdf') ? 'application/pdf' : 
+                   file.file_name.endsWith('.png') ? 'image/png' : 
+                   file.file_name.endsWith('.jpg') || file.file_name.endsWith('.jpeg') ? 'image/jpeg' : 
+                   'application/octet-stream',
+              fromServer: true,
+              url: file.drive_link
+            };
           }
         });
-        
+
         setPreviews(initialPreviews);
         setDocuments(initialDocuments);
-      } catch (error) {
-        console.error("Error loading documents:", error);
       }
+    } catch (err) {
+      console.error("Fetch document error:", err);
     }
-  }, []);
+  };
+
+  // Panggil fetchUserDocuments jika user sudah login
+  if (user?.userId) {
+    fetchUserDocuments();
+  }
+}, [user]);
+  
 
   const handleFileChange = (e, documentType) => {
     const file = e.target.files[0];
@@ -339,6 +348,16 @@ const RequiredDocumentsForm = () => {
                   </p>
                 </div>
               </div>
+              {previews[currentDocType] && (
+  <div className="mt-4">
+    {typeof previews[currentDocType] === 'string' && (
+      <a href={previews[currentDocType]} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+        Lihat Dokumen
+      </a>
+    )}
+  </div>
+)}
+
               <button 
                 onClick={() => handleDeleteDocument(currentDocType)}
                 className="text-red-500 hover:text-red-700 text-sm"
