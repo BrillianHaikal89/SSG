@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster position="top-right"/>
+        <Toaster position="top-center"/>
         <HydrationHandler>
           {children}
         </HydrationHandler>

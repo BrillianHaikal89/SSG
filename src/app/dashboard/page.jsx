@@ -17,6 +17,13 @@ export default function SSGDashboardPage() {
     router.push('/dashboard/my'); // Ganti dengan route yang sesuai
   };
 
+  const navigateToECard = () => {
+    router.push('/dashboard/ecard'); // Ganti dengan route yang sesuai
+  };
+
+  const navigateToPeserta = () => {
+    router.push('/dashboard/peserta'); // Ganti dengan route yang sesuai
+  };
   useEffect(() => {
     if (verify === 0) {
       router.replace('/verify-otp');
@@ -338,6 +345,13 @@ export default function SSGDashboardPage() {
             <p className="text-xs text-gray-700">Kegiatan Bakti Sosial di Masjid Agung Sumedang</p>
             <p className="text-xs text-gray-500 mt-1">15 Maret 2025</p>
           </div>
+          
+          {role === '1a' && (
+          <div className="mt-2 p-3 bg-green-600 rounded-lg">
+          <p className="font-medium text-sm text-white">Selamat kamu menjadi peserta Ssg</p>
+        </div>
+        )}
+          
         </div>
 
         {/* Quick Access */}
@@ -413,15 +427,27 @@ export default function SSGDashboardPage() {
               </div>
               <span className="text-xs text-gray-600">MY</span>
             </div>
+
             
             {/* E-Card */}
-            <div className="flex flex-col items-center">
+            { role === '1a' && (
+              <div className="flex flex-col items-center" onClick={navigateToECard}>
               <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
               <span className="text-xs text-gray-600">E-Card</span>
+            </div>
+            )}
+            
+           <div className="flex flex-col items-center" onClick={navigateToPeserta}>
+           <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+             </svg>
+            </div>
+           <span className="text-xs text-gray-600">Peserta</span>
             </div>
           </div>
         </div>

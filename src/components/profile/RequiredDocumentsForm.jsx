@@ -7,7 +7,8 @@ import toast from 'react-hot-toast';
 const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran'];
+  // Add digital signature to document types order
+  const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran', 'digitalSignature'];
   const currentDocType = docTypesOrder[currentStep];
   const { user } = useAuthStore();
   const [documents, setDocuments] = useState({
@@ -15,21 +16,24 @@ const RequiredDocumentsForm = () => {
     pasFoto: null,
     suratIzin: null,
     suratSehat: null,
-    buktiPembayaran: null
+    buktiPembayaran: null,
+    digitalSignature: null
   });
   const [previews, setPreviews] = useState({
     ktp: null,
     pasFoto: null,
     suratIzin: null,
     suratSehat: null,
-    buktiPembayaran: null
+    buktiPembayaran: null,
+    digitalSignature: null
   });
   const [uploadingStatus, setUploadingStatus] = useState({
     ktp: false,
     pasFoto: false,
     suratIzin: false,
     suratSehat: false,
-    buktiPembayaran: false
+    buktiPembayaran: false,
+    digitalSignature: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRefs = {
@@ -37,8 +41,15 @@ const RequiredDocumentsForm = () => {
     pasFoto: useRef(null),
     suratIzin: useRef(null),
     suratSehat: useRef(null),
-    buktiPembayaran: useRef(null)
+    buktiPembayaran: useRef(null),
+    digitalSignature: useRef(null)
   };
+  
+  // Signature pad reference
+  const signaturePadRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [signatureExists, setSignatureExists] = useState(false);
 
   // Document type labels and descriptions
   const documentTypes = {
@@ -76,7 +87,138 @@ const RequiredDocumentsForm = () => {
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
       backendType: "bukti_pembayaran"
+    },
+    digitalSignature: {
+      label: "Tanda Tangan Digital",
+      description: "Buat tanda tangan digital atau unggah file tanda tangan Anda",
+      formats: "JPG atau PNG",
+      maxSize: "1MB",
+      backendType: "digital_signature"
     }
+  };
+
+  // Initialize signature canvas when it's the current step
+  useEffect(() => {
+    if (currentDocType === 'digitalSignature' && canvasRef.current && !documents.digitalSignature) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      
+      // Set initial canvas style
+      context.lineWidth = 2;
+      context.lineCap = 'round';
+      context.strokeStyle = '#000000';
+      
+      // Clear canvas with white background
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }, [currentDocType, documents.digitalSignature]);
+
+  // Signature pad event handlers
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    
+    // Get mouse/touch position
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    context.beginPath();
+    context.moveTo(
+      clientX - rect.left,
+      clientY - rect.top
+    );
+    
+    setIsDrawing(true);
+    setSignatureExists(true);
+  };
+  
+  const draw = (e) => {
+    if (!isDrawing) return;
+    
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    
+    // Get mouse/touch position
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    context.lineTo(
+      clientX - rect.left,
+      clientY - rect.top
+    );
+    context.stroke();
+  };
+  
+  const stopDrawing = () => {
+    if (isDrawing) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      context.closePath();
+      setIsDrawing(false);
+    }
+  };
+  
+  const clearSignature = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    // Clear canvas with white background
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    setSignatureExists(false);
+    
+    // Also clear any saved signature
+    setDocuments(prev => ({
+      ...prev,
+      digitalSignature: null
+    }));
+    
+    setPreviews(prev => ({
+      ...prev,
+      digitalSignature: null
+    }));
+  };
+  
+  const saveSignature = () => {
+    if (!signatureExists) {
+      toast.error("Harap buat tanda tangan terlebih dahulu");
+      return;
+    }
+    
+    const canvas = canvasRef.current;
+    
+    // Convert canvas to blob
+    canvas.toBlob((blob) => {
+      // Create a File object from the blob
+      const signatureFile = new File([blob], "signature.png", { type: "image/png" });
+      
+      // Store the signature file in the documents state
+      setDocuments(prev => ({
+        ...prev,
+        digitalSignature: signatureFile
+      }));
+      
+      // Store the signature preview
+      const dataUrl = canvas.toDataURL("image/png");
+      setPreviews(prev => ({
+        ...prev,
+        digitalSignature: dataUrl
+      }));
+      
+      // Save metadata
+      safelyStoreDocumentMetadata('digitalSignature', signatureFile, dataUrl);
+      
+      toast.success("Tanda tangan berhasil disimpan");
+    });
   };
 
   // Separate function to safely store document metadata
@@ -114,7 +256,7 @@ const RequiredDocumentsForm = () => {
     }
   
     const formData = new FormData();
-    formData.append('id', user.userId);
+    // formData.append('id', user.userId);
   
     // Add all files to formData with the same field name "files"
     // The order matches the expected order in the backend
@@ -135,13 +277,13 @@ const RequiredDocumentsForm = () => {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch("http://localhost:3333/api/users/upload-files", {
+      const response = await fetch(`http://localhost:3333/api/users/upload-files?id=${user.userId}`, {
         method: "POST",
         body: formData
       });
   
       setIsSubmitting(false);
-
+      
       if (response.ok) {
         const result = await response.json();
         toast.success(result.message || "Semua dokumen berhasil dikirim!");
@@ -153,21 +295,23 @@ const RequiredDocumentsForm = () => {
           pasFoto: null,
           suratIzin: null,
           suratSehat: null,
-          buktiPembayaran: null
+          buktiPembayaran: null,
+          digitalSignature: null
         });
         setPreviews({
           ktp: null,
           pasFoto: null,
           suratIzin: null,
           suratSehat: null,
-          buktiPembayaran: null
+          buktiPembayaran: null,
+          digitalSignature: null
         });
         setCurrentStep(0);
       } else {
-        throw new Error(await response.text());
+        const errorData = await response.json();
+        toast.error(errorData.message || "Gagal mengupload dokumen");
       }
     } catch (err) {
-      console.error("Upload error:", err);
       toast.error(err.message || "Terjadi kesalahan saat mengupload");
       setIsSubmitting(false);
     }
@@ -197,7 +341,8 @@ const RequiredDocumentsForm = () => {
               'pas_foto': 'pasFoto',
               'surat_izin': 'suratIzin',
               'surat_kesehatan': 'suratSehat',
-              'bukti_pembayaran': 'buktiPembayaran'
+              'bukti_pembayaran': 'buktiPembayaran',
+              'digital_signature': 'digitalSignature'
             };
 
             const frontendDocType = backendToFrontendMap[file.file_type];
@@ -319,7 +464,7 @@ const RequiredDocumentsForm = () => {
             <p className="text-xs text-gray-400">Format: {documentTypes[currentDocType].formats} (Maks: {documentTypes[currentDocType].maxSize})</p>
           </div>
           
-          {!documents[currentDocType] && (
+          {!documents[currentDocType] && currentDocType !== 'digitalSignature' && (
             <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer ${uploadingStatus[currentDocType] ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} text-white`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
@@ -335,6 +480,23 @@ const RequiredDocumentsForm = () => {
               />
             </label>
           )}
+
+          {/* For digital signature, show upload option as an alternative */}
+          {!documents[currentDocType] && currentDocType === 'digitalSignature' && (
+            <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer bg-gray-500 hover:bg-gray-600 text-white`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+              </svg>
+              Unggah Tanda Tangan
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={(e) => handleFileChange(e, 'digitalSignature')} 
+                accept="image/jpeg,image/png"
+                ref={fileInputRefs.digitalSignature}
+              />
+            </label>
+          )}
         </div>
         
         {/* Uploading indicator */}
@@ -343,6 +505,43 @@ const RequiredDocumentsForm = () => {
             <p className="text-xs text-gray-500 mb-1">Mengunggah...</p>
             <div className="w-full bg-gray-200 rounded-full h-1.5">
               <div className="bg-blue-600 h-1.5 rounded-full animate-pulse w-full"></div>
+            </div>
+          </div>
+        )}
+        
+        {/* Digital Signature Canvas - Only show if current step is digitalSignature and no signature is uploaded yet */}
+        {currentDocType === 'digitalSignature' && !documents.digitalSignature && (
+          <div className="mt-6">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+              <p className="text-sm text-center text-gray-500 mb-3">Buat tanda tangan digital Anda di bawah ini</p>
+              
+              <canvas
+                ref={canvasRef}
+                className="w-full h-64 border border-gray-300 bg-white rounded cursor-crosshair touch-none"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              
+              <div className="flex justify-center mt-4 space-x-3">
+                <button
+                  onClick={clearSignature}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  Hapus
+                </button>
+                <button
+                  onClick={saveSignature}
+                  disabled={!signatureExists}
+                  className={`px-4 py-2 rounded-md text-sm font-medium text-white ${signatureExists ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-400 cursor-not-allowed'}`}
+                >
+                  Simpan Tanda Tangan
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -357,7 +556,7 @@ const RequiredDocumentsForm = () => {
                   <div className="p-2 bg-blue-100 rounded-md text-blue-600">
                     {documents[currentDocType].type.startsWith('image/') ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M416l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     ) : (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -368,7 +567,7 @@ const RequiredDocumentsForm = () => {
                   
                   <div>
                     <p className="text-sm font-medium text-gray-800">
-                      {documents[currentDocType].name}
+                      {documents[currentDocType].name || (currentDocType === 'digitalSignature' ? 'Tanda Tangan Digital.png' : 'Document')}
                     </p>
                     <p className="text-xs text-gray-500">
                       {formatFileSize(documents[currentDocType].size)} • {new Date().toLocaleDateString('id-ID')}
