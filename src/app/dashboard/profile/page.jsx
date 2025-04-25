@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 // Use dynamic import with no SSR to prevent hydration issues
 const ProfilePage = () => {
   const router = useRouter();
-  const { user, checkAuth } = useAuthStore();
+  const { user, checkAuth, role } = useAuthStore();
   const [userData, setUserData] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -61,7 +61,9 @@ const ProfilePage = () => {
       <PersonalInfoForm initialData={userData} />
       <HealthInfoForm initialData={userData} />
       <RequiredDocumentsForm initialData={userData} />
-      <AgreementSignatureForm initialData={userData} />
+      { role === '0a' && (
+        <AgreementSignatureForm initialData={userData} />
+      )}
     </ProfileLayout>
   );
 };
