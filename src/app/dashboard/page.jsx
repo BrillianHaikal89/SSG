@@ -1,11 +1,13 @@
 "use client";
-
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '../../stores/authStore';
-import Dashboard from '../../components/dashboard';
+import Dashboard from '../../components/Dashboard';
 
 export default function SSGDashboardPage() {
+const MySwal = withReactContent(Swal);
   const router = useRouter();
   const { user, userId, logout, checkAuth, verify, role } = useAuthStore();
   const [userData, setUserData] = useState(null);
@@ -29,6 +31,10 @@ export default function SSGDashboardPage() {
   const navigateToPeserta = () => {
     router.push('/dashboard/peserta');
   };
+
+  const navigateToScan = () => {
+    router.push('/dashboard/scan');
+  }
   
   const navigateToProfile = () => {
     router.push('/dashboard/profile');
@@ -135,29 +141,59 @@ export default function SSGDashboardPage() {
       }, 3000);
     }
   };
-
   // Handle logout using Zustand store
-  const handleLogout = () => {
-    try {
-      // Show success notification
-      setNotificationType('success');
-      setNotificationMessage('Logout berhasil!');
-      setShowNotification(true);
-      
-      // Add a slight delay before clearing session and redirecting
-      setTimeout(() => {
-        // Call logout function from Zustand store
-        logout();
-        router.push('/login');
-      }, 1500);
-    } catch (error) {
-      console.error("Error during logout process:", error);
-      // Show error notification
-      setNotificationType('error');
-      setNotificationMessage('Gagal logout. Silakan coba lagi.');
-      setShowNotification(true);
+const handleLogout = () => {
+  MySwal.fire({
+    title: 'Yakin ingin logout?',
+    text: "Anda perlu login kembali untuk mengakses sistem",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Ya, Logout!',
+    cancelButtonText: 'Batal',
+    backdrop: `
+      rgba(0,0,123,0.4)
+      url("/images/nyan-cat.gif")
+      left top
+      no-repeat
+    `
+  }).then((result) => {
+    if (result.isConfirmed) {
+      try {
+        MySwal.fire({
+          title: 'Logging out...',
+          timer: 1500,
+          timerProgressBar: true,
+          didOpen: () => {
+            MySwal.showLoading();
+          }
+        }).then(() => {
+          // Call logout function from Zustand store
+          logout();
+          router.push('/login');
+          
+          // Optional: Show success toast after redirect
+          MySwal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Logout berhasil!',
+            showConfirmButton: false,
+            timer: 3000
+          });
+        });
+      } catch (error) {
+        console.error("Error during logout process:", error);
+        MySwal.fire({
+          icon: 'error',
+          title: 'Gagal logout',
+          text: 'Silakan coba lagi',
+        });
+      }
     }
-  };
+  });
+};
 
   // If we're server-side or still loading, show a loading spinner
   if (!isClient || loading) {
@@ -178,6 +214,7 @@ export default function SSGDashboardPage() {
     <Dashboard 
       userData={userData}
       loading={loading}
+      navigateToScan ={navigateToScan}
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}
       navigateToPeserta={navigateToPeserta}

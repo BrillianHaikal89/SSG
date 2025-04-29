@@ -2,11 +2,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, RefreshCw, Filter, Download, ChevronLeft, ChevronRight, Eye, Check, Power, AlertCircle } from 'lucide-react';
+import { Search, RefreshCw, Filter, Download, ChevronLeft, ChevronRight, Eye, Check, Power, AlertCircle, FileText, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +20,17 @@ export default function UsersManagement() {
   const [activatingUser, setActivatingUser] = useState(null);
 
   const handleGoBack = () => {
-    // Gunakan history API untuk kembali ke halaman sebelumnya
     window.history.back();
+  };
+  
+  // File type display names
+  const fileTypeNames = {
+    'ktp': 'KTP',
+    'pas_foto': 'Pas Foto',
+    'surat_izin': 'Surat Izin',
+    'surat_kesehatan': 'Surat Kesehatan',
+    'bukti_pembayaran': 'Bukti Pembayaran',
+    'tertanda': 'Tanda Tangan'
   };
   
   // Fetch users data
@@ -31,6 +41,7 @@ export default function UsersManagement() {
         setIsRefreshing(true);
       }
       
+      // Fetch users data
       const response = await fetch('http://localhost:3333/api/users');
       
       if (!response.ok) {
@@ -38,6 +49,7 @@ export default function UsersManagement() {
       }
       
       const data = await response.json();
+      console.log("datanya : " , data);
       
       // Process and combine user data with flag status
       const processedData = data.data.map((user, index) => {
@@ -52,6 +64,13 @@ export default function UsersManagement() {
       });
       
       setUsers(processedData);
+      
+      // Fetch files data separately or mock it for now
+      // For example purposes, I'll use the "file" key from your provided response
+      if (data.file) {
+        setFiles(data.file);
+      }
+      
       setError(null);
     } catch (err) {
       setError(`Failed to fetch users: ${err.message}`);
@@ -80,46 +99,56 @@ export default function UsersManagement() {
     return null;
   };
 
+  // Get user files
+  const getUserFiles = (userId) => {
+    return files.filter(file => file.user_id === userId);
+  };
+
+  // Check if user has submitted all required documents
+  const hasAllDocuments = (userId) => {
+    const userFiles = getUserFiles(userId);
+    const requiredTypes = ['ktp', 'pas_foto', 'surat_izin', 'surat_kesehatan', 'bukti_pembayaran'];
+    return requiredTypes.every(type => userFiles.some(file => file.file_type === type));
+  };
+
   // Activate user function
-  // Activate user function
-const activateUser = async (userId) => {
-  setActivatingUser(userId);
-  try {
-    // API call to activate user with the correct endpoint
-    const response = await fetch(`http://localhost:3333/api/admin/activate?user_id=${userId}`, {
-      method: 'POST', // Ubah ke POST jika endpoint mengharapkan POST
-      headers: {
-        'Content-Type': 'application/json',
+  const activateUser = async (userId) => {
+    setActivatingUser(userId);
+    try {
+      // API call to activate user with the correct endpoint
+      const response = await fetch(`http://localhost:3333/api/admin/activate?user_id=${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
       }
-      // Tidak perlu body karena parameter sudah di URL query
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      
+      const resData = await response.json();
+      console.log('Response from activation:', resData);
+      toast.success(resData.message || 'User activated successfully');
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, flag_status: "1" } : user
+        )
+      );
+      
+      // If detail modal is open, update selected user too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser(prev => ({...prev, flag_status: "1"}));
+      }
+      fetchUsers();
+    } catch (err) {
+      console.error(`Failed to activate user: ${err.message}`);
+      toast.error(`Failed to activate user: ${err.message}`);
+    } finally {
+      setActivatingUser(null);
     }
-    
-    const resData = await response.json();
-    console.log('Response from activation:', resData);
-    toast.success(resData.message || 'User activated successfully');
-    // Update local state
-    setUsers(prevUsers => 
-      prevUsers.map(user => 
-        user.id === userId ? { ...user, flag_status: "1" } : user
-      )
-    );
-    
-    // Jika ada modal detail yang terbuka, update selected user juga
-    if (selectedUser && selectedUser.id === userId) {
-      setSelectedUser(prev => ({...prev, flag_status: "1"}));
-    }
-    fetchUsers();
-  } catch (err) {
-    console.error(`Failed to activate user: ${err.message}`);
-    alert(`Failed to activate user: ${err.message}`);
-  } finally {
-    setActivatingUser(null);
-  }
-};
+  };
 
   // Handle sorting
   const requestSort = (key) => {
@@ -139,6 +168,13 @@ const activateUser = async (userId) => {
       month: 'long',
       year: 'numeric'
     });
+  };
+
+  // View file function (link to Google Drive)
+  const viewFile = (fileId) => {
+    console.log("file id :" , fileId)
+    if (!fileId) return;
+    window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank');
   };
 
   // Open user detail modal
@@ -210,7 +246,7 @@ const activateUser = async (userId) => {
       'Kabupaten/Kota', 'Provinsi', 'Nomor HP', 'Golongan Darah',
       'Domisili Alamat', 'Domisili RT', 'Domisili RW', 'Domisili Kode Pos',
       'Domisili Kelurahan/Desa', 'Domisili Kecamatan', 'Domisili Kabupaten/Kota',
-      'Domisili Provinsi', 'Status Aktivasi'
+      'Domisili Provinsi', 'Status Aktivasi', 'Dokumen Lengkap'
     ];
     
     const csvContent = [
@@ -219,6 +255,7 @@ const activateUser = async (userId) => {
         const flagStatus = getUserFlagStatus(user);
         const activationStatus = flagStatus === 'active' ? 'Aktif' : 
                                 flagStatus === 'inactive' ? 'Tidak Aktif' : 'Belum Memperbaharui Dokumen';
+        const documentsComplete = hasAllDocuments(user.id) ? 'Lengkap' : 'Belum Lengkap';
         
         return [
           user.nama_lengkap || '',
@@ -244,7 +281,8 @@ const activateUser = async (userId) => {
           user.domisili_kecamatan || '',
           user.domisili_kabupaten_kota || '',
           user.domisili_provinsi || '',
-          activationStatus
+          activationStatus,
+          documentsComplete
         ].join(',');
       })
     ].join('\n');
@@ -259,6 +297,27 @@ const activateUser = async (userId) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Function to get file icon based on file extension
+  const getFileIcon = (fileName) => {
+    if (!fileName) return null;
+    
+    const extension = fileName.split('.').pop().toLowerCase();
+    
+    if (['png', 'jpg', 'jpeg', 'gif'].includes(extension)) {
+      return '📷';
+    } else if (['pdf'].includes(extension)) {
+      return '📄';
+    } else if (['zip', 'rar'].includes(extension)) {
+      return '📦';
+    } else if (['json', 'txt'].includes(extension)) {
+      return '📝';
+    } else if (['pptx'].includes(extension)) {
+      return '📊';
+    }
+    
+    return '📁';
   };
 
   return (
@@ -417,6 +476,14 @@ const activateUser = async (userId) => {
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       <div className="flex items-center">
+                        Dokumen
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
                         Status
                       </div>
                     </th>
@@ -434,6 +501,8 @@ const activateUser = async (userId) => {
                   {currentUsers.length > 0 ? (
                     currentUsers.map((user, index) => {
                       const flagStatus = getUserFlagStatus(user);
+                      const userFiles = getUserFiles(user.id);
+                      const hasComplete = hasAllDocuments(user.id);
                       
                       return (
                         <tr key={index} className="hover:bg-gray-50">
@@ -470,6 +539,26 @@ const activateUser = async (userId) => {
                             {user.nomor_hp || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
+                            {userFiles.length > 0 ? (
+                              hasComplete ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  <Check size={14} className="mr-1" />
+                                  Lengkap
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  <AlertTriangle size={14} className="mr-1" />
+                                  Belum Lengkap
+                                </span>
+                              )
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <AlertTriangle size={14} className="mr-1" />
+                                Belum Ada
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             {flagStatus === 'active' ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <Check size={14} className="mr-1" />
@@ -482,7 +571,7 @@ const activateUser = async (userId) => {
                               </span>
                             ) : (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Belum Memperbaharui Dokumen
+                                Belum Update
                               </span>
                             )}
                           </td>
@@ -511,7 +600,7 @@ const activateUser = async (userId) => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="7" className="px-6 py-10 text-center text-gray-500">
+                      <td colSpan="8" className="px-6 py-10 text-center text-gray-500">
                         {searchTerm ? 'Tidak ada pengguna yang sesuai dengan pencarian' : 'Tidak ada data pengguna'}
                       </td>
                     </tr>
@@ -596,221 +685,220 @@ const activateUser = async (userId) => {
       {showDetailModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-800">Detail Pengguna</h3>
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Detail Pengguna</h3>
               <button 
                 onClick={closeDetailModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-500"
               >
-                &times;
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
-            <div className="p-6">
-              <div className="mb-4">
-                {/* User status info */}
-                {(() => {
-                  const flagStatus = getUserFlagStatus(selectedUser);
-                  if (flagStatus === 'active') {
-                    return (
-                      <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
-                        <Check size={20} className="text-green-600 mr-2" />
-                        <span className="text-green-800">Pengguna ini sudah jadi peserta SSG</span>
-                      </div>
-                    );
-                  } else if (flagStatus === 'inactive') {
-                    return (
-                      <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                        <div className="flex items-center">
-                          <AlertCircle size={20} className="text-red-600 mr-2" />
-                          <span className="text-red-800">Pengguna ini belum jadi peserta SSG</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            activateUser(selectedUser.id);
-                            closeDetailModal();
-                          }}
-                          className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                        >
-                          Aktivasi Sekarang
-                        </button>
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
-                        <div className="flex items-center">
-                          <AlertCircle size={20} className="text-gray-600 mr-2" />
-                          <span className="text-gray-800">Belum Memperbaharui Dokumen</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            activateUser(selectedUser.id);
-                            closeDetailModal();
-                          }}
-                          className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                        >
-                          Aktivasi Sekarang
-                        </button>
-                      </div>
-                    );
-                  }
-                })()}
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Left Column - Personal Info */}
-                <div className="w-full md:w-1/2">
-                  <h4 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Informasi Pribadi</h4>
-                  
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-600 block">Nama Lengkap</span>
-                    <span className="text-base text-gray-800">{selectedUser.nama_lengkap || 'N/A'}</span>
-                  </div>
-
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-600 block">NIK</span>
-                    <span className="text-base text-gray-800">{selectedUser.nik || 'N/A'}</span>
-                  </div>
-
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-600 block">Tempat, Tanggal Lahir</span>
-                    <span className="text-base text-gray-800">
-                      {selectedUser.tempat_lahir || 'N/A'}, {formatDate(selectedUser.tanggal_lahir)}
-                    </span>
-                  </div>
-
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-600 block">Jenis Kelamin</span>
-                    <span className="text-base text-gray-800">
-                      {selectedUser.jenis_kelamin === 'L' ? 'Laki-laki' : 
-                      selectedUser.jenis_kelamin === 'P' ? 'Perempuan' : 'N/A'}
-                    </span>
-                  </div>
-
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-600 block">Golongan Darah</span>
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      selectedUser.golongan_darah === 'A' ? 'bg-green-100 text-green-800' : 
-                      selectedUser.golongan_darah === 'B' ? 'bg-blue-100 text-blue-800' : 
-                      selectedUser.golongan_darah === 'AB' ? 'bg-purple-100 text-purple-800' : 
-                      selectedUser.golongan_darah === 'O' ? 'bg-red-100 text-red-800' : 
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {selectedUser.golongan_darah || 'N/A'}
-                    </span>
-                  </div>
-
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-600 block">Nomor HP</span>
-                    <span className="text-base text-gray-800">{selectedUser.nomor_hp || 'N/A'}</span>
+            
+            <div className="px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Personal Information */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Informasi Pribadi</h4>
+                  <div className="space-y-2">
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Nama Lengkap</span>
+                      <span className="text-gray-900">{selectedUser.nama_lengkap || 'N/A'}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">NIK</span>
+                      <span className="text-gray-900">{selectedUser.nik || 'N/A'}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Tempat Lahir</span>
+                      <span className="text-gray-900">{selectedUser.tempat_lahir || 'N/A'}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Tanggal Lahir</span>
+                      <span className="text-gray-900">{formatDate(selectedUser.tanggal_lahir)}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Jenis Kelamin</span>
+                      <span className="text-gray-900">{selectedUser.jenis_kelamin || 'N/A'}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Golongan Darah</span>
+                      <span className="text-gray-900">{selectedUser.golongan_darah || 'N/A'}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Nomor HP</span>
+                      <span className="text-gray-900">{selectedUser.nomor_hp || 'N/A'}</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Right Column - Address Info */}
-                <div className="w-full md:w-1/2">
-                  <div className="mb-5">
-                    <h4 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Alamat KTP</h4>
-                    
-                    <div className="mb-3">
-                      <span className="text-sm font-medium text-gray-600 block">Alamat Lengkap</span>
-                      <span className="text-base text-gray-800">{selectedUser.alamat || 'N/A'}</span>
+                
+                {/* Address Information */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Alamat KTP</h4>
+                  <div className="space-y-2">
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Alamat</span>
+                      <span className="text-gray-900">{selectedUser.alamat || 'N/A'}</span>
                     </div>
-
-                    <div className="mb-3 flex gap-4">
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">RT</span>
-                        <span className="text-base text-gray-800">{selectedUser.rt || 'N/A'}</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">RW</span>
-                        <span className="text-base text-gray-800">{selectedUser.rw || 'N/A'}</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">Kode Pos</span>
-                        <span className="text-base text-gray-800">{selectedUser.kode_pos || 'N/A'}</span>
-                      </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">RT/RW</span>
+                      <span className="text-gray-900">
+                        {selectedUser.rt || 'N/A'}/{selectedUser.rw || 'N/A'}
+                      </span>
                     </div>
-
-                    <div className="mb-3">
-                      <span className="text-sm font-medium text-gray-600 block">Kelurahan/Desa</span>
-                      <span className="text-base text-gray-800">{selectedUser.kelurahan_desa || 'N/A'}</span>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Kelurahan/Desa</span>
+                      <span className="text-gray-900">{selectedUser.kelurahan_desa || 'N/A'}</span>
                     </div>
-
-                    <div className="mb-3">
-                      <span className="text-sm font-medium text-gray-600 block">Kecamatan</span>
-                      <span className="text-base text-gray-800">{selectedUser.kecamatan || 'N/A'}</span>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Kecamatan</span>
+                      <span className="text-gray-900">{selectedUser.kecamatan || 'N/A'}</span>
                     </div>
-
-                    <div className="mb-3">
-                      <span className="text-sm font-medium text-gray-600 block">Kabupaten/Kota</span>
-                      <span className="text-base text-gray-800">{selectedUser.kabupaten_kota || 'N/A'}</span>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Kabupaten/Kota</span>
+                      <span className="text-gray-900">{selectedUser.kabupaten_kota || 'N/A'}</span>
                     </div>
-
-                    <div className="mb-3">
-                      <span className="text-sm font-medium text-gray-600 block">Provinsi</span>
-                      <span className="text-base text-gray-800">{selectedUser.provinsi || 'N/A'}</span>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Provinsi</span>
+                      <span className="text-gray-900">{selectedUser.provinsi || 'N/A'}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="text-gray-500 w-32">Kode Pos</span>
+                      <span className="text-gray-900">{selectedUser.kode_pos || 'N/A'}</span>
                     </div>
                   </div>
-
+                </div>
+                
+                {/* Domisili Information (if different) */}
+                {selectedUser.domisili_alamat && (
                   <div>
-                    <h4 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Alamat Domisili</h4>
-                    
-                    {selectedUser.domisili_alamat ? (
-                      <>
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-600 block">Alamat Lengkap</span>
-                          <span className="text-base text-gray-800">{selectedUser.domisili_alamat || 'N/A'}</span>
-                        </div>
-
-                        <div className="mb-3 flex gap-4">
-                          <div>
-                            <span className="text-sm font-medium text-gray-600 block">RT</span>
-                            <span className="text-base text-gray-800">{selectedUser.domisili_rt || 'N/A'}</span>
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Alamat Domisili</h4>
+                    <div className="space-y-2">
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">Alamat</span>
+                        <span className="text-gray-900">{selectedUser.domisili_alamat || 'N/A'}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">RT/RW</span>
+                        <span className="text-gray-900">
+                          {selectedUser.domisili_rt || 'N/A'}/{selectedUser.domisili_rw || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">Kelurahan/Desa</span>
+                        <span className="text-gray-900">{selectedUser.domisili_kelurahan_desa || 'N/A'}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">Kecamatan</span>
+                        <span className="text-gray-900">{selectedUser.domisili_kecamatan || 'N/A'}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">Kabupaten/Kota</span>
+                        <span className="text-gray-900">{selectedUser.domisili_kabupaten_kota || 'N/A'}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">Provinsi</span>
+                        <span className="text-gray-900">{selectedUser.domisili_provinsi || 'N/A'}</span>
+                      </div>
+                      <div className="flex">
+                        <span className="text-gray-500 w-32">Kode Pos</span>
+                        <span className="text-gray-900">{selectedUser.domisili_kode_pos || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Documents Section */}
+                <div className="md:col-span-2">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Dokumen</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {getUserFiles(selectedUser.id).length > 0 ? (
+                      getUserFiles(selectedUser.id).map((file, index) => (
+                        <div key={index} className="border rounded-lg p-3 hover:bg-gray-50">
+                          <div className="flex items-center mb-2">
+                            <FileText size={18} className="text-gray-500 mr-2" />
+                            <span className="font-medium text-gray-900">
+                              {fileTypeNames[file.file_type] || file.file_type}
+                            </span>
                           </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-600 block">RW</span>
-                            <span className="text-base text-gray-800">{selectedUser.domisili_rw || 'N/A'}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">
+                              {getFileIcon(file.file_name)} {file.file_name || 'file'}
+                            </span>
+                            <button
+                              onClick={() => viewFile(file.google_drive_file_id
+                              )}
+                              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                            >
+                              <Eye size={16} className="mr-1" />
+                              Lihat
+                            </button>
                           </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-600 block">Kode Pos</span>
-                            <span className="text-base text-gray-800">{selectedUser.domisili_kode_pos || 'N/A'}</span>
-                          </div>
                         </div>
-
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-600 block">Kelurahan/Desa</span>
-                          <span className="text-base text-gray-800">{selectedUser.domisili_kelurahan_desa || 'N/A'}</span>
-                        </div>
-
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-600 block">Kecamatan</span>
-                          <span className="text-base text-gray-800">{selectedUser.domisili_kecamatan || 'N/A'}</span>
-                        </div>
-
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-600 block">Kabupaten/Kota</span>
-                          <span className="text-base text-gray-800">{selectedUser.domisili_kabupaten_kota || 'N/A'}</span>
-                        </div>
-
-                        <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-600 block">Provinsi</span>
-                          <span className="text-base text-gray-800">{selectedUser.domisili_provinsi || 'N/A'}</span>
-                        </div>
-                      </>
+                      ))
                     ) : (
-                      <p className="text-gray-600 italic">Sama dengan alamat KTP</p>
+                      <div className="col-span-full text-center text-gray-500 py-4">
+                        Belum ada dokumen yang diunggah
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={closeDetailModal}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-              >
-                Tutup
-              </button>
+            
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+              <div>
+                <span className="text-gray-500 mr-2">Status:</span>
+                {getUserFlagStatus(selectedUser) === 'active' ? (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <Check size={14} className="mr-1" />
+                    Aktif
+                  </span>
+                ) : getUserFlagStatus(selectedUser) === 'inactive' ? (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <AlertCircle size={14} className="mr-1" />
+                    Tidak Aktif
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    Belum Update
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={closeDetailModal}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Tutup
+                </button>
+                
+                {getUserFlagStatus(selectedUser) !== 'active' && (
+                  <button
+                    onClick={() => {
+                      activateUser(selectedUser.id);
+                      closeDetailModal();
+                    }}
+                    disabled={activatingUser === selectedUser.id}
+                    className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+                      activatingUser === selectedUser.id ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {activatingUser === selectedUser.id ? (
+                      <span className="flex items-center">
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Mengaktifkan...
+                      </span>
+                    ) : (
+                      'Aktifkan Pengguna'
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

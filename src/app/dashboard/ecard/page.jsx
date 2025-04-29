@@ -139,9 +139,7 @@ export default function ECard() {
                         <div className="w-28 h-28 bg-gray-200 animate-pulse rounded"></div>
                       )}
                     </div>
-                    <div className="text-center mt-1">
-                      <p className="text-xs text-white">ID: {user?.userId || "5"}</p>
-                    </div>
+                    
                   </div>
                   
                   {/* Right side with user info */}

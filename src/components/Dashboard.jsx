@@ -6,6 +6,7 @@ import DashboardContent from './DashboardContent';
 const Dashboard = ({ 
   userData, 
   loading, 
+  navigateToScan,
   handleLogout,
   navigateToMY,
   navigateToProfile,
@@ -73,6 +74,8 @@ const Dashboard = ({
         navigateToPresensi={navigateToPresensi}
         navigateToTugas={navigateToTugas}
         navigateToProfile={navigateToProfile}
+        navigateToScan={navigateToScan}
+
       />
 
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -96,6 +99,7 @@ const Dashboard = ({
           navigateToProfile={navigateToProfile}
           navigateToECard={navigateToECard}
           navigateToPeserta={navigateToPeserta}
+          navigateToScan={navigateToScan}
         />
       </div>
     </div>
