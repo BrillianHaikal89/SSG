@@ -6,6 +6,8 @@ import Image from 'next/image';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function VerifyOtpPage() {
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
@@ -104,7 +106,7 @@ export default function VerifyOtpPage() {
     try {
       const otpCode = otpValues.join('');
       
-      const response = await fetch('http://localhost:3333/api/users/verify', {
+      const response = await fetch(`${API_URL}/users/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
