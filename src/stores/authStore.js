@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import Cookies from 'js-cookie';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -84,7 +86,7 @@ const useAuthStore = create(
         set({ loading: true, error: null })
         try {
           const user = get().user;
-          const response = await fetch(`http://localhost:3333/api/users/user-qrcode?user_id=${user.userId}`)
+          const response = await fetch(`${API_URL}/users/user-qrcode?user_id=${user.userId}`)
           if (!response.ok) {
             throw new Error('Failed to fetch user data')
           }

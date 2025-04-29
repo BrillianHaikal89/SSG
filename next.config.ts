@@ -1,7 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  output: 'export', // 👈 ini kunci agar bisa jadi static site
+  reactStrictMode: true,
+  // Tambahkan config lain jika perlu
+}
 
-export default nextConfig;
+export default nextConfig

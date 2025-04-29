@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, RefreshCw, Filter, Download, ChevronLeft, ChevronRight, Eye, Check, Power, AlertCircle, FileText, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
   const [files, setFiles] = useState([]);
@@ -42,7 +43,7 @@ export default function UsersManagement() {
       }
       
       // Fetch users data
-      const response = await fetch('http://localhost:3333/api/users');
+      const response = await fetch(`${API_URL}/users`);
       
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
@@ -116,7 +117,7 @@ export default function UsersManagement() {
     setActivatingUser(userId);
     try {
       // API call to activate user with the correct endpoint
-      const response = await fetch(`http://localhost:3333/api/admin/activate?user_id=${userId}`, {
+      const response = await fetch(`${API_URL}/admin/activate?user_id=${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

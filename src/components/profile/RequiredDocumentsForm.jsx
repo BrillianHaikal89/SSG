@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -277,7 +278,7 @@ const RequiredDocumentsForm = () => {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch(`http://localhost:3333/api/users/upload-files?id=${user.userId}`, {
+      const response = await fetch(`${API_URL}/users/upload-files?id=${user.userId}`, {
         method: "POST",
         body: formData
       });
@@ -324,7 +325,7 @@ const RequiredDocumentsForm = () => {
     
     const fetchUserDocuments = async () => {
       try {
-        const res = await fetch(`http://localhost:3333/api/users/user-files?userId=${user.userId}`);
+        const res = await fetch(`${API_URL}/users/user-files?userId=${user.userId}`);
         if (!res.ok) throw new Error("Gagal mengambil data dokumen");
 
         const data = await res.json();

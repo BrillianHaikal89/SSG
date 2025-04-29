@@ -6,6 +6,7 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Camera, CameraOff, LogIn, LogOut, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function QrCodeScanner() {
   const [scanning, setScanning] = useState(false);
   const [attendanceType, setAttendanceType] = useState('masuk'); // Default to 'masuk'
@@ -80,7 +81,7 @@ export default function QrCodeScanner() {
     setScanResult(null);
 
     try {
-      const response = await fetch('http://localhost:3333/api/users/presensi', {
+      const response = await fetch(`${API_URL}/users/presensi`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

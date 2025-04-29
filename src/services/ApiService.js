@@ -2,15 +2,14 @@
  * API Service untuk komunikasi dengan server database
  */
 
-const API_BASE_URL = 'http://localhost:3333/api';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 class ApiService {
     /**
      * Memeriksa apakah NIK sudah terdaftar di database
      */
     static async checkNikExists(nik) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/check-nik`, {
+            const response = await fetch(`${API_URL}/users/check-nik`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,7 +39,7 @@ class ApiService {
      */
     static async registerUser(userData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/register`, {
+            const response = await fetch(`${API_URL}/users/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -76,7 +75,7 @@ class ApiService {
      */
     static async loginUser(phone, password) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/login`, {
+            const response = await fetch(`${API_URL}/users/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -115,7 +114,7 @@ class ApiService {
      */
     static async getPostalCodeData(kodePos) {
         try {
-            const response = await fetch(`${API_BASE_URL}/users/kodepos?kode_pos=${kodePos}`, {
+            const response = await fetch(`${API_URL}/users/kodepos?kode_pos=${kodePos}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json'

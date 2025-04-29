@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../stores/authStore';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const AgreementForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -44,7 +46,7 @@ const AgreementForm = () => {
     setSubmitStatus(null);
     
     try {
-      const response = await fetch(`http://localhost:3333/api/users/re-registration?user_id=${userId}`, {
+      const response = await fetch(`${API_URL}/users/re-registration?user_id=${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

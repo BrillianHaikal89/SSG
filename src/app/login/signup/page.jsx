@@ -8,6 +8,7 @@ import BannerSide from '../../../components/BannerSide';
 import MobileFooter from '../../../components/MobileFooter';
 import toast from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const SignupPage = () => {
   const router = useRouter();
   
@@ -96,7 +97,7 @@ const SignupPage = () => {
       setIsLoadingData(true);
       
       // Fetch data from the server
-      const response = await fetch(`http://localhost:3333/api/users/kodepos?kode_pos=${postalCode}`, {
+      const response = await fetch(`${API_URL}/users/kodepos?kode_pos=${postalCode}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
@@ -262,7 +263,7 @@ const SignupPage = () => {
         };
         
         // Send registration request to server
-        const response = await fetch('http://localhost:3333/api/users/register', {
+        const response = await fetch(`${API_URL}/users/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

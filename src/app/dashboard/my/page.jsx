@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function MutabahYaumiyahPage() {
   const router = useRouter();
   const { user, userId } = useAuthStore();
@@ -193,7 +194,7 @@ export default function MutabahYaumiyahPage() {
         
         console.log("Submitting data:", requestData);
         
-        const response = await fetch('http://localhost:3333/api/users/input-my', {
+        const response = await fetch(`${API_URL}/users/input-my`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

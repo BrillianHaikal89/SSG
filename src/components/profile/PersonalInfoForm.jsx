@@ -4,6 +4,7 @@ import React, { useState, useEffect, useId } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const PersonalInfoForm = () => {
   const { user } = useAuthStore(); 
   const [userData, setUserData] = useState(null);
@@ -61,8 +62,8 @@ const PersonalInfoForm = () => {
     try {
       const userId = user?.userId;
       const url = isCreating
-        ? 'http://localhost:3333/api/users/create-education'
-        : 'http://localhost:3333/api/users/edit-education';
+        ? `${API_URL}/users/create-education`
+        : `${API_URL}/users/edit-education`;
   
       const response = await fetch(url, {
         method: 'POST',
@@ -91,7 +92,7 @@ const PersonalInfoForm = () => {
 
   const fetchEducationData = async (userId) => {
     try {
-      const res = await fetch(`http://localhost:3333/api/users/get-education?id=${userId}`);
+      const res = await fetch(`${API_URL}/users/get-education?id=${userId}`);
       if (!res.ok) throw new Error('Gagal ambil data');
       const data = await res.json();
   

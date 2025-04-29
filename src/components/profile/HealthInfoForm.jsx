@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const HealthInfoForm = () => {
   const [userData, setUserData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -21,7 +23,7 @@ const HealthInfoForm = () => {
   useEffect(() => {
     const fetchHealthData = async () => {
       try {
-        const response = await fetch(`http://localhost:3333/api/users/get-health?user_id=${user?.userId}`);
+        const response = await fetch(`${API_URL}/users/get-health?user_id=${user?.userId}`);
         const result = await response.json();
         
         if (result?.data) {
@@ -73,8 +75,8 @@ const HealthInfoForm = () => {
   const saveData = async () => {
     try {
       const url = userData 
-        ? 'http://localhost:3333/api/users/edit-health'
-        : 'http://localhost:3333/api/users/create-health';
+        ? `${API_URL}/users/edit-health`
+        : `${API_URL}/users/create-health`;
 
       const response = await fetch(url, {
         method: 'POST',

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function SignInPage() {
   const router = useRouter();
   const { login, checkAuth } = useAuthStore();
@@ -58,7 +59,7 @@ export default function SignInPage() {
         throw new Error('Nomor HP dan password harus diisi');
       }
   
-      const response = await fetch('http://localhost:3333/api/users/login', {
+      const response = await fetch(`${API_URL}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
