@@ -61,9 +61,9 @@ const ProfilePage = () => {
       <PersonalInfoForm initialData={userData} />
       <HealthInfoForm initialData={userData} />
       <RequiredDocumentsForm initialData={userData} />
-      { role === '0a' && (
+  
         <AgreementSignatureForm initialData={userData} />
-      )}
+      
     </ProfileLayout>
   );
 };
