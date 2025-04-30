@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 import DashboardContent from './DashboardContent';
+import DashboardMobile from './DashboardMobile';
 
 const Dashboard = ({ 
   userData, 
