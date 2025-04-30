@@ -1,3 +1,4 @@
+// Dashboard.jsx - Main component with improved desktop layout
 import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
@@ -21,26 +22,22 @@ const Dashboard = ({
   notificationType,
   setShowNotification
 }) => {
+  // Start with sidebar closed on all devices
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  // Detect screen size and set sidebar state
+  // Make sure sidebar is closed on page load
   useEffect(() => {
+    // Always start with sidebar closed
+    setSidebarOpen(false);
+    
+    // Add event listener for window resize to close sidebar on small screens
     const handleResize = () => {
-      // Close sidebar on mobile, open on desktop
       if (window.innerWidth < 768) {
         setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
       }
     };
     
-    // Run once on component mount
-    handleResize();
-    
-    // Add event listener for window resize
     window.addEventListener('resize', handleResize);
-    
-    // Clean up event listener on component unmount
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 

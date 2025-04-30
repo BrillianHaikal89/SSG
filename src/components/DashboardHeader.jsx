@@ -1,3 +1,4 @@
+// DashboardHeader.jsx - Updated for desktop layout
 import React from 'react';
 import Image from 'next/image';
 
@@ -14,19 +15,9 @@ const DashboardHeader = ({
     <header className="bg-white shadow-sm sticky top-0 z-20">
       {/* User Greeting Card with improved spacing */}
       <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-4 relative">
-        {/* Mobile Menu Button - Positioned with proper spacing */}
-        <button 
-          onClick={toggleSidebar}
-          className="text-white hover:bg-orange-600/30 rounded-full p-2 transition-colors duration-300 absolute left-3 top-1/2 transform -translate-y-1/2 md:hidden"
-          aria-label="Toggle menu"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center pl-10 md:pl-0"> {/* Added left padding on mobile to accommodate hamburger menu */}
+          {/* User Profile & Greeting */}
+          <div className="flex items-center">
             <div className="flex-shrink-0 mr-4">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-orange-500 font-bold text-xl shadow-md">
                 {userData.name ? userData.name.charAt(0).toUpperCase() : 'M'}

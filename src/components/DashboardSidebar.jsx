@@ -1,4 +1,4 @@
-// DashboardSidebar.jsx - Improved for better mobile experience without dark overlay
+// DashboardSidebar.jsx - Logo only shows when sidebar is opened
 import React from 'react';
 import Image from 'next/image';
 import useAuthStore from '../stores/authStore';
@@ -103,15 +103,15 @@ const DashboardSidebar = ({
 
     return (
         <aside
-            className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 w-64 md:w-20'} 
-                bg-blue-900 text-white shadow-xl fixed md:static z-30 h-full
+            className={`${sidebarOpen ? 'w-64' : 'w-16'} 
+                bg-blue-900 text-white shadow-xl h-full overflow-hidden
                 transition-all duration-300 ease-in-out flex flex-col`}
         >
-            {/* Sidebar Header with Logo and Close Button */}
-            <div className="flex items-center justify-between p-4 border-b border-blue-800">
-                {/* Logo Section */}
-                <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 flex-shrink-0">
+            {/* Sidebar Header with Toggle Button */}
+            <div className="flex items-center justify-between p-4 border-b border-blue-800 h-16">
+                {/* Only show logo when sidebar is open */}
+                {sidebarOpen && (
+                    <div className="flex items-center space-x-2">
                         <Image
                             src="/img/logossg_white.png"
                             alt="Logo Santri Siap Guna"
@@ -119,28 +119,15 @@ const DashboardSidebar = ({
                             height={28}
                             className="rounded-full"
                         />
+                        <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
                     </div>
-                    {sidebarOpen && <span className="text-lg font-bold">SANTRI SIAP GUNA</span>}
-                </div>
-                
-                {/* Close button - only visible on mobile when sidebar is open */}
-                {sidebarOpen && (
-                    <button
-                        onClick={toggleSidebar}
-                        className="text-white hover:bg-blue-800 rounded-full p-1 transition-colors duration-300 md:hidden"
-                        aria-label="Close sidebar"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 )}
                 
-                {/* Toggle button - only visible on desktop */}
+                {/* Always show toggle button */}
                 <button
                     onClick={toggleSidebar}
-                    className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 hidden md:block"
-                    aria-label="Toggle sidebar width"
+                    className={`text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 ${!sidebarOpen ? 'mx-auto' : ''}`}
+                    aria-label="Toggle sidebar"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         {sidebarOpen ? (
@@ -152,14 +139,14 @@ const DashboardSidebar = ({
                 </button>
             </div>
 
-            {/* Navigation Menu - Scrollable */}
+            {/* Navigation Menu */}
             <nav className="py-4 flex-grow overflow-y-auto">
                 <ul className="space-y-1">
                     {menuItems.map((item) => (
                         <li key={item.id}>
                             <button
                                 onClick={item.onClick}
-                                className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
+                                className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4 text-left' : 'p-3 justify-center'} 
                                     hover:bg-blue-800 text-white transition-colors duration-300 group`}
                                 title={sidebarOpen ? "" : item.label}
                             >
@@ -171,14 +158,14 @@ const DashboardSidebar = ({
                 </ul>
             </nav>
 
-            {/* Logout Section - Fixed at bottom */}
+            {/* Logout Section */}
             <div className="border-t border-blue-800 mt-auto">
                 <button
                     onClick={() => {
                         handleLogout();
                         closeSidebar && closeSidebar();
                     }}
-                    className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
+                    className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4 text-left' : 'p-3 justify-center'} 
                         text-white transition-colors duration-300 hover:bg-blue-800`}
                     title={sidebarOpen ? "" : "Logout"}
                 >
