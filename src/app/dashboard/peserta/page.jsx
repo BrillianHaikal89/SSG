@@ -125,7 +125,7 @@ export default function UsersManagement() {
       });
       
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${response.json()}`);
       }
       
       const resData = await response.json();
