@@ -125,7 +125,7 @@ export default function UsersManagement() {
       });
       
       if (!response.ok) {
-        throw new Error(`Error: ${response.json()}`);
+        toast.error(resData.message || 'user belum menyetujui persyaratan atau belum upload dokumen')
       }
       
       const resData = await response.json();
