@@ -195,7 +195,6 @@ const DashboardContent = ({
           </div>
 
           {/* Scan QR (only for role 2a) - Placed next to Peserta */}
-          {role === '2a' && (
             <div className="flex flex-col items-center cursor-pointer" onClick={navigateToScan}>
               <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,7 +203,6 @@ const DashboardContent = ({
               </div>
               <span className="text-xs text-gray-600">Scan QR</span>
             </div>
-          )}
         </div>
       </div>
 
