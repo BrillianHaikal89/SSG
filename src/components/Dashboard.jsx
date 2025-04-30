@@ -26,18 +26,28 @@ const Dashboard = ({
   
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) setSidebarOpen(false);
-      else setSidebarOpen(false);
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
     };
+    
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => {
+    if (window.innerWidth < 768) {
+      setMobileMenuOpen(!mobileMenuOpen);
+    }
+    setSidebarOpen(!sidebarOpen);
+  };
+
   const toggleMobileMenu = () => {
-    setSidebarOpen(true);
     setMobileMenuOpen(!mobileMenuOpen);
+    setSidebarOpen(!sidebarOpen);
   };
 
   if (loading) {
@@ -55,7 +65,7 @@ const Dashboard = ({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 overflow-hidden relative">
       {mobileMenuOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
@@ -67,6 +77,7 @@ const Dashboard = ({
         userData={userData}
         sidebarOpen={sidebarOpen}
         toggleSidebar={toggleSidebar}
+        mobileMenuOpen={mobileMenuOpen}
         handleLogout={handleLogout}
         navigateToHome={navigateToHome}
         navigateToMY={navigateToMY}
@@ -75,14 +86,11 @@ const Dashboard = ({
         navigateToTugas={navigateToTugas}
         navigateToProfile={navigateToProfile}
         navigateToScan={navigateToScan}
-
       />
 
       <div className="flex flex-col flex-1 overflow-hidden">
         <DashboardHeader 
           userData={userData}
-          sidebarOpen={sidebarOpen}
-          toggleSidebar={toggleSidebar}
           toggleMobileMenu={toggleMobileMenu}
           showNotification={showNotification}
           notificationMessage={notificationMessage}

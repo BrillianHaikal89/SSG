@@ -145,9 +145,6 @@ const QuranDashboard = () => {
           </svg>
         </button>
       )}
-
-      {/* Bottom Navigation */}
-      <BottomNavigation />
     </div>
   );
 };

@@ -14,9 +14,9 @@ const DashboardContent = ({
 }) => {
   const { role } = useAuthStore();
   return (
-    <main className="flex-1 overflow-y-auto py-4 px-4 md:px-6 pb-16 transition-all duration-300">
+    <main className="flex-1 overflow-y-auto py-4 px-2 md:px-4 lg:px-6 pb-16 transition-all duration-300">
       {/* Progress MY Card */}
-      <div className="bg-white rounded-lg shadow-sm mb-4 p-4">
+      <div className="bg-white rounded-lg shadow-sm mb-4 p-4 mx-2 md:mx-0">
         <h3 className="text-sm font-medium mb-2">Progres MY</h3>
         <div className="mb-2 flex justify-between text-xs text-gray-600">
           <span>Diselesaikan: {userData.taskCompleted}/{userData.taskTotal}</span>
@@ -31,14 +31,14 @@ const DashboardContent = ({
       </div>
 
       {/* Jadwal and Search Row */}
-      <div className="flex flex-col md:flex-row gap-3 mb-4">
+      <div className="flex flex-col md:flex-row gap-3 mb-4 px-2 md:px-0">
         {/* Jadwal Card */}
-        <div className="flex rounded-lg overflow-hidden shadow-sm flex-grow">
-          <div className="bg-blue-900 text-white p-4 w-48 flex flex-col justify-center">
+        <div className="flex flex-col md:flex-row rounded-lg overflow-hidden shadow-sm flex-grow">
+          <div className="bg-blue-900 text-white p-3 md:p-4 w-full md:w-48 flex flex-col justify-center">
             <h3 className="text-sm font-semibold">Jadwal Hari ini</h3>
             <p className="text-xs mt-1">Selasa, 18 Maret</p>
           </div>
-          <div className="bg-blue-100 p-4 flex-grow">
+          <div className="bg-blue-100 p-3 md:p-4 flex-grow">
             <h3 className="text-blue-900 font-medium text-sm">TUGAS</h3>
             <ol className="text-xs space-y-1 mt-2">
               <li>
@@ -67,7 +67,7 @@ const DashboardContent = ({
         </div>
 
         {/* Search Box */}
-        <div className="flex flex-col w-full md:w-80">
+        <div className="flex flex-col w-full md:w-80 px-2 md:px-0">
           <div className="relative mb-3">
             <input 
               type="text" 
@@ -84,7 +84,7 @@ const DashboardContent = ({
       </div>
 
       {/* Pengumuman Section */}
-      <div className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
+      <div className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4 mx-2 md:mx-0">
         <h3 className="font-bold text-sm">Pengumuman</h3>
         
         <div className="mt-2 p-3 bg-white rounded-lg mb-2">
@@ -101,9 +101,9 @@ const DashboardContent = ({
       </div>
 
       {/* Quick Access */}
-      <div className="bg-white rounded-lg shadow-sm mb-4 p-4">
+      <div className="bg-white rounded-lg shadow-sm mb-4 p-4 mx-2 md:mx-0">
         <h3 className="font-medium text-sm mb-4">Akses Cepat</h3>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {/* Rundown */}
           <div className="flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
@@ -144,14 +144,14 @@ const DashboardContent = ({
             <span className="text-xs text-gray-600">BAP/LAJ</span>
           </div>
 
-          { role === '2a' &&(
-          <div className="flex flex-col items-center" onClick={navigateToScan}>
+          { role === '2a' && (
+          <div className="flex flex-col items-center cursor-pointer" onClick={navigateToScan}>
             <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-orange-500 mb-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
               </svg>
             </div>
-            <span className="text-xs text-gray-600">scan</span>
+            <span className="text-xs text-gray-600">Scan QR</span>
           </div>
           )}
           

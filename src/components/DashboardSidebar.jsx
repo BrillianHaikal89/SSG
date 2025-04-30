@@ -6,6 +6,7 @@ const DashboardSidebar = ({
     userData,
     sidebarOpen,
     toggleSidebar,
+    mobileMenuOpen,
     handleLogout,
     navigateToHome,
     navigateToAlQuran,
@@ -62,7 +63,8 @@ const DashboardSidebar = ({
             ),
             label: "Tugas",
             onClick: navigateToTugas
-        },{
+        },
+        ...(role === '2a' ? [{
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
@@ -70,20 +72,35 @@ const DashboardSidebar = ({
             ),
             label: "Scan QR",
             onClick: navigateToScan
-        }
+        }] : [])
     ];
 
     return (
         <aside
-            className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-blue-900 text-white shadow-xl z-30 transition-all duration-300 ease-in-out
-        fixed md:static h-full overflow-hidden`}
+            className={`${sidebarOpen ? 'w-64' : 'w-0 md:w-20'} 
+              bg-blue-900 text-white shadow-xl z-30 transition-all duration-300 ease-in-out
+              fixed md:relative h-full overflow-hidden`}
         >
+            {/* Mobile close button */}
+            {sidebarOpen && (
+                <div className="md:hidden absolute top-2 right-2 z-50">
+                    <button
+                        onClick={toggleSidebar}
+                        className="text-white hover:bg-blue-800 rounded-full p-1"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
             {/* Sidebar Header with Toggle */}
             <div className="flex items-center justify-end p-4 border-b border-blue-800">
                 {/* Hamburger Menu Toggle */}
                 <button
                     onClick={toggleSidebar}
-                    className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300"
+                    className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 hidden md:block"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -113,9 +130,14 @@ const DashboardSidebar = ({
                     {menuItems.map((item, index) => (
                         <li key={index}>
                             <button
-                                onClick={item.onClick}
+                                onClick={() => {
+                                    item.onClick();
+                                    if (window.innerWidth < 768) {
+                                        toggleSidebar();
+                                    }
+                                }}
                                 className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-                  hover:bg-blue-800 text-white transition-colors duration-300 group`}
+                                hover:bg-blue-800 text-white transition-colors duration-300 group`}
                                 title={sidebarOpen ? "" : item.label}
                             >
                                 <span className={`${sidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
@@ -131,7 +153,7 @@ const DashboardSidebar = ({
                 <button
                     onClick={handleLogout}
                     className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-      text-white transition-colors duration-300 hover:bg-blue-800`}
+                    text-white transition-colors duration-300 hover:bg-blue-800`}
                     title={sidebarOpen ? "" : "Logout"}
                 >
                     <span className={`${sidebarOpen ? 'mr-3' : ''}`}>
