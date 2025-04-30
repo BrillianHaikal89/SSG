@@ -39,7 +39,7 @@ const DashboardHeader = ({
               </div>
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-white">Assalamu'alaikum,</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-white">Ahlan Wa Sahlan,</h2>
               <p className="text-sm font-semibold text-white">{userData.name}</p>
               <p className="text-xs text-white opacity-80">{userData.level}</p>
             </div>
