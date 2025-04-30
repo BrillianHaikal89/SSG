@@ -193,7 +193,7 @@ login(normalizedUser, token, userId);
       >
         <div className="w-full max-w-md">
           <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">
-            Masuk
+            Bismillah Masuk
           </h1>
           
           {/* Social login options */}
