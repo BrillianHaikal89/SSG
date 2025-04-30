@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 import DashboardContent from './DashboardContent';
-import DashboardMobile from './DashboardMobile';
 
 const Dashboard = ({ 
   userData, 
@@ -23,13 +22,12 @@ const Dashboard = ({
   setShowNotification
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) setSidebarOpen(false);
+      if (window.innerWidth < 768) setSidebarOpen(false);
+      else setSidebarOpen(false);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -37,6 +35,10 @@ const Dashboard = ({
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleMobileMenu = () => {
+    setSidebarOpen(true);
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   if (loading) {
     return (
@@ -53,63 +55,54 @@ const Dashboard = ({
   }
 
   return (
-    <>
-      {isMobile ? (
-        <DashboardMobile 
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
+          onClick={toggleMobileMenu}
+        ></div>
+      )}
+
+      <DashboardSidebar 
+        userData={userData}
+        sidebarOpen={sidebarOpen}
+        toggleSidebar={toggleSidebar}
+        handleLogout={handleLogout}
+        navigateToHome={navigateToHome}
+        navigateToMY={navigateToMY}
+        navigateToAlQuran={navigateToAlQuran}
+        navigateToPresensi={navigateToPresensi}
+        navigateToTugas={navigateToTugas}
+        navigateToProfile={navigateToProfile}
+        navigateToScan={navigateToScan}
+
+      />
+
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader 
           userData={userData}
-          loading={loading}
+          sidebarOpen={sidebarOpen}
+          toggleSidebar={toggleSidebar}
+          toggleMobileMenu={toggleMobileMenu}
+          showNotification={showNotification}
+          notificationMessage={notificationMessage}
+          notificationType={notificationType}
+          setShowNotification={setShowNotification}
+        />
+
+        <DashboardContent 
+          userData={userData}
           navigateToMY={navigateToMY}
-          navigateToProfile={navigateToProfile}  
           navigateToPresensi={navigateToPresensi}
+          navigateToTugas={navigateToTugas}
           navigateToAlQuran={navigateToAlQuran}
-          navigateToTugas={navigateToTugas} 
-          navigateToHome={navigateToHome}
+          navigateToProfile={navigateToProfile}
           navigateToECard={navigateToECard}
           navigateToPeserta={navigateToPeserta}
-          handleLogout={handleLogout}
+          navigateToScan={navigateToScan}
         />
-      ) : (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
-          <DashboardSidebar 
-            userData={userData}
-            sidebarOpen={sidebarOpen}  
-            toggleSidebar={toggleSidebar}
-            handleLogout={handleLogout} 
-            navigateToHome={navigateToHome}
-            navigateToMY={navigateToMY}
-            navigateToAlQuran={navigateToAlQuran}
-            navigateToPresensi={navigateToPresensi}
-            navigateToTugas={navigateToTugas}
-            navigateToProfile={navigateToProfile} 
-            navigateToScan={navigateToScan}
-          />
-
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <DashboardHeader 
-              userData={userData}
-              sidebarOpen={sidebarOpen}
-              toggleSidebar={toggleSidebar}  
-              showNotification={showNotification}
-              notificationMessage={notificationMessage}  
-              notificationType={notificationType}
-              setShowNotification={setShowNotification}
-            />
-
-            <DashboardContent 
-              userData={userData}
-              navigateToMY={navigateToMY}
-              navigateToPresensi={navigateToPresensi} 
-              navigateToTugas={navigateToTugas}
-              navigateToAlQuran={navigateToAlQuran}
-              navigateToProfile={navigateToProfile}
-              navigateToECard={navigateToECard}  
-              navigateToPeserta={navigateToPeserta}
-              navigateToScan={navigateToScan}  
-            />
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 
