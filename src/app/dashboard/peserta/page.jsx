@@ -116,40 +116,43 @@ export default function UsersManagement() {
   const activateUser = async (userId) => {
     setActivatingUser(userId);
     try {
-      // API call to activate user with the correct endpoint
       const response = await fetch(`${API_URL}/admin/activate?user_id=${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         }
       });
-      
+  
+      const resData = await response.json(); // parse dulu responsenya
+  
       if (!response.ok) {
-        toast.error(resData.message || 'user belum menyetujui persyaratan atau belum upload dokumen')
+        // Kalau gagal, tampilkan message dari response JSON
+        throw new Error(resData.message || 'Activation failed');
       }
-      
-      const resData = await response.json();
-      console.log('Response from activation:', resData);
+  
       toast.success(resData.message || 'User activated successfully');
+      
       // Update local state
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
           user.id === userId ? { ...user, flag_status: "1" } : user
         )
       );
-      
+  
       // If detail modal is open, update selected user too
       if (selectedUser && selectedUser.id === userId) {
-        setSelectedUser(prev => ({...prev, flag_status: "1"}));
+        setSelectedUser(prev => ({ ...prev, flag_status: "1" }));
       }
+  
       fetchUsers();
     } catch (err) {
       console.error(`Failed to activate user: ${err.message}`);
-      toast.error(`Failed to activate user: ${err.message}`);
+      toast.error(err.message); // gunakan message dari error yang dilempar
     } finally {
       setActivatingUser(null);
     }
   };
+  
 
   // Handle sorting
   const requestSort = (key) => {
