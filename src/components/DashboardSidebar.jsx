@@ -1,5 +1,5 @@
-// DashboardSidebar.jsx - Logo only shows when sidebar is opened
-import React from 'react';
+// DashboardSidebar.jsx - Complete fixed implementation
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import useAuthStore from '../stores/authStore';
 
@@ -18,6 +18,23 @@ const DashboardSidebar = ({
     closeSidebar
 }) => {
     const { role } = useAuthStore();
+    const [isMobile, setIsMobile] = useState(false);
+    
+    // Detect if we're on mobile
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        // Check on mount
+        checkMobile();
+        
+        // Add resize listener
+        window.addEventListener('resize', checkMobile);
+        
+        // Cleanup
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
     
     // Sidebar menu items
     const menuItems = [
@@ -103,14 +120,19 @@ const DashboardSidebar = ({
 
     return (
         <aside
-            className={`${sidebarOpen ? 'w-64' : 'w-16'} 
-                bg-blue-900 text-white shadow-xl h-full overflow-hidden
-                transition-all duration-300 ease-in-out flex flex-col`}
+            className={`${isMobile 
+                    // Mobile styles: slide in from left
+                    ? `${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed z-30 w-64` 
+                    // Desktop styles: expand/collapse in place
+                    : `${sidebarOpen ? 'w-64' : 'w-16'}`
+                } bg-blue-900 text-white shadow-xl h-full overflow-hidden
+                   transition-all duration-300 ease-in-out flex flex-col`}
         >
-            {/* Sidebar Header with Toggle Button */}
+            {/* Sidebar Header */}
             <div className="flex items-center justify-between p-4 border-b border-blue-800 h-16">
-                {/* Only show logo when sidebar is open */}
-                {sidebarOpen && (
+                {/* Desktop: Only show logo when expanded */}
+                {/* Mobile: Always show logo when sidebar is open */}
+                {(sidebarOpen && (
                     <div className="flex items-center space-x-2">
                         <Image
                             src="/img/logossg_white.png"
@@ -121,22 +143,37 @@ const DashboardSidebar = ({
                         />
                         <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
                     </div>
+                ))}
+                
+                {/* Mobile: Close button (X) */}
+                {isMobile && sidebarOpen && (
+                    <button
+                        onClick={toggleSidebar}
+                        className="text-white hover:bg-blue-800 rounded-full p-1 transition-colors duration-300"
+                        aria-label="Close sidebar"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 )}
                 
-                {/* Always show toggle button */}
-                <button
-                    onClick={toggleSidebar}
-                    className={`text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 ${!sidebarOpen ? 'mx-auto' : ''}`}
-                    aria-label="Toggle sidebar"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        {sidebarOpen ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                        ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        )}
-                    </svg>
-                </button>
+                {/* Desktop: Toggle button */}
+                {!isMobile && (
+                    <button
+                        onClick={toggleSidebar}
+                        className={`text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 ${!sidebarOpen ? 'mx-auto' : ''}`}
+                        aria-label="Toggle sidebar"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            {sidebarOpen ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                            ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            )}
+                        </svg>
+                    </button>
+                )}
             </div>
 
             {/* Navigation Menu */}

@@ -1,4 +1,4 @@
-// Dashboard.jsx - Main component with improved desktop layout
+// Dashboard.jsx - Main component with separate mobile/desktop handling
 import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
@@ -22,29 +22,35 @@ const Dashboard = ({
   notificationType,
   setShowNotification
 }) => {
-  // Start with sidebar closed on all devices
+  // Start with sidebar closed (for both mobile and desktop)
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
-  // Make sure sidebar is closed on page load
+  // Check device type and set initial state
   useEffect(() => {
-    // Always start with sidebar closed
-    setSidebarOpen(false);
-    
-    // Add event listener for window resize to close sidebar on small screens
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSidebarOpen(false);
-      }
+    const checkDevice = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Desktop: Start with sidebar closed per requirement
+      // Mobile: Always keep sidebar closed initially
+      setSidebarOpen(false);
     };
     
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Check on mount
+    checkDevice();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkDevice);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   
   const closeSidebar = () => {
-    if (window.innerWidth < 768) {
+    if (isMobile) {
       setSidebarOpen(false);
     }
   };
@@ -65,7 +71,16 @@ const Dashboard = ({
 
   return (
     <div className="flex h-screen bg-white overflow-hidden relative">
-      {/* Sidebar */}
+      {/* Mobile dark overlay - only shown on mobile when sidebar is open */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        ></div>
+      )}
+
+      {/* Sidebar with mobile/desktop awareness */}
       <DashboardSidebar 
         userData={userData}
         sidebarOpen={sidebarOpen}
@@ -79,10 +94,11 @@ const Dashboard = ({
         navigateToProfile={navigateToProfile}
         navigateToScan={navigateToScan}
         closeSidebar={closeSidebar}
+        isMobile={isMobile}
       />
 
       {/* Main content */}
-      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-white`}>
+      <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-white">
         <DashboardHeader 
           userData={userData}
           sidebarOpen={sidebarOpen}
@@ -91,6 +107,7 @@ const Dashboard = ({
           notificationMessage={notificationMessage}
           notificationType={notificationType}
           setShowNotification={setShowNotification}
+          isMobile={isMobile}
         />
 
         <DashboardContent 
