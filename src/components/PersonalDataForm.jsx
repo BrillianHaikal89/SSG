@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import FormField from './FormField';
 import InfoAlert from './InfoAlert';
 
@@ -21,13 +21,6 @@ const PersonalDataForm = ({
     setAddress, setRt, setRw, setKodePos, setKelurahan, setKecamatan, setKota, setProvinsi
   } = setters;
 
-  // State untuk modal pencarian
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchType, setSearchType] = useState('kelurahan');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-
   // Handler untuk mengubah nama menjadi uppercase
   const handleNameChange = (e) => {
     setName(e.target.value.toUpperCase());
@@ -36,46 +29,6 @@ const PersonalDataForm = ({
   // Handler untuk mengubah alamat menjadi uppercase
   const handleAddressChange = (e) => {
     setAddress(e.target.value.toUpperCase());
-  };
-  
-  // Membuka modal pencarian
-  const openSearchModal = (type) => {
-    setSearchType(type);
-    setSearchTerm('');
-    setSearchResults([]);
-    setShowSearchModal(true);
-  };
-  
-  // Handle pencarian alamat
-  const handleSearch = () => {
-    if (!searchTerm.trim()) return;
-    
-    setIsSearching(true);
-    // Simulasi pencarian - dalam implementasi nyata, ini akan memanggil API
-    setTimeout(() => {
-      // Data contoh - dalam kasus nyata, ini akan datang dari respons API
-      const mockResults = [
-        { kelurahan: 'KEBON KOSONG', kecamatan: 'KEMAYORAN', kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA', kodePos: '10630' },
-        { kelurahan: 'KEBON MELATI', kecamatan: 'TANAH ABANG', kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA', kodePos: '10230' },
-        { kelurahan: 'KEBON JERUK', kecamatan: 'KEBON JERUK', kota: 'JAKARTA BARAT', provinsi: 'DKI JAKARTA', kodePos: '11530' },
-      ].filter(item => {
-        const term = searchTerm.toUpperCase();
-        return item[searchType].toUpperCase().includes(term);
-      });
-      
-      setSearchResults(mockResults);
-      setIsSearching(false);
-    }, 800);
-  };
-  
-  // Mengisi data dari hasil pencarian
-  const fillAddressData = (result) => {
-    setKelurahan(result.kelurahan);
-    setKecamatan(result.kecamatan);
-    setKota(result.kota);
-    setProvinsi(result.provinsi);
-    setKodePos(result.kodePos);
-    setShowSearchModal(false);
   };
 
   return (
@@ -225,55 +178,17 @@ const PersonalDataForm = ({
               />
             </div>
             
-            <div className="relative">
-              <div className="flex items-center">
-                <div className="flex-grow">
-                  <FormField
-                    id="kodePos"
-                    label="KODE POS"
-                    type="text"
-                    placeholder="Kode Pos KTP"
-                    value={kodePos}
-                    onChange={handleKodePosChange}
-                    maxLength={5}
-                    formSubmitted={formSubmitted}
-                    formErrors={formErrors}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="absolute right-2 top-9 bg-blue-900 text-white p-2 rounded-md"
-                  onClick={() => openSearchModal('kelurahan')}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex space-x-2 mt-1">
-                <button
-                  type="button"
-                  className="text-xs text-blue-700 hover:text-blue-900"
-                  onClick={() => openSearchModal('kelurahan')}
-                >
-                  Cari Kelurahan
-                </button>
-                <button
-                  type="button"
-                  className="text-xs text-blue-700 hover:text-blue-900"
-                  onClick={() => openSearchModal('kecamatan')}
-                >
-                  Cari Kecamatan
-                </button>
-                <button
-                  type="button"
-                  className="text-xs text-blue-700 hover:text-blue-900"
-                  onClick={() => openSearchModal('kota')}
-                >
-                  Cari Kota
-                </button>
-              </div>
-            </div>
+            <FormField
+              id="kodePos"
+              label="KODE POS"
+              type="text"
+              placeholder="Kode Pos KTP"
+              value={kodePos}
+              onChange={handleKodePosChange}
+              maxLength={5}
+              formSubmitted={formSubmitted}
+              formErrors={formErrors}
+            />
             
             {isLoadingData && (
               <div className="mb-3 px-3 py-2 bg-gray-50 text-gray-700 text-sm rounded-md border border-gray-100 flex items-center">
@@ -352,78 +267,6 @@ const PersonalDataForm = ({
           </form>
         </div>
       </div>
-      
-      {/* Modal Pencarian */}
-      {showSearchModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
-                Cari berdasarkan {searchType === 'kelurahan' ? 'Kelurahan/Desa' : 
-                                 searchType === 'kecamatan' ? 'Kecamatan' : 'Kabupaten/Kota'}
-              </h3>
-              <button
-                onClick={() => setShowSearchModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="flex mb-4">
-              <input
-                type="text"
-                className="flex-grow border rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={`Masukkan ${searchType === 'kelurahan' ? 'kelurahan/desa' : 
-                            searchType === 'kecamatan' ? 'kecamatan' : 'kabupaten/kota'}`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <button
-                onClick={handleSearch}
-                className="bg-blue-900 text-white px-4 py-2 rounded-r-md hover:bg-blue-800"
-              >
-                Cari
-              </button>
-            </div>
-            
-            <div className="mt-4 max-h-60 overflow-y-auto">
-              {isSearching ? (
-                <div className="flex justify-center py-4">
-                  <svg className="animate-spin h-5 w-5 text-blue-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-              ) : searchResults.length === 0 && searchTerm ? (
-                <p className="text-center text-gray-500 py-4">Tidak ada data yang ditemukan</p>
-              ) : (
-                <ul className="divide-y">
-                  {searchResults.map((result, index) => (
-                    <li key={index} className="py-2">
-                      <button
-                        onClick={() => fillAddressData(result)}
-                        className="w-full text-left hover:bg-gray-50 p-2 rounded"
-                      >
-                        <div className="font-medium">{result[searchType]}</div>
-                        <div className="text-sm text-gray-600">
-                          {searchType !== 'kelurahan' && <span>{result.kelurahan}, </span>}
-                          {searchType !== 'kecamatan' && <span>{result.kecamatan}, </span>}
-                          {searchType !== 'kota' && <span>{result.kota}, </span>}
-                          <span>{result.provinsi} - {result.kodePos}</span>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
