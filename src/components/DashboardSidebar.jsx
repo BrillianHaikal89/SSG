@@ -77,16 +77,20 @@ const DashboardSidebar = ({
 
     return (
         <aside
-            className={`${sidebarOpen ? 'w-64' : 'w-0 md:w-20'} 
-              bg-blue-900 text-white shadow-xl z-30 transition-all duration-300 ease-in-out
-              fixed md:relative h-full overflow-hidden`}
+            className={`fixed md:relative z-40 top-0 left-0 h-full w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out 
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+                md:translate-x-0 md:w-20`}
+            style={{ 
+                backgroundColor: sidebarOpen ? 'white' : 'transparent',
+                boxShadow: sidebarOpen ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+            }}
         >
             {/* Mobile close button */}
             {sidebarOpen && (
                 <div className="md:hidden absolute top-2 right-2 z-50">
                     <button
                         onClick={toggleSidebar}
-                        className="text-white hover:bg-blue-800 rounded-full p-1"
+                        className="text-gray-700 hover:bg-gray-100 rounded-full p-1"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -95,22 +99,10 @@ const DashboardSidebar = ({
                 </div>
             )}
 
-            {/* Sidebar Header with Toggle */}
-            <div className="flex items-center justify-end p-4 border-b border-blue-800">
-                {/* Hamburger Menu Toggle */}
-                <button
-                    onClick={toggleSidebar}
-                    className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 hidden md:block"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-            </div>
-
-            {/* Logo Section - Only visible when sidebar is open */}
-            {sidebarOpen && (
-                <div className="flex items-center justify-center p-4 border-b border-blue-800">
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                {/* Logo and Title - Only visible when sidebar is open */}
+                {sidebarOpen && (
                     <div className="flex items-center space-x-2">
                         <Image
                             src="/img/logossg_white.png"
@@ -119,10 +111,20 @@ const DashboardSidebar = ({
                             height={36}
                             className="rounded-full"
                         />
-                        <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
+                        <span className="text-lg font-bold text-gray-800">SANTRI SIAP GUNA</span>
                     </div>
-                </div>
-            )}
+                )}
+                
+                {/* Hamburger Menu Toggle - Only for mobile */}
+                <button
+                    onClick={toggleSidebar}
+                    className="text-gray-700 md:hidden hover:bg-gray-100 rounded-full p-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
 
             {/* Navigation Menu */}
             <nav className="py-4">
@@ -137,7 +139,7 @@ const DashboardSidebar = ({
                                     }
                                 }}
                                 className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-                                hover:bg-blue-800 text-white transition-colors duration-300 group`}
+                                hover:bg-gray-100 text-gray-700 transition-colors duration-300 group`}
                                 title={sidebarOpen ? "" : item.label}
                             >
                                 <span className={`${sidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
@@ -149,11 +151,11 @@ const DashboardSidebar = ({
             </nav>
 
             {/* Logout Section */}
-            <div className="border-t border-blue-800">
+            <div className="border-t border-gray-200">
                 <button
                     onClick={handleLogout}
                     className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-                    text-white transition-colors duration-300 hover:bg-blue-800`}
+                    text-gray-700 transition-colors duration-300 hover:bg-gray-100`}
                     title={sidebarOpen ? "" : "Logout"}
                 >
                     <span className={`${sidebarOpen ? 'mr-3' : ''}`}>
