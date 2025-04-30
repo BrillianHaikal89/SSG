@@ -154,7 +154,7 @@ const PersonalDataForm = ({
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 pb-16">
         <h1 className="text-2xl font-bold text-center mb-6">Daftar - Data Pribadi</h1>
         
         {/* Progress Indicator */}
@@ -299,27 +299,35 @@ const PersonalDataForm = ({
               />
             </div>
             
-            <div className="relative mb-3">
-              <FormField
-                id="kodePos"
-                label="KODE POS"
-                type="text"
-                placeholder="Kode Pos KTP"
-                value={kodePos}
-                onChange={handleKodePosChange}
-                maxLength={5}
-                formSubmitted={formSubmitted}
-                formErrors={formErrors}
-              />
-              <button
-                type="button"
-                onClick={() => openSearchModal()}
-                className="absolute right-3 top-9 text-blue-700 hover:text-blue-900 p-1 rounded-md"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
+            {/* Improved Kode Pos field with search icon properly aligned */}
+            <div className="relative">
+              <label htmlFor="kodePos" className="block text-sm font-medium text-gray-700 mb-1">
+                KODE POS{formErrors.kodePos && formSubmitted && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <div className="flex items-center relative">
+                <input
+                  id="kodePos"
+                  type="text"
+                  placeholder="Kode Pos KTP"
+                  value={kodePos}
+                  onChange={handleKodePosChange}
+                  maxLength={5}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.kodePos && formSubmitted ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                <button
+                  type="button"
+                  onClick={openSearchModal}
+                  className="absolute right-2 text-blue-700 hover:text-blue-900 p-1 rounded-md"
+                  aria-label="Cari kode pos"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </div>
+              {formErrors.kodePos && formSubmitted && (
+                <p className="mt-1 text-sm text-red-500">{formErrors.kodePos}</p>
+              )}
             </div>
             
             {isLoadingData && (
@@ -388,10 +396,11 @@ const PersonalDataForm = ({
               />
             </div>
             
-            <div className="mt-6">
+            {/* Fixed margin for the button so it's always fully visible */}
+            <div className="mt-6 mb-6 fixed-button">
               <button
                 type="submit"
-                className="w-full bg-blue-900 text-white py-3 rounded-md font-medium hover:bg-blue-800 transition-colors"
+                className="w-full bg-blue-900 text-white py-3 rounded-md font-medium hover:bg-blue-800 transition-colors shadow-md"
               >
                 Lanjutkan
               </button>
@@ -402,7 +411,7 @@ const PersonalDataForm = ({
       
       {/* Modal Pencarian */}
       {showSearchModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">
@@ -507,6 +516,27 @@ const PersonalDataForm = ({
           </div>
         </div>
       )}
+
+      {/* Add additional CSS for fixing button visibility on mobile */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .fixed-button {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            z-index: 40;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          
+          .container {
+            padding-bottom: 80px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
