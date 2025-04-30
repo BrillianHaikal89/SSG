@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import FormField from './FormField';
 import InfoAlert from './InfoAlert';
+import toast from 'react-hot-toast';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const PersonalDataForm = ({ 
   formData, 
@@ -44,21 +47,62 @@ const PersonalDataForm = ({
     setShowSearchModal(true);
   };
   
-  // Handle pencarian alamat
-  const handleSearch = () => {
+  // Handle pencarian alamat - terhubung dengan API kode pos
+  const handleSearch = async () => {
     if (!searchTerm.trim()) return;
     
     setIsSearching(true);
-    // Simulasi pencarian - dalam implementasi nyata, ini akan memanggil API
-    setTimeout(() => {
-      // Data contoh - dalam kasus nyata, ini akan datang dari respons API
+    setSearchResults([]);
+    
+    try {
+      // Menggunakan endpoint kodepos yang sudah ada di aplikasi
+      const response = await fetch(`${API_URL}/users/kodepos/search?keyword=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        cache: 'no-store'
+      });
+      
+      if (!response.ok) {
+        // Jika response status 404, artinya tidak ada hasil yang ditemukan
+        if (response.status === 404) {
+          setSearchResults([]);
+          setIsSearching(false);
+          return;
+        }
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Pastikan data yang diterima sesuai format yang dibutuhkan
+      const formattedResults = Array.isArray(data) 
+        ? data.map(item => ({
+            kelurahan: item.kelurahan || '',
+            kecamatan: item.kecamatan || '',
+            kota: item.kota || item.kabupaten_kota || '',  
+            provinsi: item.provinsi || '',
+            kodePos: item.kode_pos || ''
+          }))
+        : [];
+      
+      setSearchResults(formattedResults);
+      
+      if (formattedResults.length === 0) {
+        console.log('Tidak ada hasil yang ditemukan untuk pencarian:', searchTerm);
+      }
+    } catch (error) {
+      console.error('Error searching for address:', error);
+      
+      // Jika API gagal, gunakan fallback ke data statis
+      // Ini hanya digunakan jika endpoint sebenarnya belum siap
       const mockResults = [
         { kelurahan: 'KEBON KOSONG', kecamatan: 'KEMAYORAN', kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA', kodePos: '10630' },
         { kelurahan: 'KEBON MELATI', kecamatan: 'TANAH ABANG', kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA', kodePos: '10230' },
-        { kelurahan: 'KEBON JERUK', kecamatan: 'KEBON JERUK', kota: 'JAKARTA BARAT', provinsi: 'DKI JAKARTA', kodePos: '11530' },
+        { kelurahan: 'KEBON JERUK', kecamatan: 'KEBON JERUK', kota: 'JAKARTA BARAT', provinsi: 'DKI JAKARTA', kodePos: '11530' }
       ].filter(item => {
         const term = searchTerm.toUpperCase();
-        // Cari berdasarkan kelurahan, kecamatan, atau kota (diutamakan dalam urutan ini)
         return (
           item.kelurahan.toUpperCase().includes(term) || 
           item.kecamatan.toUpperCase().includes(term) || 
@@ -67,18 +111,45 @@ const PersonalDataForm = ({
       });
       
       setSearchResults(mockResults);
+      
+      // Opsional: beri tahu pengguna bahwa API sedang menggunakan data lokal
+      toast.error('Gagal terhubung ke server. Menggunakan data lokal.');
+    } finally {
       setIsSearching(false);
-    }, 800);
+    }
   };
   
   // Mengisi data dari hasil pencarian
   const fillAddressData = (result) => {
-    setKelurahan(result.kelurahan);
-    setKecamatan(result.kecamatan);
-    setKota(result.kota);
-    setProvinsi(result.provinsi);
-    setKodePos(result.kodePos);
+    // Pastikan semua data ada sebelum mengisi form
+    if (!result) {
+      console.error('Data alamat tidak lengkap');
+      return;
+    }
+
+    // Transformasi data jika diperlukan
+    // Pastikan semua nilai dalam uppercase sesuai dengan tampilan formulir
+    const kelurahanVal = result.kelurahan ? result.kelurahan.toUpperCase() : '';
+    const kecamatanVal = result.kecamatan ? result.kecamatan.toUpperCase() : '';
+    const kotaVal = result.kota || result.kabupaten_kota ? (result.kota || result.kabupaten_kota).toUpperCase() : '';
+    const provinsiVal = result.provinsi ? result.provinsi.toUpperCase() : '';
+    const kodePosVal = result.kodePos || result.kode_pos || '';
+
+    // Isi data ke form
+    setKelurahan(kelurahanVal);
+    setKecamatan(kecamatanVal);
+    setKota(kotaVal);
+    setProvinsi(provinsiVal);
+    setKodePos(kodePosVal);
+    
+    // Kirim feedback ke pengguna
+    toast.success('Data alamat berhasil diisi');
+    
+    // Tutup modal pencarian
     setShowSearchModal(false);
+    
+    // Opsional: Log untuk debugging
+    console.log('Data alamat diisi:', { kelurahanVal, kecamatanVal, kotaVal, provinsiVal, kodePosVal });
   };
 
   return (
@@ -348,14 +419,14 @@ const PersonalDataForm = ({
             </div>
             
             <div className="mb-2 text-sm text-gray-600">
-              <p>Masukkan kelurahan/desa, kecamatan, atau kabupaten/kota</p>
+              <p>Masukkan nama kelurahan, kecamatan, atau kabupaten/kota</p>
             </div>
             
             <div className="flex mb-4">
               <input
                 type="text"
                 className="flex-grow border rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Cari alamat..."
+                placeholder="Contoh: Kebon Jeruk, Kemayoran, Jakarta..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -377,7 +448,42 @@ const PersonalDataForm = ({
                   </svg>
                 </div>
               ) : searchResults.length === 0 && searchTerm ? (
-                <p className="text-center text-gray-500 py-4">Tidak ada data yang ditemukan</p>
+                <div className="text-center py-4">
+                  <div className="text-gray-400 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 font-medium">Tidak ada data yang ditemukan</p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Coba kata kunci lain atau cari dengan kode pos
+                  </p>
+                  
+                  {/* Opsi alternatif: cari dengan kode pos */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-gray-600 text-sm mb-2">Atau cari menggunakan kode pos:</p>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        className="flex-grow border rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Masukkan kode pos (5 digit)"
+                        maxLength={5}
+                        onChange={(e) => setKodePos(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                        value={kodePos}
+                      />
+                      <button
+                        onClick={() => {
+                          setShowSearchModal(false);
+                          handleKodePosChange({ target: { value: kodePos } });
+                        }}
+                        className="bg-blue-900 text-white px-4 py-2 rounded-r-md hover:bg-blue-800"
+                        disabled={kodePos.length !== 5}
+                      >
+                        Gunakan
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <ul className="divide-y">
                   {searchResults.map((result, index) => (
