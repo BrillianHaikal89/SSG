@@ -1,4 +1,4 @@
-// DashboardSidebar.jsx - Complete fixed implementation
+// DashboardSidebar.jsx - Updated for mobile with no dark background
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import useAuthStore from '../stores/authStore';
@@ -15,26 +15,10 @@ const DashboardSidebar = ({
     navigateToProfile,
     navigateToMY,
     navigateToScan,
-    closeSidebar
+    closeSidebar,
+    isMobile
 }) => {
     const { role } = useAuthStore();
-    const [isMobile, setIsMobile] = useState(false);
-    
-    // Detect if we're on mobile
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-        
-        // Check on mount
-        checkMobile();
-        
-        // Add resize listener
-        window.addEventListener('resize', checkMobile);
-        
-        // Cleanup
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
     
     // Sidebar menu items
     const menuItems = [
@@ -118,114 +102,123 @@ const DashboardSidebar = ({
         }
     ];
 
+    // Generate appropriate classes for sidebar based on mobile/desktop and open/closed state
+    const getSidebarClasses = () => {
+        if (isMobile) {
+            // Mobile: slide in/out but keep sidebar above content with higher z-index
+            return `${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed z-40 w-64`;
+        } else {
+            // Desktop: expand/collapse in place
+            return `${sidebarOpen ? 'w-64' : 'w-16'}`;
+        }
+    };
+
     return (
-        <aside
-            className={`${isMobile 
-                    // Mobile styles: slide in from left
-                    ? `${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed z-30 w-64` 
-                    // Desktop styles: expand/collapse in place
-                    : `${sidebarOpen ? 'w-64' : 'w-16'}`
-                } bg-blue-900 text-white shadow-xl h-full overflow-hidden
-                   transition-all duration-300 ease-in-out flex flex-col`}
-        >
-            {/* Sidebar Header */}
-            <div className="flex items-center justify-between p-4 border-b border-blue-800 h-16">
-                {/* Desktop: Only show logo when expanded */}
-                {/* Mobile: Always show logo when sidebar is open */}
-                {(sidebarOpen && (
-                    <div className="flex items-center space-x-2">
-                        <Image
-                            src="/img/logossg_white.png"
-                            alt="Logo Santri Siap Guna"
-                            width={28}
-                            height={28}
-                            className="rounded-full"
-                        />
-                        <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
-                    </div>
-                ))}
-                
-                {/* Mobile: Close button (X) */}
-                {isMobile && sidebarOpen && (
-                    <button
-                        onClick={toggleSidebar}
-                        className="text-white hover:bg-blue-800 rounded-full p-1 transition-colors duration-300"
-                        aria-label="Close sidebar"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                )}
-                
-                {/* Desktop: Toggle button */}
-                {!isMobile && (
-                    <button
-                        onClick={toggleSidebar}
-                        className={`text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 ${!sidebarOpen ? 'mx-auto' : ''}`}
-                        aria-label="Toggle sidebar"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {sidebarOpen ? (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                            ) : (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            )}
-                        </svg>
-                    </button>
-                )}
-            </div>
-
-            {/* Navigation Menu */}
-            <nav className="py-4 flex-grow overflow-y-auto">
-                <ul className="space-y-1">
-                    {menuItems.map((item) => (
-                        <li key={item.id}>
-                            <button
-                                onClick={item.onClick}
-                                className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4 text-left' : 'p-3 justify-center'} 
-                                    hover:bg-blue-800 text-white transition-colors duration-300 group`}
-                                title={sidebarOpen ? "" : item.label}
-                            >
-                                <span className={`${sidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
-                                {sidebarOpen && <span className="text-sm">{item.label}</span>}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-
-            {/* Logout Section */}
-            <div className="border-t border-blue-800 mt-auto">
-                <button
-                    onClick={() => {
-                        handleLogout();
-                        closeSidebar && closeSidebar();
-                    }}
-                    className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4 text-left' : 'p-3 justify-center'} 
-                        text-white transition-colors duration-300 hover:bg-blue-800`}
-                    title={sidebarOpen ? "" : "Logout"}
-                >
-                    <span className={`${sidebarOpen ? 'mr-3' : ''}`}>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+        <>
+            {/* Sidebar component */}
+            <aside
+                className={`${getSidebarClasses()} 
+                    bg-blue-900 text-white shadow-xl h-full overflow-hidden
+                    transition-all duration-300 ease-in-out flex flex-col`}
+            >
+                {/* Sidebar Header */}
+                <div className="flex items-center justify-between p-4 border-b border-blue-800 h-16">
+                    {/* Show logo only when sidebar is open (both mobile and desktop) */}
+                    {sidebarOpen && (
+                        <div className="flex items-center space-x-2">
+                            <Image
+                                src="/img/logossg_white.png"
+                                alt="Logo Santri Siap Guna"
+                                width={28}
+                                height={28}
+                                className="rounded-full"
                             />
-                        </svg>
-                    </span>
-                    {sidebarOpen && <span className="text-sm">Logout</span>}
-                </button>
-            </div>
-        </aside>
+                            <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
+                        </div>
+                    )}
+                    
+                    {/* Mobile: Close button (X) */}
+                    {isMobile && sidebarOpen && (
+                        <button
+                            onClick={toggleSidebar}
+                            className="text-white hover:bg-blue-800 rounded-full p-1 transition-colors duration-300"
+                            aria-label="Close sidebar"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
+                    
+                    {/* Desktop: Toggle button */}
+                    {!isMobile && (
+                        <button
+                            onClick={toggleSidebar}
+                            className={`text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 ${!sidebarOpen ? 'mx-auto' : ''}`}
+                            aria-label="Toggle sidebar"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {sidebarOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+                    )}
+                </div>
+
+                {/* Navigation Menu */}
+                <nav className="py-4 flex-grow overflow-y-auto">
+                    <ul className="space-y-1">
+                        {menuItems.map((item) => (
+                            <li key={item.id}>
+                                <button
+                                    onClick={item.onClick}
+                                    className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4 text-left' : 'p-3 justify-center'} 
+                                        hover:bg-blue-800 text-white transition-colors duration-300 group`}
+                                    title={sidebarOpen ? "" : item.label}
+                                >
+                                    <span className={`${sidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
+                                    {sidebarOpen && <span className="text-sm">{item.label}</span>}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+
+                {/* Logout Section */}
+                <div className="border-t border-blue-800 mt-auto">
+                    <button
+                        onClick={() => {
+                            handleLogout();
+                            closeSidebar && closeSidebar();
+                        }}
+                        className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4 text-left' : 'p-3 justify-center'} 
+                            text-white transition-colors duration-300 hover:bg-blue-800`}
+                        title={sidebarOpen ? "" : "Logout"}
+                    >
+                        <span className={`${sidebarOpen ? 'mr-3' : ''}`}>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                            </svg>
+                        </span>
+                        {sidebarOpen && <span className="text-sm">Logout</span>}
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 };
 

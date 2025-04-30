@@ -1,4 +1,4 @@
-// DashboardHeader.jsx - Mobile-aware header component
+// DashboardHeader.jsx - Updated for mobile with no dark background
 import React from 'react';
 import Image from 'next/image';
 
@@ -16,7 +16,7 @@ const DashboardHeader = ({
     <header className="bg-white shadow-sm sticky top-0 z-20">
       {/* User Greeting Card */}
       <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-4 relative">
-        {/* Mobile Menu Button - Only shown on mobile */}
+        {/* Mobile Menu Button - Only shown on mobile when sidebar is closed */}
         {isMobile && !sidebarOpen && (
           <button 
             onClick={toggleSidebar}
@@ -33,7 +33,7 @@ const DashboardHeader = ({
           {/* User Profile & Greeting */}
           <div className="flex items-center">
             {/* Add left padding on mobile to make room for hamburger menu */}
-            <div className={`flex-shrink-0 mr-4 ${isMobile ? 'ml-8' : ''}`}>
+            <div className={`flex-shrink-0 mr-4 ${isMobile && !sidebarOpen ? 'ml-8' : ''}`}>
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-orange-500 font-bold text-xl shadow-md">
                 {userData.name ? userData.name.charAt(0).toUpperCase() : 'M'}
               </div>

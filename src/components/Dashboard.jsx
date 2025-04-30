@@ -1,4 +1,4 @@
-// Dashboard.jsx - Main component with separate mobile/desktop handling
+// Dashboard.jsx - Main component with no dark overlay for mobile
 import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
@@ -71,14 +71,7 @@ const Dashboard = ({
 
   return (
     <div className="flex h-screen bg-white overflow-hidden relative">
-      {/* Mobile dark overlay - only shown on mobile when sidebar is open */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        ></div>
-      )}
+      {/* Removed dark overlay for both mobile and desktop */}
 
       {/* Sidebar with mobile/desktop awareness */}
       <DashboardSidebar 
