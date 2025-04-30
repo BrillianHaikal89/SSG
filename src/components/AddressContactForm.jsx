@@ -34,32 +34,57 @@ const AddressContactForm = ({
     showConfirmPassword, setShowConfirmPassword 
   } = passwordVisibility;
 
-  // Format nomor HP untuk mengganti awalan 0 dengan 62
+  // Format nomor HP untuk mengizinkan input dengan awalan 08
+  // namun menyimpan dengan format 62
   const handlePhoneNumberChange = (e) => {
     let value = e.target.value;
     
     // Hapus karakter non-digit
     value = value.replace(/\D/g, '');
     
-    // Jika nomor dimulai dengan "0", ubah menjadi "62"
-    if (value.startsWith('0')) {
-      value = '62' + value.substring(1);
+    // Display format dengan 0 di awal untuk UX yang lebih familiar
+    let displayValue = value;
+    
+    // Jika user mengetik 08xxx, tampilkan seperti itu di input field
+    if (value.length > 0) {
+      // Pastikan selalu mulai dengan 0 jika tidak ada
+      if (!value.startsWith('0')) {
+        displayValue = '0' + value;
+      } else {
+        displayValue = value;
+      }
     }
     
-    // Jika nomor belum diawali dengan "62" dan tidak kosong, tambahkan "62"
-    if (!value.startsWith('62') && value.length > 0) {
-      value = '62' + value;
+    // Batasi panjang maksimal (15 digit)
+    displayValue = displayValue.slice(0, 12); // Max 12 digit karena 62 + 10 digit nomor lokal
+    
+    // Simpan nilai ke state (untuk database akan dikonversi saat submit)
+    setNomorHp(displayValue);
+  };
+
+  // Function untuk memformat nomor HP saat disubmit ke backend
+  const formatPhoneForDatabase = (phone) => {
+    // Hapus awalan 0 dan tambahkan 62
+    if (phone.startsWith('0')) {
+      return '62' + phone.substring(1);
     }
+    return phone;
+  };
+
+  // Modifikasi handleSubmit untuk memformat nomor HP
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
     
-    // Batasi panjang maksimal (13 digit setelah kode negara)
-    value = value.slice(0, 15);
+    // Konversi nomor HP dari 08xxx ke 62xxx
+    const formattedPhone = formatPhoneForDatabase(nomorHp);
     
-    setNomorHp(value);
+    // Panggil handleSubmit asli dengan nomor HP yang sudah diformat
+    handleSubmit(e, formattedPhone);
   };
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 pb-16">
         <h1 className="text-2xl font-bold text-center mb-6">Daftar - Data Alamat</h1>
         
         {/* Progress Indicator */}
@@ -84,7 +109,7 @@ const AddressContactForm = ({
             textColor="text-blue-800"
           />
 
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <form onSubmit={handleFormSubmit} className="space-y-4 mt-4">
             {/* Same Address Checkbox */}
             <div className="flex items-start mb-2">
               <input
@@ -105,7 +130,7 @@ const AddressContactForm = ({
               type="textarea"
               placeholder="Alamat Sesuai Domisili"
               value={alamatDomisili}
-              onChange={(e) => setAlamatDomisili(e.target.value)}
+              onChange={(e) => setAlamatDomisili(e.target.value.toUpperCase())}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
               readOnly={isSameAddress}
@@ -142,19 +167,39 @@ const AddressContactForm = ({
               />
             </div>
             
-            <FormField
-              id="kodePosStep2"
-              label="KODE POS"
-              type="text"
-              placeholder="Kode Pos Sesuai Domisili"
-              value={kodePosStep2}
-              onChange={handleKodePosChange}
-              maxLength={5}
-              formSubmitted={formSubmitted}
-              formErrors={formErrors}
-              readOnly={isSameAddress}
-              additionalClassName={isSameAddress ? "bg-gray-100" : ""}
-            />
+            {/* Improved Kode Pos field */}
+            <div className="relative">
+              <label htmlFor="kodePosStep2" className="block text-xs font-medium text-gray-500 uppercase mb-1">
+                KODE POS {formErrors.kodePosStep2 && formSubmitted && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <div className="flex items-center relative">
+                <input
+                  id="kodePosStep2"
+                  type="text"
+                  placeholder="Kode Pos Sesuai Domisili"
+                  value={kodePosStep2}
+                  onChange={handleKodePosChange}
+                  maxLength={5}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.kodePosStep2 && formSubmitted ? 'border-red-500' : 'border-gray-300'} ${isSameAddress ? 'bg-gray-100' : ''}`}
+                  readOnly={isSameAddress}
+                />
+                {!isSameAddress && (
+                  <button
+                    type="button"
+                    onClick={() => handleKodePosChange({ target: { value: kodePosStep2 } })}
+                    className="absolute right-2 text-blue-700 hover:text-blue-900 p-1 rounded-md"
+                    aria-label="Cari kode pos"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {formErrors.kodePosStep2 && formSubmitted && (
+                <p className="mt-1 text-sm text-red-500">{formErrors.kodePosStep2}</p>
+              )}
+            </div>
             
             {isLoadingData && (
               <div className="mb-3 px-3 py-2 bg-gray-50 text-gray-700 text-sm rounded-md border border-gray-100 flex items-center">
@@ -237,7 +282,7 @@ const AddressContactForm = ({
               formErrors={formErrors}
             />
             
-            {/* Nomor HP dengan penanganan khusus untuk format 62 */}
+            {/* Nomor HP dengan penanganan format 08xx -> 62xx */}
             <div className="mb-3">
               <label htmlFor="nomorHp" className="block text-xs font-medium text-gray-500 uppercase mb-1">
                 NOMOR HP <span className="text-red-500">*</span>
@@ -249,7 +294,7 @@ const AddressContactForm = ({
                   type="tel"
                   value={nomorHp}
                   onChange={handlePhoneNumberChange}
-                  placeholder="Contoh: 628123456789"
+                  placeholder="Contoh: 0812345678"
                   className={`appearance-none block w-full px-3 py-2 border ${formSubmitted && formErrors.nomorHp ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm`}
                 />
               </div>
@@ -257,7 +302,7 @@ const AddressContactForm = ({
                 <p className="mt-1 text-xs text-red-500">{formErrors.nomorHp}</p>
               )}
               <p className="mt-1 text-xs text-gray-500">
-                Nomor HP diawali dengan 62 (kode negara Indonesia)
+                Masukkan nomor HP dengan awalan 08
               </p>
             </div>
             
@@ -355,26 +400,54 @@ const AddressContactForm = ({
               <p className="mt-1 text-xs text-red-500">{formErrors.persetujuanSyarat}</p>
             )}
             
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <button
-                type="button"
-                onClick={goBackToStep1}
-                className="w-full bg-gray-200 text-gray-700 py-3 rounded-md font-medium hover:bg-gray-300 transition-colors"
-              >
-                Kembali
-              </button>
-              
-              <button
-                type="submit"
-                disabled={isLoadingData}
-                className="w-full bg-blue-900 text-white py-3 rounded-md font-medium hover:bg-blue-800 transition-colors disabled:opacity-50"
-              >
-                Daftar
-              </button>
+            {/* Fixed margin for the buttons so they're always fully visible */}
+            <div className="mt-6 mb-6">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={goBackToStep1}
+                  className="w-full bg-gray-200 text-gray-700 py-3 rounded-md font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Kembali
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isLoadingData}
+                  className="w-full bg-blue-900 text-white py-3 rounded-md font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 shadow-md"
+                >
+                  Daftar
+                </button>
+              </div>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Add additional CSS for fixing button visibility on mobile */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .container {
+            padding-bottom: 80px;
+          }
+          
+          form {
+            padding-bottom: 60px;
+          }
+          
+          .mt-6.mb-6 {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            z-index: 40;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+          }
+        }
+      `}</style>
     </div>
   );
 };
