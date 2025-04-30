@@ -1,4 +1,4 @@
-// DashboardSidebar.jsx - Improved for better mobile responsiveness
+// DashboardSidebar.jsx - Improved for better mobile experience without dark overlay
 import React from 'react';
 import Image from 'next/image';
 import useAuthStore from '../stores/authStore';
@@ -22,6 +22,7 @@ const DashboardSidebar = ({
     // Sidebar menu items
     const menuItems = [
         {
+            id: 'profile',
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -34,6 +35,7 @@ const DashboardSidebar = ({
             }
         },
         {
+            id: 'my',
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -46,6 +48,7 @@ const DashboardSidebar = ({
             }
         },
         {
+            id: 'quran',
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -58,6 +61,7 @@ const DashboardSidebar = ({
             }
         },
         {
+            id: 'presensi',
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -70,6 +74,7 @@ const DashboardSidebar = ({
             }
         },
         {
+            id: 'tugas',
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -82,6 +87,7 @@ const DashboardSidebar = ({
             }
         },
         {
+            id: 'scanqr',
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
@@ -98,39 +104,43 @@ const DashboardSidebar = ({
     return (
         <aside
             className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 w-64 md:w-20'} 
-                bg-blue-900 text-white shadow-xl fixed z-30 h-full overflow-hidden
-                transition-all duration-300 ease-in-out md:static`}
+                bg-blue-900 text-white shadow-xl fixed md:static z-30 h-full
+                transition-all duration-300 ease-in-out flex flex-col`}
         >
-            {/* Sidebar Header with Toggle and Logo */}
+            {/* Sidebar Header with Logo and Close Button */}
             <div className="flex items-center justify-between p-4 border-b border-blue-800">
-                {/* Logo - Always visible, but centered when collapsed on desktop */}
-                <div className={`flex items-center ${!sidebarOpen && 'md:justify-center md:w-full'}`}>
-                    <Image
-                        src="/img/logossg_white.png"
-                        alt="Logo Santri Siap Guna"
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                    />
-                    {sidebarOpen && <span className="ml-2 text-lg font-bold">SANTRI SIAP GUNA</span>}
+                {/* Logo Section */}
+                <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 flex-shrink-0">
+                        <Image
+                            src="/img/logossg_white.png"
+                            alt="Logo Santri Siap Guna"
+                            width={28}
+                            height={28}
+                            className="rounded-full"
+                        />
+                    </div>
+                    {sidebarOpen && <span className="text-lg font-bold">SANTRI SIAP GUNA</span>}
                 </div>
-
-                {/* Close button for mobile */}
+                
+                {/* Close button - only visible on mobile when sidebar is open */}
                 {sidebarOpen && (
                     <button
                         onClick={toggleSidebar}
-                        className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 md:hidden"
+                        className="text-white hover:bg-blue-800 rounded-full p-1 transition-colors duration-300 md:hidden"
+                        aria-label="Close sidebar"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 )}
-
-                {/* Hamburger Menu Toggle (desktop only) */}
+                
+                {/* Toggle button - only visible on desktop */}
                 <button
                     onClick={toggleSidebar}
                     className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 hidden md:block"
+                    aria-label="Toggle sidebar width"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         {sidebarOpen ? (
@@ -142,11 +152,11 @@ const DashboardSidebar = ({
                 </button>
             </div>
 
-            {/* Navigation Menu */}
-            <nav className="py-4 h-full overflow-y-auto">
+            {/* Navigation Menu - Scrollable */}
+            <nav className="py-4 flex-grow overflow-y-auto">
                 <ul className="space-y-1">
-                    {menuItems.map((item, index) => (
-                        <li key={index}>
+                    {menuItems.map((item) => (
+                        <li key={item.id}>
                             <button
                                 onClick={item.onClick}
                                 className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
@@ -162,7 +172,7 @@ const DashboardSidebar = ({
             </nav>
 
             {/* Logout Section - Fixed at bottom */}
-            <div className="border-t border-blue-800 absolute bottom-0 w-full">
+            <div className="border-t border-blue-800 mt-auto">
                 <button
                     onClick={() => {
                         handleLogout();

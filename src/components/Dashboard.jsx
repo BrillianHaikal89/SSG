@@ -1,4 +1,3 @@
-// Dashboard.jsx - Main component with improved mobile responsiveness
 import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
@@ -24,9 +23,10 @@ const Dashboard = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  // Close sidebar by default on mobile, open on desktop
+  // Detect screen size and set sidebar state
   useEffect(() => {
     const handleResize = () => {
+      // Close sidebar on mobile, open on desktop
       if (window.innerWidth < 768) {
         setSidebarOpen(false);
       } else {
@@ -34,11 +34,13 @@ const Dashboard = ({
       }
     };
     
-    // Call once on mount and add event listener
+    // Run once on component mount
     handleResize();
+    
+    // Add event listener for window resize
     window.addEventListener('resize', handleResize);
     
-    // Cleanup
+    // Clean up event listener on component unmount
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -65,17 +67,8 @@ const Dashboard = ({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Overlay for mobile - closes sidebar when clicked */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        ></div>
-      )}
-
-      {/* Sidebar with higher z-index */}
+    <div className="flex h-screen bg-white overflow-hidden relative">
+      {/* Sidebar */}
       <DashboardSidebar 
         userData={userData}
         sidebarOpen={sidebarOpen}
@@ -91,8 +84,8 @@ const Dashboard = ({
         closeSidebar={closeSidebar}
       />
 
-      {/* Main content area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Main content */}
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-white`}>
         <DashboardHeader 
           userData={userData}
           sidebarOpen={sidebarOpen}
