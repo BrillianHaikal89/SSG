@@ -49,59 +49,26 @@ const PersonalDataForm = ({
     if (!searchTerm.trim()) return;
     
     setIsSearching(true);
-    
-    // Dalam implementasi nyata, di sini kita akan memanggil API
-    // Contoh API call ke kode pos endpoint:
-    // fetch(`${API_URL}/users/search-alamat?q=${encodeURIComponent(searchTerm)}`)
-    //    .then(response => response.json())
-    //    .then(data => {
-    //      setSearchResults(data);
-    //      setIsSearching(false);
-    //    })
-    //    .catch(error => {
-    //      console.error("Error searching:", error);
-    //      setIsSearching(false);
-    //    });
-    
-    // Simulasi respons API dengan setTimeout
+    // Simulasi pencarian - dalam implementasi nyata, ini akan memanggil API
     setTimeout(() => {
-      // Data contoh - dalam implementasi nyata ini akan diganti dengan respons API
+      // Data contoh - dalam kasus nyata, ini akan datang dari respons API
       const mockResults = [
         { kelurahan: 'KEBON KOSONG', kecamatan: 'KEMAYORAN', kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA', kodePos: '10630' },
         { kelurahan: 'KEBON MELATI', kecamatan: 'TANAH ABANG', kota: 'JAKARTA PUSAT', provinsi: 'DKI JAKARTA', kodePos: '10230' },
         { kelurahan: 'KEBON JERUK', kecamatan: 'KEBON JERUK', kota: 'JAKARTA BARAT', provinsi: 'DKI JAKARTA', kodePos: '11530' },
-        { kelurahan: 'SUKABUMI UTARA', kecamatan: 'KEBON JERUK', kota: 'JAKARTA BARAT', provinsi: 'DKI JAKARTA', kodePos: '11540' },
-        { kelurahan: 'PALMERAH', kecamatan: 'PALMERAH', kota: 'JAKARTA BARAT', provinsi: 'DKI JAKARTA', kodePos: '11480' },
-        { kelurahan: 'KELAPA GADING TIMUR', kecamatan: 'KELAPA GADING', kota: 'JAKARTA UTARA', provinsi: 'DKI JAKARTA', kodePos: '14240' },
-        { kelurahan: 'KOTA BARU', kecamatan: 'BEKASI BARAT', kota: 'BEKASI', provinsi: 'JAWA BARAT', kodePos: '17133' },
-        { kelurahan: 'MEKAR SARI', kecamatan: 'BEKASI BARAT', kota: 'BEKASI', provinsi: 'JAWA BARAT', kodePos: '17131' }
       ].filter(item => {
         const term = searchTerm.toUpperCase();
-        // Cari di semua field alamat
+        // Cari berdasarkan kelurahan, kecamatan, atau kota (diutamakan dalam urutan ini)
         return (
           item.kelurahan.toUpperCase().includes(term) || 
           item.kecamatan.toUpperCase().includes(term) || 
-          item.kota.toUpperCase().includes(term) ||
-          item.provinsi.toUpperCase().includes(term)
+          item.kota.toUpperCase().includes(term)
         );
       });
       
       setSearchResults(mockResults);
       setIsSearching(false);
     }, 800);
-  };
-  
-  // Mengisi data alamat dari hasil pencarian
-  const fillAddressData = (result) => {
-    setKelurahan(result.kelurahan);
-    setKecamatan(result.kecamatan);
-    setKota(result.kota);
-    setProvinsi(result.provinsi);
-    setKodePos(result.kodePos);
-    setShowSearchModal(false);
-    
-    // Menampilkan konfirmasi untuk pengguna
-    toast.success(`Data alamat berhasil diisi dengan alamat: ${result.kelurahan}, ${result.kecamatan}, ${result.kota}`);
   };
   
   // Mengisi data dari hasil pencarian
@@ -261,39 +228,27 @@ const PersonalDataForm = ({
               />
             </div>
             
-            <div className="mb-3">
-              <label htmlFor="kodePos" className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                KODE POS <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center">
-                <div className="flex-grow relative">
-                  <input
-                    id="kodePos"
-                    type="text"
-                    value={kodePos}
-                    onChange={handleKodePosChange}
-                    placeholder="Masukkan kode pos 5 digit"
-                    className={`appearance-none block w-full px-3 py-2 border ${formSubmitted && formErrors.kodePos ? 'border-red-500' : 'border-gray-300'} rounded-l-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-sm`}
-                    maxLength="5"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={openSearchModal}
-                  className="bg-blue-900 text-white px-3 py-2 rounded-r-md hover:bg-blue-800 text-sm flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Cari Alamat
-                </button>
-              </div>
-              {formSubmitted && formErrors.kodePos && (
-                <p className="mt-1 text-xs text-red-500">{formErrors.kodePos}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                Tidak tahu kode pos? Gunakan tombol "Cari Alamat" untuk mencari berdasarkan kelurahan/desa, kecamatan, atau kabupaten/kota.
-              </p>
+            <div className="relative mb-3">
+              <FormField
+                id="kodePos"
+                label="KODE POS"
+                type="text"
+                placeholder="Kode Pos KTP"
+                value={kodePos}
+                onChange={handleKodePosChange}
+                maxLength={5}
+                formSubmitted={formSubmitted}
+                formErrors={formErrors}
+              />
+              <button
+                type="button"
+                onClick={() => openSearchModal()}
+                className="absolute right-3 top-9 text-blue-700 hover:text-blue-900 p-1 rounded-md"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
             </div>
             
             {isLoadingData && (
@@ -378,7 +333,7 @@ const PersonalDataForm = ({
       {showSearchModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">
                 Cari Alamat
               </h3>
@@ -392,21 +347,18 @@ const PersonalDataForm = ({
               </button>
             </div>
             
-            <div className="mb-3">
-              <p className="text-sm text-gray-600">
-                Masukkan nama kelurahan/desa, kecamatan, atau kabupaten/kota untuk mencari alamat. Data akan terisi otomatis.
-              </p>
+            <div className="mb-2 text-sm text-gray-600">
+              <p>Masukkan kelurahan/desa, kecamatan, atau kabupaten/kota</p>
             </div>
             
             <div className="flex mb-4">
               <input
                 type="text"
                 className="flex-grow border rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Contoh: Kebon Jeruk, Palmerah, Jakarta..."
+                placeholder="Cari alamat..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                autoFocus
               />
               <button
                 onClick={handleSearch}
@@ -415,53 +367,35 @@ const PersonalDataForm = ({
                 Cari
               </button>
             </div>
-
-            {/* Hasil Pencarian */}
-            <div className="mt-2">
+            
+            <div className="mt-4 max-h-60 overflow-y-auto">
               {isSearching ? (
-                <div className="flex justify-center py-6">
-                  <svg className="animate-spin h-8 w-8 text-blue-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <div className="flex justify-center py-4">
+                  <svg className="animate-spin h-5 w-5 text-blue-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 </div>
               ) : searchResults.length === 0 && searchTerm ? (
-                <div className="py-6 text-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-gray-500">Tidak ada hasil yang ditemukan</p>
-                  <p className="text-sm text-gray-400 mt-1">Coba kata kunci lain atau pastikan ejaan sudah benar</p>
-                </div>
+                <p className="text-center text-gray-500 py-4">Tidak ada data yang ditemukan</p>
               ) : (
-                <div>
-                  {searchResults.length > 0 && (
-                    <p className="text-xs text-gray-500 mb-1 font-medium">
-                      {searchResults.length} hasil ditemukan. Klik salah satu untuk mengisi formulir secara otomatis.
-                    </p>
-                  )}
-                  <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200">
-                    <ul className="divide-y divide-gray-200">
-                      {searchResults.map((result, index) => (
-                        <li key={index} className="hover:bg-blue-50 transition-colors">
-                          <button
-                            onClick={() => fillAddressData(result)}
-                            className="w-full text-left p-3"
-                            type="button"
-                          >
-                            <div className="font-medium text-blue-900">{result.kelurahan}</div>
-                            <div className="text-sm text-gray-600 mt-1">
-                              Kec. {result.kecamatan}, {result.kota}, {result.provinsi}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Kode Pos: {result.kodePos}
-                            </div>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <ul className="divide-y">
+                  {searchResults.map((result, index) => (
+                    <li key={index} className="py-2">
+                      <button
+                        onClick={() => fillAddressData(result)}
+                        className="w-full text-left hover:bg-gray-50 p-2 rounded"
+                      >
+                        <div className="font-medium">{result.kelurahan}</div>
+                        <div className="text-sm text-gray-600">
+                          <span>{result.kecamatan}, </span>
+                          <span>{result.kota}, </span>
+                          <span>{result.provinsi} - {result.kodePos}</span>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
