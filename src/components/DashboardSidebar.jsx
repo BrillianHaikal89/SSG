@@ -19,7 +19,7 @@ const DashboardSidebar = ({
     navigateToPeserta
 }) => {
     const { role } = useAuthStore();
-    
+
     // Fungsi untuk mendapatkan menu items yang dinamis berdasarkan role
     const getMenuItems = () => {
         const baseItems = [
@@ -35,7 +35,7 @@ const DashboardSidebar = ({
             {
                 icon: (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                     </svg>
                 ),
                 label: "Mutaba'ah Yaumiyah",
@@ -90,7 +90,7 @@ const DashboardSidebar = ({
             roleSpecificItems.push({
                 icon: (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 ),
                 label: "E-Card",
@@ -118,13 +118,13 @@ const DashboardSidebar = ({
 
     return (
         <aside
-            className={`fixed md:relative top-0 left-0 h-full w-64 
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-                md:translate-x-0 md:w-20 
+            className={`fixed md:relative top-0 left-0 h-full 
+                ${sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
                 bg-white md:bg-blue-900 
                 text-gray-800 md:text-white 
                 shadow-xl z-50 
-                transition-transform duration-300 ease-in-out`}
+                transition-all duration-300 ease-in-out 
+                overflow-hidden`}
         >
             {/* Mobile close button */}
             {sidebarOpen && (
@@ -140,7 +140,7 @@ const DashboardSidebar = ({
                 </div>
             )}
 
-            {/* Sidebar Header with Toggle */}
+            {/* Sidebar Header dengan Toggle */}
             <div className="flex items-center justify-end p-4 border-b border-gray-200 md:border-blue-800">
                 {/* Hamburger Menu Toggle */}
                 <button
@@ -153,7 +153,7 @@ const DashboardSidebar = ({
                 </button>
             </div>
 
-            {/* Logo Section - Only visible when sidebar is open */}
+            {/* Logo Section - Hanya terlihat saat sidebar terbuka */}
             {sidebarOpen && (
                 <div className="flex items-center justify-center p-4 border-b border-gray-200 md:border-blue-800">
                     <div className="flex items-center space-x-2">
@@ -164,13 +164,13 @@ const DashboardSidebar = ({
                             height={36}
                             className="rounded-full"
                         />
-                        <span className="text-lg font-bold text-gray-800 md:text-white">SANTRI SIAP GUNA</span>
+                        <span className="text-lg font-bold text-gray-800 md:text-white truncate">SANTRI SIAP GUNA</span>
                     </div>
                 </div>
             )}
 
             {/* Navigation Menu */}
-            <nav className="py-4">
+            <nav className="py-4 overflow-y-auto">
                 <ul className="space-y-1">
                     {menuItems.map((item, index) => (
                         <li key={index}>
@@ -181,12 +181,17 @@ const DashboardSidebar = ({
                                         toggleSidebar();
                                     }
                                 }}
-                                className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-                                hover:bg-gray-100 md:hover:bg-blue-800 text-gray-800 md:text-white transition-colors duration-300 group`}
-                                title={sidebarOpen ? "" : item.label}
+                                className={`flex items-center w-full 
+                                    ${sidebarOpen ? 'p-3 px-4 justify-start' : 'p-3 justify-center'} 
+                                    hover:bg-gray-100 md:hover:bg-blue-800 
+                                    text-gray-800 md:text-white 
+                                    transition-colors duration-300 group`}
+                                title={!sidebarOpen ? item.label : ""}
                             >
                                 <span className={`${sidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
-                                {sidebarOpen && <span className="text-sm">{item.label}</span>}
+                                {sidebarOpen && (
+                                    <span className="text-sm truncate">{item.label}</span>
+                                )}
                             </button>
                         </li>
                     ))}
@@ -197,9 +202,12 @@ const DashboardSidebar = ({
             <div className="border-t border-gray-200 md:border-blue-800">
                 <button
                     onClick={handleLogout}
-                    className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-                    text-gray-800 md:text-white transition-colors duration-300 hover:bg-gray-100 md:hover:bg-blue-800`}
-                    title={sidebarOpen ? "" : "Logout"}
+                    className={`flex items-center w-full 
+                        ${sidebarOpen ? 'p-3 px-4 justify-start' : 'p-3 justify-center'} 
+                        text-gray-800 md:text-white 
+                        transition-colors duration-300 
+                        hover:bg-gray-100 md:hover:bg-blue-800`}
+                    title={!sidebarOpen ? "Logout" : ""}
                 >
                     <span className={`${sidebarOpen ? 'mr-3' : ''}`}>
                         <svg
@@ -217,7 +225,7 @@ const DashboardSidebar = ({
                             />
                         </svg>
                     </span>
-                    {sidebarOpen && <span className="text-sm">Logout</span>}
+                    {sidebarOpen && <span className="text-sm truncate">Logout</span>}
                 </button>
             </div>
         </aside>
