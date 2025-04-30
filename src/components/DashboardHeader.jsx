@@ -1,15 +1,30 @@
+// DashboardHeader.jsx - Enhanced for better mobile experience
 import React from 'react';
 import Image from 'next/image';
 
 const DashboardHeader = ({ 
   userData, 
+  sidebarOpen,
+  toggleSidebar,
   showNotification, 
   notificationMessage, 
   notificationType, 
   setShowNotification 
 }) => {
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm sticky top-0 z-20">
+      {/* Mobile Menu Button - Only visible on mobile */}
+      <div className="md:hidden absolute top-4 left-4 z-20">
+        <button 
+          onClick={toggleSidebar}
+          className="text-white bg-orange-500 rounded-full p-2 shadow-md"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
       {/* User Greeting Card */}
       <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-4 relative">
         <div className="container mx-auto flex justify-between items-center">
@@ -39,28 +54,29 @@ const DashboardHeader = ({
         </div>
       </div>
 
-      {/* Custom notification - Centered at top */}
+      {/* Custom notification - Centered at top with better mobile styling */}
       {showNotification && (
         <div 
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-lg shadow-lg z-50 flex items-center transition-all duration-300 max-w-md w-full ${
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-lg shadow-lg z-50 flex items-center transition-all duration-300 max-w-md w-11/12 sm:w-full ${
             notificationType === 'success' 
               ? 'bg-green-50 text-green-800 border-l-4 border-green-500' 
               : 'bg-red-50 text-red-800 border-l-4 border-red-500'
           }`}
         >
           {notificationType === 'success' ? (
-            <svg className="h-6 w-6 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-6 w-6 mr-3 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           ) : (
-            <svg className="h-6 w-6 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-6 w-6 mr-3 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           )}
-          <span className="flex-grow">{notificationMessage}</span>
+          <span className="flex-grow text-sm sm:text-base">{notificationMessage}</span>
           <button 
-            className="ml-2 text-gray-500 hover:text-gray-700"
+            className="ml-2 text-gray-500 hover:text-gray-700 flex-shrink-0"
             onClick={() => setShowNotification(false)}
+            aria-label="Close notification"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

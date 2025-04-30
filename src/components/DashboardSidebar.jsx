@@ -1,3 +1,4 @@
+// DashboardSidebar.jsx - Improved for better mobile responsiveness
 import React from 'react';
 import Image from 'next/image';
 import useAuthStore from '../stores/authStore';
@@ -13,9 +14,11 @@ const DashboardSidebar = ({
     navigateToTugas,
     navigateToProfile,
     navigateToMY,
-    navigateToScan
+    navigateToScan,
+    closeSidebar
 }) => {
     const { role } = useAuthStore();
+    
     // Sidebar menu items
     const menuItems = [
         {
@@ -25,7 +28,10 @@ const DashboardSidebar = ({
                 </svg>
             ),
             label: "Profile",
-            onClick: navigateToProfile
+            onClick: () => {
+                navigateToProfile();
+                closeSidebar && closeSidebar();
+            }
         },
         {
             icon: (
@@ -34,7 +40,10 @@ const DashboardSidebar = ({
                 </svg>
             ),
             label: "Mutaba'ah Yaumiyah",
-            onClick: navigateToMY
+            onClick: () => {
+                navigateToMY();
+                closeSidebar && closeSidebar();
+            }
         },
         {
             icon: (
@@ -43,7 +52,10 @@ const DashboardSidebar = ({
                 </svg>
             ),
             label: "Al-Quran",
-            onClick: navigateToAlQuran
+            onClick: () => {
+                navigateToAlQuran();
+                closeSidebar && closeSidebar();
+            }
         },
         {
             icon: (
@@ -52,7 +64,10 @@ const DashboardSidebar = ({
                 </svg>
             ),
             label: "Presensi",
-            onClick: navigateToPresensi
+            onClick: () => {
+                navigateToPresensi();
+                closeSidebar && closeSidebar();
+            }
         },
         {
             icon: (
@@ -61,61 +76,81 @@ const DashboardSidebar = ({
                 </svg>
             ),
             label: "Tugas",
-            onClick: navigateToTugas
-        },{
+            onClick: () => {
+                navigateToTugas();
+                closeSidebar && closeSidebar();
+            }
+        },
+        {
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
             ),
             label: "Scan QR",
-            onClick: navigateToScan
+            onClick: () => {
+                navigateToScan();
+                closeSidebar && closeSidebar();
+            }
         }
     ];
 
     return (
         <aside
-            className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-blue-900 text-white shadow-xl z-30 transition-all duration-300 ease-in-out
-        fixed md:static h-full overflow-hidden`}
+            className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 w-64 md:w-20'} 
+                bg-blue-900 text-white shadow-xl fixed z-30 h-full overflow-hidden
+                transition-all duration-300 ease-in-out md:static`}
         >
-            {/* Sidebar Header with Toggle */}
-            <div className="flex items-center justify-end p-4 border-b border-blue-800">
-                {/* Hamburger Menu Toggle */}
+            {/* Sidebar Header with Toggle and Logo */}
+            <div className="flex items-center justify-between p-4 border-b border-blue-800">
+                {/* Logo - Always visible, but centered when collapsed on desktop */}
+                <div className={`flex items-center ${!sidebarOpen && 'md:justify-center md:w-full'}`}>
+                    <Image
+                        src="/img/logossg_white.png"
+                        alt="Logo Santri Siap Guna"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                    />
+                    {sidebarOpen && <span className="ml-2 text-lg font-bold">SANTRI SIAP GUNA</span>}
+                </div>
+
+                {/* Close button for mobile */}
+                {sidebarOpen && (
+                    <button
+                        onClick={toggleSidebar}
+                        className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 md:hidden"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                )}
+
+                {/* Hamburger Menu Toggle (desktop only) */}
                 <button
                     onClick={toggleSidebar}
-                    className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300"
+                    className="text-white hover:bg-blue-800 rounded-full p-2 transition-colors duration-300 hidden md:block"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        {sidebarOpen ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        )}
                     </svg>
                 </button>
             </div>
 
-            {/* Logo Section - Only visible when sidebar is open */}
-            {sidebarOpen && (
-                <div className="flex items-center justify-center p-4 border-b border-blue-800">
-                    <div className="flex items-center space-x-2">
-                        <Image
-                            src="/img/logossg_white.png"
-                            alt="Logo Santri Siap Guna"
-                            width={36}
-                            height={36}
-                            className="rounded-full"
-                        />
-                        <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
-                    </div>
-                </div>
-            )}
-
             {/* Navigation Menu */}
-            <nav className="py-4">
+            <nav className="py-4 h-full overflow-y-auto">
                 <ul className="space-y-1">
                     {menuItems.map((item, index) => (
                         <li key={index}>
                             <button
                                 onClick={item.onClick}
                                 className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-                  hover:bg-blue-800 text-white transition-colors duration-300 group`}
+                                    hover:bg-blue-800 text-white transition-colors duration-300 group`}
                                 title={sidebarOpen ? "" : item.label}
                             >
                                 <span className={`${sidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
@@ -126,12 +161,15 @@ const DashboardSidebar = ({
                 </ul>
             </nav>
 
-            {/* Logout Section */}
-            <div className="border-t border-blue-800">
+            {/* Logout Section - Fixed at bottom */}
+            <div className="border-t border-blue-800 absolute bottom-0 w-full">
                 <button
-                    onClick={handleLogout}
+                    onClick={() => {
+                        handleLogout();
+                        closeSidebar && closeSidebar();
+                    }}
                     className={`flex items-center w-full ${sidebarOpen ? 'p-3 px-4' : 'p-3 justify-center'} 
-      text-white transition-colors duration-300 hover:bg-blue-800`}
+                        text-white transition-colors duration-300 hover:bg-blue-800`}
                     title={sidebarOpen ? "" : "Logout"}
                 >
                     <span className={`${sidebarOpen ? 'mr-3' : ''}`}>

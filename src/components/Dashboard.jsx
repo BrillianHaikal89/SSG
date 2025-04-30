@@ -1,3 +1,4 @@
+// Dashboard.jsx - Main component with improved mobile responsiveness
 import React, { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
@@ -22,22 +23,31 @@ const Dashboard = ({
   setShowNotification
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+  // Close sidebar by default on mobile, open on desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) setSidebarOpen(false);
-      else setSidebarOpen(false);
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
     };
+    
+    // Call once on mount and add event listener
     handleResize();
     window.addEventListener('resize', handleResize);
+    
+    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const toggleMobileMenu = () => {
-    setSidebarOpen(true);
-    setMobileMenuOpen(!mobileMenuOpen);
+  
+  const closeSidebar = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   if (loading) {
@@ -56,13 +66,16 @@ const Dashboard = ({
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {mobileMenuOpen && (
+      {/* Overlay for mobile - closes sidebar when clicked */}
+      {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
-          onClick={toggleMobileMenu}
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
         ></div>
       )}
 
+      {/* Sidebar with higher z-index */}
       <DashboardSidebar 
         userData={userData}
         sidebarOpen={sidebarOpen}
@@ -75,15 +88,15 @@ const Dashboard = ({
         navigateToTugas={navigateToTugas}
         navigateToProfile={navigateToProfile}
         navigateToScan={navigateToScan}
-
+        closeSidebar={closeSidebar}
       />
 
+      {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <DashboardHeader 
           userData={userData}
           sidebarOpen={sidebarOpen}
           toggleSidebar={toggleSidebar}
-          toggleMobileMenu={toggleMobileMenu}
           showNotification={showNotification}
           notificationMessage={notificationMessage}
           notificationType={notificationType}
