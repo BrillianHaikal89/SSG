@@ -1,4 +1,3 @@
-// DashboardHeader.jsx - Enhanced for better mobile experience
 import React from 'react';
 import Image from 'next/image';
 
@@ -13,30 +12,30 @@ const DashboardHeader = ({
 }) => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-20">
-      {/* Mobile Menu Button - Only visible on mobile */}
-      <div className="md:hidden absolute top-4 left-4 z-20">
+      {/* User Greeting Card with improved spacing */}
+      <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-4 relative">
+        {/* Mobile Menu Button - Positioned with proper spacing */}
         <button 
           onClick={toggleSidebar}
-          className="text-white bg-orange-500 rounded-full p-2 shadow-md"
+          className="text-white hover:bg-orange-600/30 rounded-full p-2 transition-colors duration-300 absolute left-3 top-1/2 transform -translate-y-1/2 md:hidden"
+          aria-label="Toggle menu"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-      </div>
 
-      {/* User Greeting Card */}
-      <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-4 relative">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center">
+          <div className="flex items-center pl-10 md:pl-0"> {/* Added left padding on mobile to accommodate hamburger menu */}
             <div className="flex-shrink-0 mr-4">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-orange-500 font-bold text-xl shadow-md">
                 {userData.name ? userData.name.charAt(0).toUpperCase() : 'M'}
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Assalamu'alaikum, {userData.name}</h2>
-              <p className="text-sm text-white opacity-80">{userData.level}</p>
+              <h2 className="text-lg sm:text-xl font-bold text-white">Assalamu'alaikum,</h2>
+              <p className="text-sm font-semibold text-white">{userData.name}</p>
+              <p className="text-xs text-white opacity-80">{userData.level}</p>
             </div>
           </div>
 
@@ -46,7 +45,7 @@ const DashboardHeader = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             {userData.notifications > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-xs rounded-full h-4 w-4 flex items-center justify-center text-white">
+              <span className="absolute top-0 right-0 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center text-white">
                 {userData.notifications}
               </span>
             )}
