@@ -21,6 +21,16 @@ const PersonalDataForm = ({
     setAddress, setRt, setRw, setKodePos, setKelurahan, setKecamatan, setKota, setProvinsi
   } = setters;
 
+  // Handler untuk mengubah nama menjadi uppercase
+  const handleNameChange = (e) => {
+    setName(e.target.value.toUpperCase());
+  };
+
+  // Handler untuk mengubah alamat menjadi uppercase
+  const handleAddressChange = (e) => {
+    setAddress(e.target.value.toUpperCase());
+  };
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
@@ -54,7 +64,7 @@ const PersonalDataForm = ({
               label="NAMA LENGKAP"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
               placeholder="Nama sesuai KTP"
               formSubmitted={formSubmitted}
               formErrors={formErrors}
@@ -136,7 +146,7 @@ const PersonalDataForm = ({
               label="ALAMAT (SESUAI KTP)"
               type="textarea"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={handleAddressChange}
               placeholder="Alamat Lengkap"
               formSubmitted={formSubmitted}
               formErrors={formErrors}
