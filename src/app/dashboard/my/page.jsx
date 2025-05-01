@@ -64,12 +64,18 @@ export default function MutabahYaumiyahPage() {
   const updateHeaderBgColor = (dateString) => {
     const daysDiff = calculateDaysDifference(dateString);
     
-    if (daysDiff === 2) {
-      setHeaderBgColor('bg-orange-500'); // Orange for 2 days back
-    } else if (daysDiff >= 5) {
-      setHeaderBgColor('bg-amber-700'); // Brown for 5+ days back
+    if (daysDiff === 0) {
+      // Today - Green
+      setHeaderBgColor('bg-green-600');
+    } else if (daysDiff === 1) {
+      // Yesterday - Yellow
+      setHeaderBgColor('bg-yellow-500');
+    } else if (daysDiff <= 3) {
+      // 2-3 days back - Orange
+      setHeaderBgColor('bg-orange-500');
     } else {
-      setHeaderBgColor('bg-green-600'); // Default green for today/other days
+      // 4+ days back - Brown/Red
+      setHeaderBgColor('bg-amber-700');
     }
   };
 
@@ -330,11 +336,32 @@ export default function MutabahYaumiyahPage() {
     });
   };
 
+  // Function to get text color class based on header background color
+  const getTextColorClass = () => {
+    // Default to white for most backgrounds
+    return 'text-white';
+  };
+
+  // Get status text based on the date difference
+  const getStatusText = () => {
+    const daysDiff = calculateDaysDifference(selectedDate);
+    
+    if (daysDiff === 0) {
+      return "Hari Ini";
+    } else if (daysDiff === 1) {
+      return "Kemarin";
+    } else if (daysDiff > 1) {
+      return `${daysDiff} hari yang lalu`;
+    }
+    
+    return "";
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         {/* Header with dynamic background color */}
-        <div className={`p-6 text-white ${headerBgColor}`}>
+        <div className={`p-6 ${getTextColorClass()} ${headerBgColor}`}>
           <h1 className="text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
           <p className="text-center mt-2">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium mt-1">{user?.name || 'Pengguna'}</p>
@@ -344,6 +371,15 @@ export default function MutabahYaumiyahPage() {
             <div className="text-center mt-2">
               <p className="text-sm">{formatDate(currentDateTime)}</p>
               <p className="text-lg font-bold">{formatTime(currentDateTime)}</p>
+              
+              {/* Add status badge for past dates */}
+              {calculateDaysDifference(selectedDate) > 0 && (
+                <div className="mt-2">
+                  <span className="inline-block bg-white bg-opacity-30 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    {getStatusText()}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
