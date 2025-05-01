@@ -42,9 +42,66 @@ export default function SignInPage() {
     setShowPassword(!showPassword);
   };
   
-  function handleGoogleLogin() {
-    // Redirect user to backend for Google login
-    window.location.href = `${API_URL}/users/google`;
+  async function handleGoogleLogin() {
+    try {
+      setIsLoading(true);
+      setLoginError('');
+  
+      // Buka jendela popup untuk login Google
+      const popup = window.open(
+        `${API_URL}/users/google`,
+        'Google Login',
+        'width=600,height=600'
+      );
+  
+      // Tambahkan event listener untuk menerima pesan dari popup
+      const receiveMessage = (event) => {
+        if (event.origin !== `https://aul.infonering.com`) return;
+        
+        if (event.data.token) {
+          // Login berhasil, tutup popup dan proses data
+          popup.close();
+          window.removeEventListener('message', receiveMessage);
+  
+          const { token, userId, user, user_verify, userRole } = event.data;
+  
+          // Normalisasi data user
+          const normalizedUser = {
+            userId,
+            nomor_hp: user.nomor_hp || '',
+            email: user.email,
+            name: user.nama_lengkap || `User ${user.email.split('@')[0]}`,
+            fullData: user,
+            user_verify,
+            userRole
+          };
+  
+          // Update auth store
+          login(normalizedUser, token, userId);
+  
+          // Redirect berdasarkan status verifikasi
+          if (user_verify?.isverified === 0) {
+            router.push('/verify-otp');
+          } else {
+            router.push('/dashboard');
+          }
+        } else if (event.data.error) {
+          // Handle error
+          popup.close();
+          window.removeEventListener('message', receiveMessage);
+          setLoginError(event.data.error);
+          toast.error(event.data.error);
+        }
+      };
+  
+      window.addEventListener('message', receiveMessage);
+    } catch (error) {
+      console.error('Google login error:', error);
+      setLoginError('Terjadi kesalahan saat login dengan Google');
+      toast.error('Terjadi kesalahan saat login dengan Google');
+    } finally {
+      setIsLoading(false);
+    }
   }
   
   function handleFacebookLogin() {
