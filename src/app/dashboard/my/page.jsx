@@ -11,7 +11,7 @@ export default function MutabahYaumiyahPage() {
   const { user, userId } = useAuthStore();
   const [currentDateTime, setCurrentDateTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formBgColor, setFormBgColor] = useState('bg-white'); // Default background color
+  const [headerBgColor, setHeaderBgColor] = useState('bg-green-600'); // Default header color
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -60,16 +60,16 @@ export default function MutabahYaumiyahPage() {
     return diffDays;
   };
 
-  // Update form background color based on days difference
-  const updateFormBgColor = (dateString) => {
+  // Update header background color based on days difference
+  const updateHeaderBgColor = (dateString) => {
     const daysDiff = calculateDaysDifference(dateString);
     
     if (daysDiff === 2) {
-      setFormBgColor('bg-orange-50'); // Orange for 2 days back
-    } else if (daysDiff === 5) {
-      setFormBgColor('bg-amber-100'); // Brown (using amber) for 5 days back
+      setHeaderBgColor('bg-orange-500'); // Orange for 2 days back
+    } else if (daysDiff >= 5) {
+      setHeaderBgColor('bg-amber-700'); // Brown for 5+ days back
     } else {
-      setFormBgColor('bg-white'); // Default white for other days
+      setHeaderBgColor('bg-green-600'); // Default green for today/other days
     }
   };
 
@@ -103,7 +103,7 @@ export default function MutabahYaumiyahPage() {
   useEffect(() => {
     // Only run on client-side
     setCurrentDateTime(new Date());
-    updateFormBgColor(today); // Initialize with today's color
+    updateHeaderBgColor(today); // Initialize with today's color
 
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
@@ -121,8 +121,8 @@ export default function MutabahYaumiyahPage() {
       date: newDate
     }));
     
-    // Update form background color based on selected date
-    updateFormBgColor(newDate);
+    // Update header background color based on selected date
+    updateHeaderBgColor(newDate);
     
     // Check for existing data
     checkExistingData(newDate);
@@ -332,9 +332,9 @@ export default function MutabahYaumiyahPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className={`max-w-2xl mx-auto rounded-xl shadow-md overflow-hidden ${formBgColor}`}>
-        {/* Header */}
-        <div className="bg-green-600 p-6 text-white">
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Header with dynamic background color */}
+        <div className={`p-6 text-white ${headerBgColor}`}>
           <h1 className="text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
           <p className="text-center mt-2">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium mt-1">{user?.name || 'Pengguna'}</p>
