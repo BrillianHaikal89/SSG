@@ -42,9 +42,16 @@ export default function SignInPage() {
     setShowPassword(!showPassword);
   };
   
-  function handleLogin() {
-    // Redirect user ke backend untuk mulai login Google
-    window.location.href = 'http://localhost:3333/api/users/google';
+  function handleGoogleLogin() {
+    // Redirect user to backend for Google login
+    window.location.href = `${API_URL}/users/google`;
+  }
+  
+  function handleFacebookLogin() {
+    // Facebook login not implemented yet
+    setNotificationMessage("Facebook login belum tersedia");
+    setNotificationType("error");
+    setShowNotification(true);
   }
   
 
@@ -86,26 +93,25 @@ export default function SignInPage() {
       }
   
       // Extract and normalize user data
-      // Extract and normalize user data
-const { token, userId, data: userData, user_verify, userRole } = responseData;
+      const { token, userId, data: userData, user_verify, userRole } = responseData;
 
-if (!token || !userId || !userData) {
-  throw new Error('Data respons tidak valid');
-}
+      if (!token || !userId || !userData) {
+        throw new Error('Data respons tidak valid');
+      }
 
-// Prepare user object for storage
-const normalizedUser = {
-  userId,
-  nomor_hp: userData.nomor_hp,
-  email: userData.email,
-  name: userData.nama_lengkap || `User ${phoneNumber.slice(-4)}`,
-  fullData: userData,
-  user_verify, // tambahkan ini
-  userRole     // tambahkan ini
-};
+      // Prepare user object for storage
+      const normalizedUser = {
+        userId,
+        nomor_hp: userData.nomor_hp,
+        email: userData.email,
+        name: userData.nama_lengkap || `User ${phoneNumber.slice(-4)}`,
+        fullData: userData,
+        user_verify, // tambahkan ini
+        userRole     // tambahkan ini
+      };
 
-// Update auth store
-login(normalizedUser, token, userId);
+      // Update auth store
+      login(normalizedUser, token, userId);
       // Show success notification
       setNotificationType('success');
       setNotificationMessage(`${responseData.message}`);
@@ -185,7 +191,6 @@ login(normalizedUser, token, userId);
       
       {/* Form Side */}
       <motion.div 
-        // onSubmit={handleLogin}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
@@ -200,6 +205,7 @@ login(normalizedUser, token, userId);
           <div className="flex space-x-4 mb-8">
             <button 
               type="button"
+              onClick={handleGoogleLogin}
               className="flex items-center justify-center w-1/2 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -211,6 +217,7 @@ login(normalizedUser, token, userId);
             
             <button 
               type="button"
+              onClick={handleFacebookLogin}
               className="flex items-center justify-center w-1/2 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
