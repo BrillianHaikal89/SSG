@@ -369,13 +369,11 @@ export default function MutabahYaumiyahPage() {
               <p className="text-sm">{formatDate(currentDateTime)}</p>
               <p className="text-lg font-bold">{formatTime(currentDateTime)}</p>
               
-              {/* Add status badge for past dates */}
+              {/* Status text added directly without the white background */}
               {calculateDaysDifference(selectedDate) > 0 && (
-                <div className="mt-2">
-                  <span className="inline-block bg-white bg-opacity-30 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    {getStatusText()}
-                  </span>
-                </div>
+                <p className="text-white text-sm font-medium mt-1">
+                  {getStatusText()}
+                </p>
               )}
             </div>
           )}
