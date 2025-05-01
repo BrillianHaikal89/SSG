@@ -65,16 +65,16 @@ export default function MutabahYaumiyahPage() {
     const daysDiff = calculateDaysDifference(dateString);
     
     if (daysDiff === 0) {
-      // Today - Green
+      // Today - Green (on time)
       setHeaderBgColor('bg-green-600');
-    } else if (daysDiff === 1) {
-      // Yesterday - Yellow
-      setHeaderBgColor('bg-yellow-500');
-    } else if (daysDiff <= 3) {
-      // 2-3 days back - Orange
+    } else if (daysDiff < 2) {
+      // Less than 2 days late - still Green
+      setHeaderBgColor('bg-green-600');
+    } else if (daysDiff < 4) {
+      // 2-3 days late - Orange
       setHeaderBgColor('bg-orange-500');
     } else {
-      // 4+ days back - Brown/Red
+      // 4+ days late - Brown
       setHeaderBgColor('bg-amber-700');
     }
   };
