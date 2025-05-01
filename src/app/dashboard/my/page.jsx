@@ -500,13 +500,13 @@ export default function MutabahYaumiyahPage() {
           </div>
 
           {/* Tombol Submit */}
-          <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+          <div className="flex justify-between gap-3 mt-6">
             <button
               onClick={handleRouteBack}
               disabled={isSubmitting}
               className={`${
                 isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
-              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base`}
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
             >
               Kembali
             </button>
@@ -516,7 +516,7 @@ export default function MutabahYaumiyahPage() {
               disabled={isSubmitting}
               className={`${
                 isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base`}
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan'}
             </button>
