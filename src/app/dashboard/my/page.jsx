@@ -11,6 +11,7 @@ export default function MutabahYaumiyahPage() {
   const { user, userId } = useAuthStore();
   const [currentDateTime, setCurrentDateTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formBgColor, setFormBgColor] = useState('bg-white'); // Default background color
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -49,6 +50,29 @@ export default function MutabahYaumiyahPage() {
     setDateOptions(generateDateOptions());
   }, []);
 
+  // Function to calculate days difference between selected date and today
+  const calculateDaysDifference = (dateString) => {
+    const selected = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffTime = today - selected;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Update form background color based on days difference
+  const updateFormBgColor = (dateString) => {
+    const daysDiff = calculateDaysDifference(dateString);
+    
+    if (daysDiff === 2) {
+      setFormBgColor('bg-orange-50'); // Orange for 2 days back
+    } else if (daysDiff === 5) {
+      setFormBgColor('bg-amber-100'); // Brown (using amber) for 5 days back
+    } else {
+      setFormBgColor('bg-white'); // Default white for other days
+    }
+  };
+
   const formatDateForDisplay = (date) => {
     return date.toLocaleDateString('id-ID', {
       weekday: 'long',
@@ -79,6 +103,7 @@ export default function MutabahYaumiyahPage() {
   useEffect(() => {
     // Only run on client-side
     setCurrentDateTime(new Date());
+    updateFormBgColor(today); // Initialize with today's color
 
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
@@ -95,6 +120,9 @@ export default function MutabahYaumiyahPage() {
       ...prev,
       date: newDate
     }));
+    
+    // Update form background color based on selected date
+    updateFormBgColor(newDate);
     
     // Check for existing data
     checkExistingData(newDate);
@@ -304,7 +332,7 @@ export default function MutabahYaumiyahPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+      <div className={`max-w-2xl mx-auto rounded-xl shadow-md overflow-hidden ${formBgColor}`}>
         {/* Header */}
         <div className="bg-green-600 p-6 text-white">
           <h1 className="text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
