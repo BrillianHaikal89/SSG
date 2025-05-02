@@ -6,35 +6,29 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function MutabahYaumiyahPage() {
   const router = useRouter();
   const { user, userId } = useAuthStore();
   const [currentDateTime, setCurrentDateTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [headerBgColor, setHeaderBgColor] = useState('bg-green-600'); // Default header color
+  const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
-  
-  // State for selected date
   const [selectedDate, setSelectedDate] = useState(today);
-  
-  // Generate past 7 days dates for selection
   const [dateOptions, setDateOptions] = useState([]);
 
   useEffect(() => {
-    // Generate array of past 7 days + today
     const generateDateOptions = () => {
       const options = [];
       const currentDate = new Date();
       
-      // Add today
       options.push({
         value: currentDate.toISOString().split('T')[0],
         label: formatDateForDisplay(currentDate)
       });
       
-      // Add past 7 days
       for (let i = 1; i <= 7; i++) {
         const pastDate = new Date();
         pastDate.setDate(currentDate.getDate() - i);
@@ -50,36 +44,29 @@ export default function MutabahYaumiyahPage() {
     setDateOptions(generateDateOptions());
   }, []);
 
-  // Function to calculate days difference between selected date and today
   const calculateDaysDifference = (dateString) => {
     const selected = new Date(dateString);
-    selected.setHours(0, 0, 0, 0); // Reset time part for accurate day comparison
+    selected.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const diffTime = today - selected;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // Update header background color based on days difference and haid status
   const updateHeaderBgColor = (dateString) => {
-    // If haid status is true, set header to red regardless of date
+    // If haid status is true, force red color and prevent any other color changes
     if (formData.haid) {
       setHeaderBgColor('bg-red-600');
       return;
     }
     
-    // Otherwise proceed with normal date-based color logic
     const daysDiff = calculateDaysDifference(dateString);
     
     if (daysDiff === 0) {
-      // Today - Green (on time)
       setHeaderBgColor('bg-green-600');
     } else if (daysDiff <= 2) {
-      // 1-2 days late - Orange
       setHeaderBgColor('bg-orange-500');
     } else {
-      // 3+ days late - Brown
       setHeaderBgColor('bg-amber-700');
     }
   };
@@ -111,54 +98,37 @@ export default function MutabahYaumiyahPage() {
     haid: false
   });
 
-  // Update color whenever the haid status changes
+  // Update color whenever haid status or date changes
   useEffect(() => {
     updateHeaderBgColor(formData.date);
-  }, [formData.haid]);
+  }, [formData.haid, formData.date]);
 
-  // Update current date and time only on client-side
   useEffect(() => {
-    // Only run on client-side
-    setCurrentDateTime(new Date());
-    
-    // Initial update of the header color
-    updateHeaderBgColor(selectedDate);
-
-    const timer = setInterval(() => {
+    const updateTime = () => {
       const now = new Date();
       setCurrentDateTime(now);
       
-      // Check if the selected date is today
-      // If it is, we need to ensure header color is updated in real-time
-      const currentDate = new Date().toISOString().split('T')[0];
+      // Only update color if the selected date is today
+      const currentDate = now.toISOString().split('T')[0];
       if (selectedDate === currentDate) {
         updateHeaderBgColor(selectedDate);
       }
-    }, 1000);
+    };
 
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, [selectedDate]);
 
-  // Handle date change
   const handleDateChange = (e) => {
     const newDate = e.target.value;
     setSelectedDate(newDate);
-    setFormData(prev => ({
-      ...prev,
-      date: newDate
-    }));
-    
-    // Update header background color based on selected date
-    updateHeaderBgColor(newDate);
-    
-    // Check for existing data
+    setFormData(prev => ({ ...prev, date: newDate }));
     checkExistingData(newDate);
   };
   
-  // Function to check if data exists for selected date
   const checkExistingData = async (date) => {
     try {
-      // First check localStorage for offline data
       const storageKey = `mutabaah_${user?.userId}_${date}`;
       const localData = localStorage.getItem(storageKey);
       
@@ -173,7 +143,6 @@ export default function MutabahYaumiyahPage() {
         }
       }
       
-      // Reset form but keep the date
       setFormData({
         date: date,
         sholat_wajib: 0,
@@ -194,8 +163,6 @@ export default function MutabahYaumiyahPage() {
       
     } catch (error) {
       console.error('Error checking existing data:', error);
-      
-      // In case of error, reset the form but keep the date
       setFormData({
         date: date,
         sholat_wajib: 0,
@@ -217,17 +184,21 @@ export default function MutabahYaumiyahPage() {
   };
 
   const handleInputChange = (field, value) => {
-    // Handle checkbox (boolean) separately from number inputs
     if (field === 'haid') {
+      const newValue = value;
       setFormData(prev => ({
         ...prev,
-        [field]: value
+        [field]: newValue
       }));
       
-      // Update header color immediately when haid status changes
-      updateHeaderBgColor(formData.date);
+      // Immediately update header color based on new haid status
+      if (newValue) {
+        setHeaderBgColor('bg-red-600');
+      } else {
+        // Only recalculate color if haid is unchecked
+        updateHeaderBgColor(formData.date);
+      }
     } else {
-      // For number inputs, convert to number and ensure it's not negative
       const numValue = Math.max(0, parseInt(value) || 0);
       setFormData(prev => ({
         ...prev,
@@ -238,82 +209,45 @@ export default function MutabahYaumiyahPage() {
 
   const handleRouteBack = () => {
     router.push('/dashboard');
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (isSubmitting) {
-      return; // Prevent multiple submissions
-    }
-    
+    if (isSubmitting) return;
     setIsSubmitting(true);
     
     try {
-      // Save to localStorage as a fallback
       const storageKey = `mutabaah_${user?.userId}_${formData.date}`;
       localStorage.setItem(storageKey, JSON.stringify(formData));
       
       try {
-        const requestData = {
-          user_id: user?.userId,
-          ...formData
-        };
-        
-        console.log("Submitting data:", requestData);
-        
         const response = await fetch(`${API_URL}/users/input-my`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user?.userId, ...formData }),
           credentials: 'include',
         });
 
-        console.log("Response status:", response.status);
-        
+        const responseText = await response.text();
         let result = {};
-        let responseText = '';
         
-        try {
-          // First try to get the response as text
-          responseText = await response.text();
-          console.log("Raw response:", responseText);
-          
-          // Try to parse as JSON if possible
-          if (responseText) {
-            try {
-              result = JSON.parse(responseText);
-              console.log("Parsed JSON result:", result);
-            } catch (jsonError) {
-              console.error("Failed to parse JSON:", jsonError);
-              // Keep the result as empty object, text is already saved
-            }
+        if (responseText) {
+          try {
+            result = JSON.parse(responseText);
+          } catch (jsonError) {
+            console.error("Failed to parse JSON:", jsonError);
           }
-        } catch (responseError) {
-          console.error("Error getting response:", responseError);
         }
         
         if (!response.ok) {
-          // If we get here, there was an HTTP error
-          console.error('Server returned error status:', response.status);
-          
-          // Try to get a message from the response
           let errorMessage = 'Terjadi kesalahan server. Silakan coba lagi nanti.';
           
           if (result && typeof result === 'object') {
-            if (result.message) {
-              errorMessage = result.message;
-            } else if (result.error) {
-              errorMessage = result.error;
-            }
+            errorMessage = result.message || result.error || errorMessage;
           }
           
-          // Check if it's a database error
-          if (responseText.includes('ECONNREFUSED') || 
-              responseText.includes('database') ||
-              response.status === 500) {
+          if (responseText.includes('ECONNREFUSED') || response.status === 500) {
             toast.success('Data telah disimpan di browser Anda. Server database sedang tidak tersedia.');
             router.push('/dashboard');
             return;
@@ -322,34 +256,22 @@ export default function MutabahYaumiyahPage() {
           throw new Error(errorMessage);
         }
         
-        // Success path
         toast.success(result.message || 'Data Mutabaah Yaumiyah berhasil disimpan!');
         router.push('/dashboard');
         
       } catch (apiError) {
-        // Handle network errors or failed requests
-        console.error('API call error:', apiError);
-        
-        if (apiError.message.includes('Failed to fetch') || 
-            apiError.message.includes('NetworkError') ||
-            apiError.message.includes('Network request failed')) {
+        if (apiError.message.includes('Failed to fetch')) {
           toast.warning('Server tidak tersedia. Data telah disimpan sementara di browser Anda.');
           router.push('/dashboard');
           return;
         }
-        
-        throw apiError; // Re-throw for the outer catch block
+        toast.error(apiError.message || 'Gagal menyimpan data. Silakan coba lagi.');
       }
-      
-    } catch (error) {
-      console.error('Complete error:', error);
-      toast.error(error.message || 'Gagal menyimpan data. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Format time with leading zeros
   const formatTime = (date) => {
     if (!date) return '';
     return date.toLocaleTimeString('id-ID', {
@@ -359,7 +281,6 @@ export default function MutabahYaumiyahPage() {
     });
   };
 
-  // Format date in Indonesian locale
   const formatDate = (date) => {
     if (!date) return '';
     return date.toLocaleDateString('id-ID', {
@@ -370,43 +291,28 @@ export default function MutabahYaumiyahPage() {
     });
   };
 
-  // Function to get text color class based on header background color
-  const getTextColorClass = () => {
-    // Default to white for most backgrounds
-    return 'text-white';
-  };
+  const getTextColorClass = () => 'text-white';
 
-  // Get status text based on the date difference
   const getStatusText = () => {
     const daysDiff = calculateDaysDifference(selectedDate);
-    
-    if (daysDiff === 0) {
-      return "Hari Ini";
-    } else if (daysDiff === 1) {
-      return "Kemarin";
-    } else if (daysDiff > 1) {
-      return `${daysDiff} hari yang lalu`;
-    }
-    
+    if (daysDiff === 0) return "Hari Ini";
+    if (daysDiff === 1) return "Kemarin";
+    if (daysDiff > 1) return `${daysDiff} hari yang lalu`;
     return "";
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        {/* Header with dynamic background color */}
         <div className={`p-4 sm:p-6 ${getTextColorClass()} ${headerBgColor}`}>
           <h1 className="text-xl sm:text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
           <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
           
-          {/* Real-time Date and Time */}
           {currentDateTime && (
             <div className="text-center mt-2">
               <p className="text-xs sm:text-sm">{formatDate(currentDateTime)}</p>
               <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
-              
-              {/* Status text added directly without the white background */}
               {calculateDaysDifference(selectedDate) > 0 && (
                 <p className="text-white text-xs sm:text-sm font-medium mt-1">
                   {getStatusText()}
@@ -417,7 +323,6 @@ export default function MutabahYaumiyahPage() {
         </div>
 
         <div className="p-4 sm:p-6">
-          {/* Date Selection */}
           <div className="mb-4 sm:mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Pilih Tanggal Input:
@@ -438,7 +343,6 @@ export default function MutabahYaumiyahPage() {
             </p>
           </div>
 
-          {/* Checkbox for female users who are menstruating */}
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
             <label className="flex items-center cursor-pointer">
               <input 
@@ -453,7 +357,6 @@ export default function MutabahYaumiyahPage() {
             </label>
           </div>
 
-          {/* Bagian 1.1 - Sholat Wajib dan Sunnah */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">1.1 Sholat Wajib dan Sunnah</h2>
             
@@ -467,7 +370,7 @@ export default function MutabahYaumiyahPage() {
                 { label: "Tilawah Quran (halaman)", field: "tilawah_quran", max: 100 },
                 { label: "Terjemah Quran (halaman)", field: "terjemah_quran", max: 50 },
                 { label: "Shaum Sunnah (hari)", field: "shaum_sunnah", max: 5 },
-                { label: "Shadaqah Masjid (kali)", field: "shodaqoh", max: 5 },
+                { label: "Shodaqoh (kali)", field: "shodaqoh", max: 5 },
                 { label: "Dzikir Pagi/Petang (kali)", field: "dzikir_pagi_petang", max: 2 },
                 { label: "Istighfar (x100)", field: "istighfar_1000x", max: 15 },
                 { label: "Sholawat (x100)", field: "sholawat_100x", max: 15 },
@@ -487,7 +390,6 @@ export default function MutabahYaumiyahPage() {
             </div>
           </div>
 
-          {/* Bagian 2.1 - Menyimak MQ Pagi */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">2.1 Menyimak MQ Pagi</h2>
             
@@ -510,7 +412,6 @@ export default function MutabahYaumiyahPage() {
             </div>
           </div>
 
-          {/* Tombol Submit */}
           <div className="flex justify-between gap-3 mt-6">
             <button
               onClick={handleRouteBack}
