@@ -394,10 +394,10 @@ export default function MutabaahYaumiyahPage() {
    */
   const getStatusText = () => {
     const daysDiff = calculateDaysDifference(selectedDate);
-    if (daysDiff === 0) return "Hari Ini";
+    if (daysDiff === 0) return "Hari Ini (Tepat Waktu)";
     if (daysDiff > 0) return `${daysDiff} hari ke depan`; // Added for future dates
-    if (daysDiff === -1) return "Kemarin";
-    if (daysDiff < -1) return `${Math.abs(daysDiff)} hari yang lalu`; // Use absolute value
+    if (daysDiff === -1) return "Terlambat 1 hari"; // Changed from "Kemarin" to be more explicit
+    if (daysDiff < -1) return `Terlambat ${Math.abs(daysDiff)} hari`; // Made clearer it's late
     return "";
   };
 
@@ -716,7 +716,11 @@ export default function MutabaahYaumiyahPage() {
             <div className="text-center mt-2">
               <p className="text-xs sm:text-sm">{getSelectedDateInfo().fullDate || 'Loading...'}</p>
               <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
-              {selectedDate !== today && (
+              {selectedDate === today ? (
+                <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-green-700 px-2 py-1 rounded-full inline-block">
+                  Tepat Waktu
+                </p>
+              ) : (
                 <p className="text-white text-xs sm:text-sm font-medium mt-1">
                   {getStatusText()}
                 </p>
