@@ -296,17 +296,38 @@ export default function MutabaahYaumiyahPage() {
    */
   const calculateDaysDifference = (dateString) => {
     try {
+      // Normalize both dates to local time at 00:00:00
       const selected = new Date(dateString);
-      selected.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+      
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const diffTime = today - selected;
-      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      const diffTime = todayDate - selectedDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      console.log('Date comparison:', {
+        selected: selectedDate,
+        today: todayDate,
+        diffDays
+      });
+      
+      return diffDays;
     } catch (error) {
       console.error('Error calculating days difference:', error);
       return 0;
     }
   };
+
+  useEffect(() => {
+    console.log('Selected date changed:', {
+      selectedDate,
+      formDate: formData.date,
+      daysDiff: calculateDaysDifference(selectedDate),
+      hijriDate,
+      currentDateTime: formatDate(currentDateTime)
+    });
+  }, [selectedDate, formData.date]);
 
   /**
    * Update Hijri date state safely
