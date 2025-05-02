@@ -54,7 +54,6 @@ export default function MutabahYaumiyahPage() {
   };
 
   const updateHeaderBgColor = (dateString) => {
-    // Always check haid status first - if true, force red and prevent any other color
     if (formData.haid) {
       setHeaderBgColor('bg-red-600');
       return;
@@ -103,13 +102,12 @@ export default function MutabahYaumiyahPage() {
     updateHeaderBgColor(formData.date);
   }, [formData.haid, formData.date]);
 
-  // Timer for updating clock - carefully managed to not interfere with header color
+  // Timer for updating clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
       setCurrentDateTime(now);
       
-      // Only update color if selected date is today AND haid is false
       if (!formData.haid && selectedDate === now.toISOString().split('T')[0]) {
         updateHeaderBgColor(selectedDate);
       }
@@ -186,13 +184,21 @@ export default function MutabahYaumiyahPage() {
   const handleInputChange = (field, value) => {
     if (field === 'haid') {
       const newValue = value;
-      setFormData(prev => ({
-        ...prev,
-        [field]: newValue
-      }));
+      const updatedFormData = {
+        ...formData,
+        haid: newValue,
+        // Auto-fill all prayer fields with 0 when checked
+        ...(newValue ? {
+          sholat_wajib: 0,
+          sholat_tahajud: 0,
+          sholat_dhuha: 0,
+          sholat_rawatib: 0,
+          sholat_sunnah_lainnya: 0
+        } : {})
+      };
       
-      // Immediately force red color when checked
-      // No need to update when unchecked as useEffect will handle it
+      setFormData(updatedFormData);
+      
       if (newValue) {
         setHeaderBgColor('bg-red-600');
       }
@@ -350,11 +356,12 @@ export default function MutabahYaumiyahPage() {
                 className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
               />
               <span className="ml-2 text-xs sm:text-sm text-gray-700">
-                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat wajib dan sunnah
+                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
               </span>
             </label>
           </div>
 
+          {/* Sholat Wajib dan Sunnah Section */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">1.1 Sholat Wajib dan Sunnah</h2>
             
@@ -381,13 +388,29 @@ export default function MutabahYaumiyahPage() {
                     max={item.max}
                     value={formData[item.field]}
                     onChange={(e) => handleInputChange(item.field, e.target.value)}
-                    className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
+                    className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
+                      formData.haid && [
+                        'sholat_wajib',
+                        'sholat_tahajud', 
+                        'sholat_dhuha',
+                        'sholat_rawatib',
+                        'sholat_sunnah_lainnya'
+                      ].includes(item.field) ? 'bg-gray-200 cursor-not-allowed' : ''
+                    }`}
+                    disabled={formData.haid && [
+                      'sholat_wajib',
+                      'sholat_tahajud', 
+                      'sholat_dhuha',
+                      'sholat_rawatib',
+                      'sholat_sunnah_lainnya'
+                    ].includes(item.field)}
                   />
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Menyimak MQ Pagi Section - Always editable */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">2.1 Menyimak MQ Pagi</h2>
             
