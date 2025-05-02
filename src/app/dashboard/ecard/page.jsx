@@ -219,11 +219,11 @@ export default function ECard() {
                   </div>
 
                   <div className="flex-grow px-4 overflow-visible">
-                    <ol className="text-sm text-gray-800 list-decimal ml-5 mt-1">
-                      <li className="mb-1.5 font-medium">Kartu ini adalah identitas resmi peserta SSG</li>
-                      <li className="mb-1.5 font-medium">Wajib dibawa saat kegiatan SSG berlangsung</li>
-                      <li className="mb-1.5 font-medium">Tunjukkan QR code untuk presensi kehadiran</li>
-                      <li className="mb-1.5 font-medium">Segera laporkan kehilangan kartu kepada panitia</li>
+                    <ol className="text-sm text-gray-800 list-decimal ml-5 mt-1 space-y-1">
+                      <li className="font-medium leading-tight">Kartu ini adalah identitas resmi peserta SSG</li>
+                      <li className="font-medium leading-tight">Wajib dibawa saat kegiatan SSG berlangsung</li>
+                      <li className="font-medium leading-tight">Tunjukkan QR code untuk presensi kehadiran</li>
+                      <li className="font-medium leading-tight">Segera laporkan kehilangan kartu kepada<br/>panitia</li>
                     </ol>
                   </div>
 
