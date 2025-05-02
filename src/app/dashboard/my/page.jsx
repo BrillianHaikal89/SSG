@@ -292,7 +292,7 @@ export default function MutabaahYaumiyahPage() {
   /**
    * Calculate days difference between selected date and today
    * @param {string} dateString - Date string to compare
-   * @returns {number} - Number of days difference
+   * @returns {number} - Number of days difference (negative for past dates)
    */
   const calculateDaysDifference = (dateString) => {
     try {
@@ -300,8 +300,8 @@ export default function MutabaahYaumiyahPage() {
       selected.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const diffTime = today - selected;
-      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const diffTime = selected - today; // Changed: reversed from today - selected to selected - today
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Now negative for past dates, positive for future dates
     } catch (error) {
       console.error('Error calculating days difference:', error);
       return 0;
@@ -345,11 +345,11 @@ export default function MutabaahYaumiyahPage() {
     
     const daysDiff = calculateDaysDifference(dateString);
     
-    if (daysDiff === 0) {
+    if (daysDiff >= 0) { // Today or future dates (changed from === 0 to >= 0)
       setHeaderBgColor('bg-green-600');
-    } else if (daysDiff <= 2) {
+    } else if (daysDiff >= -2) { // Within last 2 days (changed from <= 2 to >= -2)
       setHeaderBgColor('bg-orange-500');
-    } else {
+    } else { // Older than 2 days (the rest of past dates)
       setHeaderBgColor('bg-amber-700');
     }
   };
@@ -395,8 +395,9 @@ export default function MutabaahYaumiyahPage() {
   const getStatusText = () => {
     const daysDiff = calculateDaysDifference(selectedDate);
     if (daysDiff === 0) return "Hari Ini";
-    if (daysDiff === 1) return "Kemarin";
-    if (daysDiff > 1) return `${daysDiff} hari yang lalu`;
+    if (daysDiff > 0) return `${daysDiff} hari ke depan`; // Added for future dates
+    if (daysDiff === -1) return "Kemarin";
+    if (daysDiff < -1) return `${Math.abs(daysDiff)} hari yang lalu`; // Use absolute value
     return "";
   };
 
@@ -715,7 +716,7 @@ export default function MutabaahYaumiyahPage() {
             <div className="text-center mt-2">
               <p className="text-xs sm:text-sm">{getSelectedDateInfo().fullDate || 'Loading...'}</p>
               <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
-              {calculateDaysDifference(selectedDate) > 0 && (
+              {selectedDate !== today && (
                 <p className="text-white text-xs sm:text-sm font-medium mt-1">
                   {getStatusText()}
                 </p>
