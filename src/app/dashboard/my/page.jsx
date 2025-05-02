@@ -14,7 +14,8 @@ export default function MutabahYaumiyahPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
   const [showReportModal, setShowReportModal] = useState(false);
-  const [reportData, setReportData] = useState([]);
+  const [allUserData, setAllUserData] = useState([]);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -275,59 +276,72 @@ export default function MutabahYaumiyahPage() {
     }
   };
 
-  const handleGenerateReport = async () => {
+  const fetchAllUserData = async () => {
     try {
-      setIsSubmitting(true);
+      setLoadingReport(true);
+      // In a real app, you would fetch from your API:
+      // const response = await fetch(`${API_URL}/users/all-data?user_id=${user?.userId}`, {
+      //   credentials: 'include',
+      // });
       
-      // In a real app, you would fetch report data from your API
-      // For this example, we'll use the current form data
-      const report = {
-        user: user?.name || 'Pengguna',
-        date: new Date().toLocaleDateString('id-ID'),
-        data: formData
-      };
+      // For demo purposes, we'll use localStorage data
+      const allData = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(`mutabaah_${user?.userId}_`)) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            allData.push(data);
+          } catch (e) {
+            console.error('Error parsing data for key:', key);
+          }
+        }
+      }
       
-      setReportData(report);
-      setShowReportModal(true);
+      // Sort by date descending
+      allData.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setAllUserData(allData);
       
     } catch (error) {
-      console.error('Error generating report:', error);
-      toast.error('Gagal membuat laporan');
+      console.error('Error fetching user data:', error);
+      toast.error(error.message || 'Gagal mengambil data laporan');
     } finally {
-      setIsSubmitting(false);
+      setLoadingReport(false);
     }
+  };
+
+  const handleGenerateReport = async () => {
+    await fetchAllUserData();
+    setShowReportModal(true);
   };
 
   const downloadReport = () => {
     // Create CSV content
-    let csvContent = "Laporan Mutabaah Yaumiyah\n\n";
+    let csvContent = "Laporan Lengkap Mutaba'ah Yaumiyah\n\n";
     csvContent += `Nama,${user?.name || '-'}\n`;
-    csvContent += `Tanggal,${new Date().toLocaleDateString('id-ID')}\n\n`;
-    
-    // Add prayer data
-    csvContent += "Sholat Wajib," + formData.sholat_wajib + "/5\n";
-    csvContent += "Sholat Tahajud," + formData.sholat_tahajud + "\n";
-    csvContent += "Sholat Dhuha," + formData.sholat_dhuha + "\n";
-    csvContent += "Sholat Rawatib," + formData.sholat_rawatib + "\n";
-    csvContent += "Sholat Sunnah Lainnya," + formData.sholat_sunnah_lainnya + "\n\n";
-    
-    // Add other activities
-    csvContent += "Tilawah Quran," + formData.tilawah_quran + " halaman\n";
-    csvContent += "Terjemah Quran," + formData.terjemah_quran + " halaman\n";
-    csvContent += "Shaum Sunnah," + formData.shaum_sunnah + " hari\n";
-    csvContent += "Shodaqoh," + formData.shodaqoh + " kali\n";
-    csvContent += "Dzikir Pagi/Petang," + formData.dzikir_pagi_petang + " kali\n";
-    csvContent += "Istighfar (x100)," + formData.istighfar_1000x + "\n";
-    csvContent += "Sholawat (x100)," + formData.sholawat_100x + "\n";
-    csvContent += "Menyimak MQ Pagi," + formData.menyimak_mq_pagi + "\n";
-    csvContent += "Status Haid," + (formData.haid ? "Ya" : "Tidak") + "\n";
-    
+    csvContent += `Tanggal Laporan,${new Date().toLocaleDateString('id-ID')}\n`;
+    csvContent += `Total Data,${allUserData.length}\n\n`;
+
+    // Add headers
+    csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
+    csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
+    csvContent += "Istighfar (x100),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
+
+    // Add data rows
+    allUserData.forEach(data => {
+      csvContent += `${data.date},${data.sholat_wajib},${data.sholat_tahajud},${data.sholat_dhuha},`;
+      csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
+      csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
+      csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
+      csvContent += `${data.menyimak_mq_pagi},${data.haid ? "Ya" : "Tidak"}\n`;
+    });
+
     // Create download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `mutabaah_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `laporan_mutabaah_${user?.name || 'user'}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -556,10 +570,10 @@ export default function MutabahYaumiyahPage() {
       {/* Report Modal */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800">Laporan Mutaba'ah Yaumiyah</h3>
+                <h3 className="text-xl font-bold text-gray-800">Laporan Lengkap Mutaba'ah Yaumiyah</h3>
                 <button 
                   onClick={() => setShowReportModal(false)}
                   className="text-gray-500 hover:text-gray-700"
@@ -576,88 +590,113 @@ export default function MutabahYaumiyahPage() {
                   <span>{user?.name || '-'}</span>
                 </div>
                 <div className="flex justify-between mb-2">
+                  <span className="font-medium">Total Data:</span>
+                  <span>{allUserData.length} hari</span>
+                </div>
+                <div className="flex justify-between mb-2">
                   <span className="font-medium">Tanggal Laporan:</span>
                   <span>{new Date().toLocaleDateString('id-ID')}</span>
                 </div>
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium">Status Haid:</span>
-                  <span>{formData.haid ? "Ya" : "Tidak"}</span>
-                </div>
               </div>
-              
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="font-semibold text-lg mb-3">Data Sholat</h4>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-500">Sholat Wajib</div>
-                    <div className="font-medium">{formData.sholat_wajib || 0}/5</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-500">Sholat Tahajud</div>
-                    <div className="font-medium">{formData.sholat_tahajud || 0}</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-500">Sholat Dhuha</div>
-                    <div className="font-medium">{formData.sholat_dhuha || 0}</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-500">Sholat Rawatib</div>
-                    <div className="font-medium">{formData.sholat_rawatib || 0}</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-sm text-gray-500">Sholat Sunnah Lainnya</div>
-                    <div className="font-medium">{formData.sholat_sunnah_lainnya || 0}</div>
-                  </div>
+
+              {loadingReport ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
-                
-                <h4 className="font-semibold text-lg mb-3 mt-6">Aktivitas Quran</h4>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between">
-                    <span>Tilawah Quran:</span>
-                    <span className="font-medium">{formData.tilawah_quran || 0} halaman</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Terjemah Quran:</span>
-                    <span className="font-medium">{formData.terjemah_quran || 0} halaman</span>
-                  </div>
-                </div>
-                
-                <h4 className="font-semibold text-lg mb-3 mt-6">Aktivitas Lainnya</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Shaum Sunnah:</span>
-                    <span className="font-medium">{formData.shaum_sunnah || 0} hari</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shodaqoh:</span>
-                    <span className="font-medium">{formData.shodaqoh || 0} kali</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Dzikir Pagi/Petang:</span>
-                    <span className="font-medium">{formData.dzikir_pagi_petang || 0} kali</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Istighfar (x100):</span>
-                    <span className="font-medium">{formData.istighfar_1000x || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sholawat (x100):</span>
-                    <span className="font-medium">{formData.sholawat_100x || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Menyimak MQ Pagi:</span>
-                    <span className="font-medium">{formData.menyimak_mq_pagi || 0}x</span>
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <>
+                  {allUserData.length > 0 ? (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Tahajud</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Dhuha</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {allUserData.map((data, index) => (
+                              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {new Date(data.date).toLocaleDateString('id-ID')}
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {data.sholat_wajib}/5
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {data.sholat_tahajud}
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {data.sholat_dhuha}
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {data.tilawah_quran} hlm
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {data.menyimak_mq_pagi}x
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                  {data.haid ? 'Ya' : 'Tidak'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="mt-6">
+                        <h4 className="font-semibold text-lg mb-3">Statistik Ringkasan</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-blue-50 p-4 rounded-lg">
+                            <div className="text-sm text-blue-800">Sholat Wajib (Rata-rata)</div>
+                            <div className="text-2xl font-bold text-blue-600">
+                              {(
+                                allUserData.reduce((sum, data) => sum + data.sholat_wajib, 0) / 
+                                (allUserData.length || 1)
+                              ).toFixed(1)}/5
+                            </div>
+                          </div>
+                          <div className="bg-green-50 p-4 rounded-lg">
+                            <div className="text-sm text-green-800">Tilawah Quran (Total)</div>
+                            <div className="text-2xl font-bold text-green-600">
+                              {allUserData.reduce((sum, data) => sum + data.tilawah_quran, 0)} hlm
+                            </div>
+                          </div>
+                          <div className="bg-purple-50 p-4 rounded-lg">
+                            <div className="text-sm text-purple-800">Hari Berhalangan</div>
+                            <div className="text-2xl font-bold text-purple-600">
+                              {allUserData.filter(data => data.haid).length} hari
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      Tidak ada data laporan yang tersedia
+                    </div>
+                  )}
+                </>
+              )}
               
               <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={downloadReport}
-                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg"
-                >
-                  Download CSV
-                </button>
+                {allUserData.length > 0 && (
+                  <button
+                    onClick={downloadReport}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    Download CSV
+                  </button>
+                )}
                 <button
                   onClick={() => setShowReportModal(false)}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg"
