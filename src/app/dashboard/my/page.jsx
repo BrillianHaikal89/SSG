@@ -54,7 +54,7 @@ export default function MutabahYaumiyahPage() {
   };
 
   const updateHeaderBgColor = (dateString) => {
-    // If haid status is true, force red color and prevent any other color changes
+    // Always check haid status first - if true, force red and prevent any other color
     if (formData.haid) {
       setHeaderBgColor('bg-red-600');
       return;
@@ -103,14 +103,14 @@ export default function MutabahYaumiyahPage() {
     updateHeaderBgColor(formData.date);
   }, [formData.haid, formData.date]);
 
+  // Timer for updating clock - carefully managed to not interfere with header color
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
       setCurrentDateTime(now);
       
-      // Only update color if the selected date is today
-      const currentDate = now.toISOString().split('T')[0];
-      if (selectedDate === currentDate) {
+      // Only update color if selected date is today AND haid is false
+      if (!formData.haid && selectedDate === now.toISOString().split('T')[0]) {
         updateHeaderBgColor(selectedDate);
       }
     };
@@ -118,7 +118,7 @@ export default function MutabahYaumiyahPage() {
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [selectedDate]);
+  }, [selectedDate, formData.haid]);
 
   const handleDateChange = (e) => {
     const newDate = e.target.value;
@@ -191,12 +191,10 @@ export default function MutabahYaumiyahPage() {
         [field]: newValue
       }));
       
-      // Immediately update header color based on new haid status
+      // Immediately force red color when checked
+      // No need to update when unchecked as useEffect will handle it
       if (newValue) {
         setHeaderBgColor('bg-red-600');
-      } else {
-        // Only recalculate color if haid is unchecked
-        updateHeaderBgColor(formData.date);
       }
     } else {
       const numValue = Math.max(0, parseInt(value) || 0);
