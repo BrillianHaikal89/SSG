@@ -1,3 +1,13 @@
+"use client";
+
+import React, { useEffect, useState, useRef } from 'react';
+import Head from 'next/head';
+import Image from 'next/image';
+import useAuthStore from '../../../stores/authStore';
+import QRCode from "react-qr-code";
+import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
+
 export default function ECard() {
   const { user, loading, error, qrcode, fetchUserQRCode } = useAuthStore();
   const [isPrinting, setIsPrinting] = useState(false);
@@ -98,97 +108,6 @@ export default function ECard() {
     } catch (err) {
       console.error('Error generating PDF:', err);
       alert('Terjadi kesalahan saat membuat PDF: ' + err.message);
-    }
-    
-    setIsGeneratingPDF(false);
-  };"use client";
-
-import React, { useEffect, useState, useRef } from 'react';
-import Head from 'next/head';
-import Image from 'next/image';
-import useAuthStore from '../../../stores/authStore';
-import QRCode from "react-qr-code";
-import { motion } from 'framer-motion';
-import dynamic from 'next/dynamic';
-
-export default function ECard() {
-  const { user, loading, error, qrcode, fetchUserQRCode } = useAuthStore();
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [activeCard, setActiveCard] = useState('front');
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  
-  const frontCardRef = useRef(null);
-  const backCardRef = useRef(null);
-
-  useEffect(() => {
-    fetchUserQRCode();
-  }, [fetchUserQRCode]);
-
-  const navigateBack = () => {
-    window.history.back();
-  };
-
-  const handlePrint = (cardSide) => {
-    setActiveCard(cardSide);
-    setIsPrinting(true);
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        setIsPrinting(false);
-      }, 500);
-    }, 300);
-  };
-  
-  const generatePDF = async (cardSide) => {
-    setIsGeneratingPDF(true);
-    
-    try {
-      const element = cardSide === 'front' ? frontCardRef.current : backCardRef.current;
-      
-      if (!element) {
-        alert('Gagal menemukan elemen kartu');
-        setIsGeneratingPDF(false);
-        return;
-      }
-      
-      // Ensure element is visible for capture
-      element.style.display = 'flex';
-      
-      const canvas = await html2canvas(element, {
-        scale: 3, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        backgroundColor: cardSide === 'front' ? '#1e40af' : 'white'
-      });
-      
-      // Card dimensions in mm (ID-1 format)
-      const width = 85;
-      const height = 54;
-      
-      // Create PDF of ID card size
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: [width, height]
-      });
-      
-      // Add the image to the PDF centered
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-      
-      // Download the PDF
-      const fileName = cardSide === 'front' ? 'kartu_peserta_depan.pdf' : 'kartu_peserta_belakang.pdf';
-      pdf.save(fileName);
-      
-      // Restore element display if needed
-      if (cardSide !== activeCard) {
-        element.style.display = '';
-      }
-      
-    } catch (err) {
-      console.error('Error generating PDF:', err);
-      alert('Terjadi kesalahan saat membuat PDF');
     }
     
     setIsGeneratingPDF(false);
@@ -635,5 +554,4 @@ export default function ECard() {
       `}</style>
     </div>
   );
-}
 }
