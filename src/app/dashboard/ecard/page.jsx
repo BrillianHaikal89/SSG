@@ -125,52 +125,52 @@ export default function ECard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className={`print-card front-card bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500 ${activeCard === 'back' ? 'print:hidden' : ''}`}
+                className={`print-card front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500 ${activeCard === 'back' ? 'print:hidden' : ''}`}
               >
                 <div className="flex h-full">
                   {/* Left side with QR code */}
-                  <div className="w-2/5 bg-blue-900 flex flex-col justify-center items-center py-4 px-3">
-                    <div className="bg-white p-3 rounded-lg mb-3 front-qr shadow-md">
+                  <div className="w-2/5 bg-blue-900 flex flex-col justify-center items-center py-3 px-3">
+                    <div className="bg-white p-2 rounded-lg mb-2 front-qr shadow-md">
                       {qrcode ? (
                         <QRCode 
                           value={qrcode} 
-                          size={130} 
+                          size={120} 
                           className="w-full h-auto"
                         />
                       ) : (
                         <div className="w-32 h-32 bg-gray-200 animate-pulse rounded"></div>
                       )}
                     </div>
-                    <p className="text-center text-xs mt-1 font-medium text-blue-100">Scan untuk verifikasi</p>
+                    <p className="text-center text-xs font-medium text-blue-100">Scan untuk verifikasi</p>
                   </div>
                   
                   {/* Right side with user info */}
-                  <div className="w-3/5 pl-4 flex flex-col py-5 pr-4">
+                  <div className="w-3/5 pl-3 flex flex-col py-4 pr-3">
                     <div className="flex items-center">
                       <Image 
                         src="/img/logossg_white.png" 
                         alt="Logo" 
-                        width={36} 
-                        height={36} 
+                        width={32} 
+                        height={32} 
                         className="mr-2"
                       />
                       <div>
-                        <h3 className="text-lg font-bold leading-tight tracking-wide">SANTRI SIAP</h3>
-                        <h3 className="text-lg font-bold leading-tight tracking-wide">GUNA</h3>
+                        <h3 className="text-lg font-bold leading-none tracking-wide">SANTRI SIAP</h3>
+                        <h3 className="text-lg font-bold leading-none tracking-wide">GUNA</h3>
                         <p className="text-xs text-white font-medium">KARTU PESERTA</p>
                       </div>
                     </div>
                     
-                    <div className="flex-grow flex flex-col justify-center mt-4">
-                      <h2 className="text-2xl font-bold mb-3 text-white leading-tight">
-                        {user?.name || "Muhamad Brillian Haikal"}
+                    <div className="flex-grow flex flex-col justify-center mt-2">
+                      <h2 className="text-xl font-bold mb-2 text-white">
+                        {user?.name || "MUHAMAD BRILLIAN HAIKAL"}
                       </h2>
                       
                       <div className="space-y-2">
-                        <div className="bg-blue-800/70 py-1.5 px-3 rounded-md text-sm font-medium">
+                        <div className="bg-blue-800 py-1.5 px-3 rounded-md text-sm font-medium">
                           Peserta Angkatan 2025
                         </div>
-                        <div className="bg-blue-800/70 py-1.5 px-3 rounded-md text-sm font-medium">
+                        <div className="bg-blue-800 py-1.5 px-3 rounded-md text-sm font-medium">
                           Pleton: {user?.pleton || "20"} / Grup {user?.grup || "B"}
                         </div>
                       </div>
@@ -194,36 +194,36 @@ export default function ECard() {
                 className={`print-card back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200 ${activeCard === 'front' ? 'print:hidden' : ''}`}
               >
                 <div className="flex h-full flex-col">
-                  <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-5 pt-3 pb-1 border-b border-gray-100">
                     <Image 
                       src="/img/logo_ssg.png" 
                       alt="Santri Siap Guna Logo" 
-                      width={100} 
-                      height={30} 
+                      width={90} 
+                      height={25} 
                       className="h-auto"
                     />
                     <Image 
                       src="/img/logo_DT READY.png" 
                       alt="DT Logo" 
-                      width={30} 
-                      height={30} 
+                      width={28} 
+                      height={28} 
                     />
                   </div>
                   
-                  <div className="text-center mt-3 mb-2">
-                    <h3 className="text-sm font-bold text-blue-900 bg-blue-50 mx-auto py-1 px-3 rounded-full w-fit">ATURAN PENGGUNAAN KARTU</h3>
+                  <div className="text-center mt-1">
+                    <h3 className="text-base font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
                   </div>
 
-                  <div className="flex-grow px-6 py-2">
-                    <ol className="text-sm text-gray-700 pl-4 list-decimal space-y-2">
-                      <li>Kartu ini adalah identitas resmi peserta SSG</li>
-                      <li>Wajib dibawa saat kegiatan SSG berlangsung</li>
-                      <li>Tunjukkan QR code untuk presensi kehadiran</li>
-                      <li>Segera laporkan kehilangan kartu kepada panitia</li>
+                  <div className="flex-grow px-4 overflow-visible">
+                    <ol className="text-sm text-gray-800 list-decimal ml-5 mt-1">
+                      <li className="mb-1.5 font-medium">Kartu ini adalah identitas resmi peserta SSG</li>
+                      <li className="mb-1.5 font-medium">Wajib dibawa saat kegiatan SSG berlangsung</li>
+                      <li className="mb-1.5 font-medium">Tunjukkan QR code untuk presensi kehadiran</li>
+                      <li className="mb-1.5 font-medium">Segera laporkan kehilangan kartu kepada panitia</li>
                     </ol>
                   </div>
 
-                  <div className="bg-blue-50 py-2 px-5 text-xs text-blue-800 font-medium text-center border-t border-blue-100">
+                  <div className="bg-blue-50 py-1 px-4 text-xs text-blue-800 font-semibold text-center border-t border-blue-100">
                     Kartu ini hanya berlaku selama program Santri Siap Guna 2025
                   </div>
                 </div>
@@ -323,7 +323,10 @@ export default function ECard() {
           }
           .print-card,
           .print-card * {
-            visibility: visible;
+            visibility: visible !important;
+            display: block !important;
+            opacity: 1 !important;
+            overflow: visible !important;
           }
           .print-card {
             position: absolute;
@@ -331,11 +334,11 @@ export default function ECard() {
             top: 0;
             width: 85mm;
             height: 54mm;
-            overflow: hidden;
             padding: 0;
             margin: 0;
             box-shadow: none !important;
             border: none !important;
+            overflow: visible !important;
           }
           
           /* Improve print quality */
@@ -361,10 +364,23 @@ export default function ECard() {
           }
           
           /* Ensure text is legible when printed */
-          h2, h3, p, div {
+          h2, h3, p, div, li, ol {
             color-adjust: exact !important;
             print-color-adjust: exact !important;
             -webkit-print-color-adjust: exact !important;
+          }
+          
+          /* Force list items to display */
+          .back-card ol {
+            visibility: visible !important;
+            display: block !important;
+          }
+          
+          .back-card li {
+            visibility: visible !important;
+            display: list-item !important;
+            color: black !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
