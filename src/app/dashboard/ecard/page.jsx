@@ -25,7 +25,9 @@ export default function ECard() {
     setIsPrinting(true);
     setTimeout(() => {
       window.print();
-      setIsPrinting(false);
+      setTimeout(() => {
+        setIsPrinting(false);
+      }, 500);
     }, 300);
   };
 
@@ -86,6 +88,9 @@ export default function ECard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* State indicator for debugging - hidden in production */}
+      <div className="hidden">Current active card: {activeCard}</div>
+      
       {/* Header hanya ditampilkan saat tidak print */}
       <header className="bg-blue-900 text-white shadow-lg print:hidden">
         <div className="container mx-auto flex justify-between items-center px-4 py-4">
@@ -117,7 +122,7 @@ export default function ECard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-12"
+            className="mb-12 cards-container"
           >
             <div className="flex flex-col md:flex-row gap-8 justify-center print:gap-0 print:justify-center">
               {/* Front Card - Now in landscape orientation */}
@@ -125,7 +130,7 @@ export default function ECard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className={`print-card front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500 ${activeCard === 'back' ? 'print:hidden' : ''}`}
+                className={`front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500 ${activeCard === 'back' ? 'print:hidden' : ''}`}
               >
                 <div className="flex h-full">
                   {/* Left side with QR code */}
@@ -191,7 +196,7 @@ export default function ECard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className={`print-card back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200 ${activeCard === 'front' ? 'print:hidden' : ''}`}
+                className={`back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200 ${activeCard === 'front' ? 'print:hidden' : ''}`}
               >
                 <div className="flex h-full flex-col">
                   <div className="flex items-center justify-between px-5 pt-3 pb-1 border-b border-gray-100">
@@ -319,37 +324,65 @@ export default function ECard() {
           }
           /* Hide everything except the card being printed */
           body * {
-            visibility: hidden;
+            visibility: hidden !important;
+            display: none !important;
           }
-          .print-card,
-          .print-card * {
+          
+          .cards-container {
             visibility: visible !important;
             display: block !important;
-            opacity: 1 !important;
-            overflow: visible !important;
           }
-          .print-card {
+          
+          /* Only show the front card when 'front' is active */
+          .front-card {
+            display: ${activeCard === 'front' ? 'flex !important' : 'none !important'};
+            visibility: ${activeCard === 'front' ? 'visible !important' : 'hidden !important'};
             position: absolute;
             left: 0;
             top: 0;
             width: 85mm;
             height: 54mm;
-            padding: 0;
-            margin: 0;
-            box-shadow: none !important;
-            border: none !important;
             overflow: visible !important;
-          }
-          
-          /* Improve print quality */
-          .front-card {
-            background: #1e3a8a !important; /* Ensure background color prints */
+            background: #1e40af !important;
             color: white !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
           
+          /* Only show the back card when 'back' is active */
           .back-card {
+            display: ${activeCard === 'back' ? 'flex !important' : 'none !important'};
+            visibility: ${activeCard === 'back' ? 'visible !important' : 'hidden !important'};
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 85mm;
+            height: 54mm;
+            overflow: visible !important;
             background: white !important;
             color: black !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          
+          /* Make all children of visible cards visible */
+          .front-card * {
+            display: ${activeCard === 'front' ? 'block !important' : 'none !important'};
+            visibility: ${activeCard === 'front' ? 'visible !important' : 'hidden !important'};
+          }
+          
+          .back-card * {
+            display: ${activeCard === 'back' ? 'block !important' : 'none !important'};
+            visibility: ${activeCard === 'back' ? 'visible !important' : 'hidden !important'};
+          }
+          
+          /* Keep flex layouts for card structure */
+          .front-card > div, .back-card > div {
+            display: flex !important;
           }
           
           /* Fix QR code printing */
@@ -361,6 +394,7 @@ export default function ECard() {
           .front-qr svg {
             width: 90px !important;
             height: 90px !important;
+            display: block !important;
           }
           
           /* Ensure text is legible when printed */
@@ -370,15 +404,16 @@ export default function ECard() {
             -webkit-print-color-adjust: exact !important;
           }
           
-          /* Force list items to display */
+          /* Force list items to display correctly */
           .back-card ol {
-            visibility: visible !important;
             display: block !important;
+            visibility: visible !important;
+            padding-left: 20px !important;
           }
           
           .back-card li {
-            visibility: visible !important;
             display: list-item !important;
+            visibility: visible !important;
             color: black !important;
             page-break-inside: avoid !important;
           }
