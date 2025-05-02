@@ -290,20 +290,16 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
-   * Check if a date is same as another date (ignoring time)
-   * @param {string|Date} date1 - First date to compare
-   * @param {string|Date} date2 - Second date to compare
-   * @returns {boolean} - True if dates are the same
+   * Check if a date string is today
+   * @param {string} dateString - Date string to check in YYYY-MM-DD format
+   * @returns {boolean} - True if date is today
    */
-  const isSameDay = (date1, date2) => {
+  const isToday = (dateString) => {
     try {
-      const d1 = new Date(date1);
-      const d2 = new Date(date2);
-      return d1.getFullYear() === d2.getFullYear() &&
-            d1.getMonth() === d2.getMonth() &&
-            d1.getDate() === d2.getDate();
+      const today = new Date().toISOString().split('T')[0];
+      return dateString === today;
     } catch (error) {
-      console.error('Error checking if same day:', error);
+      console.error('Error checking if date is today:', error);
       return false;
     }
   };
@@ -315,39 +311,26 @@ export default function MutabaahYaumiyahPage() {
    */
   const calculateDaysDifference = (dateString) => {
     try {
-      // If it's today, return 0
-      if (isSameDay(dateString, new Date())) {
-        return 0;
+      // Convert both dates to YYYY-MM-DD format for comparison
+      const today = new Date();
+      const todayFormatted = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+      
+      // Direct string comparison of dates in YYYY-MM-DD format
+      if (dateString === todayFormatted) {
+        return 0; // It's today
       }
       
-      const selected = new Date(dateString);
-      selected.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // For other dates, calculate day difference
+      const selected = new Date(dateString + 'T00:00:00'); // Add time to ensure consistent parsing
+      today.setHours(0, 0, 0, 0); // Reset hours for accurate day comparison
       
       const diffTime = selected.getTime() - today.getTime();
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       
       return diffDays;
     } catch (error) {
       console.error('Error calculating days difference:', error);
       return 0;
-    }
-  };
-
-  /**
-   * Check if a date is yesterday
-   * @param {string} dateString - Date to check
-   * @returns {boolean} - True if date is yesterday
-   */
-  const isYesterday = (dateString) => {
-    try {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      return isSameDay(dateString, yesterday);
-    } catch (error) {
-      console.error('Error checking if yesterday:', error);
-      return false;
     }
   };
 
@@ -381,37 +364,31 @@ export default function MutabaahYaumiyahPage() {
    * @param {string} dateString - Selected date string
    */
   const updateHeaderBgColor = (dateString) => {
+    // If menstruation status is active, always show red header
     if (formData.haid) {
       setHeaderBgColor('bg-red-600');
       return;
     }
     
-    // Get days difference
+    // Check if it's today first (most direct comparison)
+    if (isToday(dateString)) {
+      setHeaderBgColor('bg-green-600'); // Today is always green
+      return;
+    }
+    
+    // For other dates, calculate day difference
     const daysDiff = calculateDaysDifference(dateString);
     
-    // If it's today or future, set to green
-    if (daysDiff >= 0) {
+    if (daysDiff > 0) {
+      // Future date (green)
       setHeaderBgColor('bg-green-600');
-      return;
-    }
-    
-    // Calculate late days (positive number)
-    const lateDays = Math.abs(daysDiff);
-    
-    // If it's 1-2 days late, set to orange
-    if (lateDays >= 1 && lateDays <= 2) {
+    } else if (daysDiff >= -2 && daysDiff < 0) {
+      // 1-2 days late (orange)
       setHeaderBgColor('bg-orange-500');
-      return;
-    }
-    
-    // If it's 3-7 days late, set to brown
-    if (lateDays >= 3 && lateDays <= 7) {
+    } else {
+      // 3 or more days late (brown)
       setHeaderBgColor('bg-amber-700');
-      return;
     }
-    
-    // Default (shouldn't reach here with 7-day limit in options)
-    setHeaderBgColor('bg-amber-700');
   };
 
   /**
@@ -454,7 +431,7 @@ export default function MutabaahYaumiyahPage() {
    */
   const getStatusText = () => {
     // If today, show "Tepat Waktu"
-    if (isSameDay(selectedDate, new Date())) {
+    if (isToday(selectedDate)) {
       return "Tepat Waktu";
     }
     
