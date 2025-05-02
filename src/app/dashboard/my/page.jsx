@@ -56,7 +56,7 @@ export default function MutabaahYaumiyahPage() {
   const [formData, setFormData] = useState({...DEFAULT_FORM_DATA});
 
   /**
-   * Calculate approximate Hijri date from Gregorian date with fix for 4 Dhu al-Qi'dah
+   * Calculate Hijri date from Gregorian date
    * @param {Date} gregorianDate - Gregorian date to convert
    * @returns {Object} - Hijri date details
    */
@@ -65,81 +65,38 @@ export default function MutabaahYaumiyahPage() {
       const date = new Date(gregorianDate);
       date.setHours(12, 0, 0, 0);
       
-      // For today specifically, return 4 Dhu al-Qi'dah 1446 H
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const inputDate = new Date(gregorianDate);
-      inputDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === inputDate.getTime()) {
-        return {
-          day: 4,
-          month: 10, // Dhu al-Qi'dah is index 10 in the array
-          year: 1446, // Current Hijri year as of May 2025
-          formatted: `4 ${HIJRI_MONTHS[10]} 1446 H`
-        };
-      }
-
       // Julian day calculation
       const day = date.getDate();
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
       
-      let jd = Math.floor((365.25 * (year + 4716)) + Math.floor((30.6001 * (month + 1))) + day - 1524.5);
+      let jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
+              Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
+              Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
+              day - 32075.5;
       
-      // Adjust for Gregorian calendar
-      if (date > new Date(1582, 9, 4)) {
-        const a = Math.floor(year / 100);
-        jd = jd + 2 - a + Math.floor(a / 4);
-      }
+      // Islamic Julian day
+      const ijDay = jd - 2400000.5;
       
-      // Calculate Hijri date
-      const b = Math.floor(((jd - 1867216.25) / 36524.25));
-      const c = jd + b - Math.floor(b / 4) + 1525;
+      // Approximate Islamic calendar
+      const islamicDate = Math.floor((ijDay - 1948084.5) * 30.0 / 10631.0);
+      const islamicDay = Math.floor(islamicDate % 30.0);
+      const islamicMonth = Math.floor((islamicDate % 355.0) / 30.0);
+      const islamicYear = 1390 + Math.floor(islamicDate / 355.0);
       
-      // Days since start of Islamic calendar (approximately)
-      const days = Math.floor(jd - 1948084);
-      
-      // Approximate Hijri year, month, day
-      const hijriYear = Math.floor((days * 30 + 10646) / 10631);
-      const daysInYear = Math.floor(((hijriYear - 1) * 10631 + 10646) / 30);
-      const dayOfYear = days - daysInYear;
-      
-      // Calculate month and day with improved accuracy
-      const daysPassed = dayOfYear;
-      const hijriMonth = Math.min(Math.floor(daysPassed / 29.53), 11); // Using more accurate lunar month length
-      const hijriDay = Math.floor(daysPassed - (hijriMonth * 29.53)) + 1;
-      
-      // Return formatted Hijri date
       return {
-        day: Math.round(hijriDay),
-        month: hijriMonth,
-        year: hijriYear,
-        formatted: `${Math.round(hijriDay)} ${HIJRI_MONTHS[hijriMonth]} ${hijriYear} H`
+        day: islamicDay + 1,
+        month: islamicMonth,
+        year: islamicYear,
+        formatted: `${islamicDay + 1} ${HIJRI_MONTHS[islamicMonth]} ${islamicYear} H`
       };
     } catch (error) {
       console.error('Error calculating Hijri date:', error);
-      
-      // Return today's correct date even on error if it's today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const inputDate = new Date(gregorianDate);
-      inputDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === inputDate.getTime()) {
-        return {
-          day: 4,
-          month: 10,
-          year: 1446,
-          formatted: `4 ${HIJRI_MONTHS[10]} 1446 H`
-        };
-      }
-      
       return { 
         day: 1, 
         month: 0, 
-        year: 1443, 
-        formatted: "1 Muharram 1443 H" 
+        year: 1446, 
+        formatted: "1 Muharram 1446 H" 
       };
     }
   };
@@ -151,16 +108,6 @@ export default function MutabaahYaumiyahPage() {
    */
   const getHijriDate = (date) => {
     try {
-      // For today specifically, always return 4 Dhu al-Qi'dah 1446 H
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const inputDate = new Date(date);
-      inputDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === inputDate.getTime()) {
-        return "4 Dhu al-Qi'dah 1446 H";
-      }
-      
       // Try using Intl.DateTimeFormat first if browser supports it
       if (typeof Intl !== 'undefined' && 
           Intl.DateTimeFormat && 
@@ -180,17 +127,6 @@ export default function MutabaahYaumiyahPage() {
       }
     } catch (error) {
       console.error('Error getting Hijri date:', error);
-      
-      // Return today's correct date even on error if it's today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const inputDate = new Date(date);
-      inputDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === inputDate.getTime()) {
-        return "4 Dhu al-Qi'dah 1446 H";
-      }
-      
       return calculateHijriDate(date).formatted;
     }
   };
@@ -220,32 +156,9 @@ export default function MutabaahYaumiyahPage() {
         latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
       }
       
-      // Check if it's today's date and ensure it shows correctly
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === currentDate.getTime()) {
-        if (hijriString.includes('٤') || hijriString.includes('4')) {
-          return "4 Dhu al-Qi'dah 1446 H";
-        }
-      }
-      
       return latinNumerals;
     } catch (error) {
       console.error('Error formatting Hijri date:', error);
-      
-      // For today, ensure correct display even on error
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === currentDate.getTime()) {
-        return "4 Dhu al-Qi'dah 1446 H";
-      }
-      
       return hijriString; // Return original if formatting fails
     }
   };
@@ -367,18 +280,7 @@ export default function MutabaahYaumiyahPage() {
       setHijriDate(hijri);
     } catch (error) {
       console.error('Failed to update Hijri date:', error);
-      
-      // For today, ensure correct display even on error
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const inputDate = new Date(date);
-      inputDate.setHours(0, 0, 0, 0);
-      
-      if (today.getTime() === inputDate.getTime()) {
-        setHijriDate("4 Dhu al-Qi'dah 1446 H");
-      } else {
-        setHijriDate(""); // Set empty string for other dates on error
-      }
+      setHijriDate(""); // Set empty string for other dates on error
     }
   };
 
@@ -711,7 +613,7 @@ export default function MutabaahYaumiyahPage() {
     
     setDateOptions(generateDateOptions());
     
-    // Initialize hijri date
+    // Update hijri date daily
     updateHijriDate(new Date());
   }, []);
 
@@ -720,12 +622,23 @@ export default function MutabaahYaumiyahPage() {
     updateHeaderBgColor(formData.date);
   }, [formData.haid, formData.date]);
 
-  // Effect to update current time
+  // Effect to update current time and date
   useEffect(() => {
     const updateTime = () => {
       try {
         const now = new Date();
         setCurrentDateTime(now);
+        
+        // Check if the system date has changed (midnight crossed)
+        const todayString = now.toISOString().split('T')[0];
+        const currentTodayString = new Date().toISOString().split('T')[0];
+        
+        if (todayString !== currentTodayString) {
+          // The date has changed, update everything
+          setSelectedDate(todayString);
+          setFormData(prev => ({ ...prev, date: todayString }));
+          updateHijriDate(now);
+        }
         
         if (!formData.haid) {
           updateHeaderBgColor(formData.date);
