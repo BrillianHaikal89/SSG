@@ -20,20 +20,18 @@ const HIJRI_MONTHS = [
 const DEFAULT_FORM_DATA = {
   date: new Date().toISOString().split('T')[0],
   sholat_wajib: 0,
-  sholat_tahajud: false, // Changed to boolean for checkbox
+  sholat_tahajud: false,
   sholat_dhuha: 0,
   sholat_rawatib: 0,
   sholat_sunnah_lainnya: 0,
-  tilawah_quran: false, // Changed to boolean for checkbox (1 Halaman)
-  terjemah_quran: false, // Changed to boolean for checkbox (1 Halaman)
-  shaum_sunnah: false, // Changed to boolean for checkbox (3x/bulan)
-  shodaqoh: false, // Changed to boolean for checkbox
-  dzikir_pagi_petang: false, // Changed to boolean for checkbox
-  istighfar_1000x_completed: false, // New field: checkbox for completing 1000x
-  istighfar_1000x: 0, // Keep for partial completion count
-  sholawat_100x_completed: false, // New field: checkbox for completing 100x
-  sholawat_100x: 0, // Keep for partial completion count
-  menyimak_mq_pagi: false, // Changed to boolean for checkbox
+  tilawah_quran: false,
+  terjemah_quran: false,
+  shaum_sunnah: false,
+  shodaqoh: false,
+  dzikir_pagi_petang: false,
+  istighfar_1000x: 0,
+  sholawat_100x: 0,
+  menyimak_mq_pagi: false,
   haid: false
 };
 
@@ -440,7 +438,7 @@ export default function MutabaahYaumiyahPage() {
           haid: newValue,
           ...(newValue ? {
             sholat_wajib: 0,
-            sholat_tahajud: false, // Updated to boolean for checkbox
+            sholat_tahajud: false,
             sholat_dhuha: 0,
             sholat_rawatib: 0,
             sholat_sunnah_lainnya: 0
@@ -453,51 +451,47 @@ export default function MutabaahYaumiyahPage() {
           setHeaderBgColor('bg-red-600');
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
-                  'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi',
-                  'istighfar_1000x_completed', 'sholawat_100x_completed'].includes(field)) {
+                  'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
         // Handle checkbox fields (boolean values)
-        const updates = {
-          [field]: value
-        };
-        
-        // If completing full count, set the partial count to max value
-        if (field === 'istighfar_1000x_completed' && value === true) {
-          updates.istighfar_1000x = 1000;
-        } else if (field === 'istighfar_1000x_completed' && value === false) {
-          updates.istighfar_1000x = 0;
-        } else if (field === 'sholawat_100x_completed' && value === true) {
-          updates.sholawat_100x = 100;
-        } else if (field === 'sholawat_100x_completed' && value === false) {
-          updates.sholawat_100x = 0;
-        }
-        
         setFormData(prev => ({
           ...prev,
-          ...updates
+          [field]: value
         }));
       } else if (field === 'istighfar_1000x') {
         // Handle istighfar count, keeping it within 0-1000
         const numValue = Math.max(0, Math.min(1000, parseInt(value) || 0));
         
-        // If count is 1000, also check the "completed" checkbox
-        const isComplete = numValue === 1000;
-        
         setFormData(prev => ({
           ...prev,
           istighfar_1000x: numValue,
-          istighfar_1000x_completed: isComplete
+          // If count is 1000, mark as completed
+          istighfar_1000x_completed: numValue === 1000
+        }));
+      } else if (field === 'istighfar_1000x_completed') {
+        // Handle completion checkbox
+        setFormData(prev => ({
+          ...prev,
+          istighfar_1000x_completed: value,
+          // If checked, set to 1000, otherwise set to 0
+          istighfar_1000x: value ? 1000 : 0
         }));
       } else if (field === 'sholawat_100x') {
         // Handle sholawat count, keeping it within 0-100
         const numValue = Math.max(0, Math.min(100, parseInt(value) || 0));
         
-        // If count is 100, also check the "completed" checkbox
-        const isComplete = numValue === 100;
-        
         setFormData(prev => ({
           ...prev,
           sholawat_100x: numValue,
-          sholawat_100x_completed: isComplete
+          // If count is 100, mark as completed
+          sholawat_100x_completed: numValue === 100
+        }));
+      } else if (field === 'sholawat_100x_completed') {
+        // Handle completion checkbox
+        setFormData(prev => ({
+          ...prev,
+          sholawat_100x_completed: value,
+          // If checked, set to 100, otherwise set to 0
+          sholawat_100x: value ? 100 : 0
         }));
       } else {
         // Handle number fields
@@ -535,9 +529,16 @@ export default function MutabaahYaumiyahPage() {
             shodaqoh: parsedData.shodaqoh ? true : parsedData.shodaqoh === 0 ? false : Boolean(parsedData.shodaqoh),
             dzikir_pagi_petang: parsedData.dzikir_pagi_petang ? true : parsedData.dzikir_pagi_petang === 0 ? false : Boolean(parsedData.dzikir_pagi_petang), 
             menyimak_mq_pagi: parsedData.menyimak_mq_pagi ? true : parsedData.menyimak_mq_pagi === 0 ? false : Boolean(parsedData.menyimak_mq_pagi),
-            // Add handling for new istighfar and sholawat completed fields
-            istighfar_1000x_completed: parsedData.istighfar_1000x_completed || parsedData.istighfar_1000x === 1000,
-            sholawat_100x_completed: parsedData.sholawat_100x_completed || parsedData.sholawat_100x === 100
+            // Handle new fields with default if they don't exist
+            istighfar_1000x: parsedData.istighfar_1000x !== undefined ? parsedData.istighfar_1000x : 0,
+            sholawat_100x: parsedData.sholawat_100x !== undefined ? parsedData.sholawat_100x : 0,
+            // Add properties for completed flags
+            istighfar_1000x_completed: parsedData.istighfar_1000x_completed !== undefined 
+              ? parsedData.istighfar_1000x_completed 
+              : parsedData.istighfar_1000x === 1000,
+            sholawat_100x_completed: parsedData.sholawat_100x_completed !== undefined 
+              ? parsedData.sholawat_100x_completed 
+              : parsedData.sholawat_100x === 100
           };
           
           setFormData(convertedData);
@@ -734,6 +735,291 @@ export default function MutabaahYaumiyahPage() {
     { label: "Shaum Sunnah (3x/bulan)", field: "shaum_sunnah", type: "checkbox" },
     { label: "Shodaqoh Maal", field: "shodaqoh", type: "checkbox" },
     { label: "Dzikir Pagi/Petang", field: "dzikir_pagi_petang", type: "checkbox" },
-    // The istighfar and sholawat fields are now handled separately with their own UI components
   ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Header Section */}
+        <div className={`p-4 sm:p-6 ${headerBgColor} text-white`}>
+          <h1 className="text-xl sm:text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
+          <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
+          <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
+          
+          {/* Hijri and Gregorian dates below the name */}
+          <div className="flex justify-center mt-1">
+            <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
+              <span className="font-medium">{formatHijriDate(hijriDate) || '...'}</span>
+              <span className="mx-1">|</span>
+              <span>{getSelectedDateInfo().dayName || '...'}</span>
+            </div>
+          </div>
+          
+          {currentDateTime && (
+            <div className="text-center mt-2">
+              <p className="text-xs sm:text-sm">{getSelectedDateInfo().fullDate || 'Loading...'}</p>
+              <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
+              {calculateDaysDifference(selectedDate) > 0 && (
+                <p className="text-white text-xs sm:text-sm font-medium mt-1">
+                  {getStatusText()}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Main Form */}
+        <div className="p-4 sm:p-6">
+          {/* Date Selector */}
+          <div className="mb-4 sm:mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Pilih Tanggal Input:
+            </label>
+            <select
+              value={selectedDate}
+              onChange={handleDateChange}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm sm:text-base"
+            >
+              {dateOptions.map((option, index) => (
+                <option key={index} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs sm:text-sm text-gray-500 italic mt-1">
+              Pilih tanggal untuk mengisi data Mutaba'ah Yaumiyah yang terlewat (hingga 7 hari ke belakang).
+            </p>
+          </div>
+
+          {/* Haid Checkbox */}
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+            <label className="flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={formData.haid}
+                onChange={(e) => handleInputChange('haid', e.target.checked)}
+                className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
+              />
+              <span className="ml-2 text-xs sm:text-sm text-gray-700">
+                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
+              </span>
+            </label>
+          </div>
+
+          {/* Sholat Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.1 Sholat Wajib dan Sunnah
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {sholatSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  {item.type === "checkbox" ? (
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={formData[item.field]}
+                        onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                        className={`form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 ${
+                          formData.haid ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={formData.haid && item.field === 'sholat_tahajud'}
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      max={item.max}
+                      value={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.value)}
+                      className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
+                        formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
+                      }`}
+                      disabled={formData.haid}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quran Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.2 Aktivitas Quran
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {quranSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sunnah Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.3 Aktivitas Sunnah
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {sunnahSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Istighfar 1000x */}
+            <div className="mt-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">Istighfar 1000x</span>
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.istighfar_1000x === 1000}
+                      onChange={(e) => handleInputChange('istighfar_1000x_completed', e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                    />
+                    <span className="ml-2 text-xs text-gray-500">Selesai 1000x</span>
+                  </div>
+                </div>
+                
+                {formData.istighfar_1000x < 1000 && (
+                  <div className="flex items-center justify-between pl-4">
+                    <span className="text-xs text-gray-500">Masukkan jumlah yang diselesaikan:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="1000"
+                      value={formData.istighfar_1000x}
+                      onChange={(e) => handleInputChange('istighfar_1000x', e.target.value)}
+                      className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Sholawat 100x */}
+            <div className="mt-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">Sholawat 100x</span>
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.sholawat_100x === 100}
+                      onChange={(e) => handleInputChange('sholawat_100x_completed', e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                    />
+                    <span className="ml-2 text-xs text-gray-500">Selesai 100x</span>
+                  </div>
+                </div>
+                
+                {formData.sholawat_100x < 100 && (
+                  <div className="flex items-center justify-between pl-4">
+                    <span className="text-xs text-gray-500">Masukkan jumlah yang diselesaikan:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.sholawat_100x}
+                      onChange={(e) => handleInputChange('sholawat_100x', e.target.value)}
+                      className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* MQ Pagi Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              2.1 Menyimak MQ Pagi
+            </h2>
+            
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg flex items-center justify-between">
+              <span className="text-xs sm:text-sm text-gray-700">Menyimak MQ Pagi</span>
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  checked={formData.menyimak_mq_pagi}
+                  onChange={(e) => handleInputChange('menyimak_mq_pagi', e.target.checked)}
+                  className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between gap-3 mt-6">
+            <button
+              onClick={handleRouteBack}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
+            >
+              Kembali
+            </button>
+            
+            <button
+              onClick={handleGenerateReport}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
+            >
+              Laporan
+            </button>
+            
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
+            >
+              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Use Report Component here */}
+      {showReportModal && (
+        <MutabaahReport 
+          user={user} 
+          onClose={() => setShowReportModal(false)} 
+        />
+      )}
+    </div>
+  );
 }
