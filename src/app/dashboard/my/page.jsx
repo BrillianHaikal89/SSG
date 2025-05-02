@@ -350,7 +350,7 @@ export default function MutabahYaumiyahPage() {
                 className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
               />
               <span className="ml-2 text-xs sm:text-sm text-gray-700">
-                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
+                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat wajib dan sunnah
               </span>
             </label>
           </div>
