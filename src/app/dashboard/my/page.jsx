@@ -11,6 +11,7 @@ export default function MutabahYaumiyahPage() {
   const router = useRouter();
   const { user, userId } = useAuthStore();
   const [currentDateTime, setCurrentDateTime] = useState(null);
+  const [hijriDate, setHijriDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
   const [showReportModal, setShowReportModal] = useState(false);
@@ -21,6 +22,29 @@ export default function MutabahYaumiyahPage() {
   const today = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateOptions, setDateOptions] = useState([]);
+
+  // Function to convert Gregorian date to Hijri date
+  const getHijriDate = (date) => {
+    try {
+      // Simple conversion without external library
+      // This is a basic approximation - in production you should use a library
+      const gregorianDate = new Date(date);
+      
+      // Format options for Arabic/Islamic calendar
+      const options = {
+        calendar: 'islamic',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      };
+      
+      // Get Islamic date as string using Intl
+      return new Intl.DateTimeFormat('ar-SA', options).format(gregorianDate);
+    } catch (error) {
+      console.error('Error calculating Hijri date:', error);
+      return "";
+    }
+  };
 
   useEffect(() => {
     const generateDateOptions = () => {
@@ -46,6 +70,14 @@ export default function MutabahYaumiyahPage() {
     
     setDateOptions(generateDateOptions());
   }, []);
+
+  useEffect(() => {
+    // Calculate Hijri date when current date changes
+    if (currentDateTime) {
+      const hijri = getHijriDate(currentDateTime);
+      setHijriDate(hijri);
+    }
+  }, [currentDateTime]);
 
   const calculateDaysDifference = (dateString) => {
     const selected = new Date(dateString);
@@ -367,6 +399,31 @@ export default function MutabahYaumiyahPage() {
     });
   };
 
+  const formatHijriDate = (hijriString) => {
+    if (!hijriString) return '';
+    
+    // Attempt to format the Hijri date in a more readable format for non-Arabic readers
+    // Note: In production, use a proper Hijri date library
+    try {
+      // Add a simple conversion map for Arabic numerals to Latin
+      const arabicToLatinNumerals = {
+        '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+        '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+      };
+      
+      // Replace Arabic numerals with Latin ones
+      let latinNumerals = hijriString;
+      for (const [arabic, latin] of Object.entries(arabicToLatinNumerals)) {
+        latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
+      }
+      
+      return latinNumerals;
+    } catch (error) {
+      console.error('Error formatting Hijri date:', error);
+      return hijriString; // Return original if formatting fails
+    }
+  };
+
   const getTextColorClass = () => 'text-white';
 
   const getStatusText = () => {
@@ -384,6 +441,15 @@ export default function MutabahYaumiyahPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
           <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
+          
+          {/* Hijri and Gregorian dates below the name */}
+          <div className="flex justify-center mt-1">
+            <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
+              <span className="font-medium">{formatHijriDate(hijriDate)}</span>
+              <span className="mx-1">|</span>
+              <span>{currentDateTime ? formatDate(currentDateTime).split(',')[0] : ''}</span>
+            </div>
+          </div>
           
           {currentDateTime && (
             <div className="text-center mt-2">
