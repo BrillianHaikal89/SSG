@@ -198,28 +198,28 @@ export default function ECard() {
                 className={`back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200 ${activeCard === 'front' ? 'print:hidden' : ''}`}
               >
                 <div className="flex h-full flex-col">
-                  <div className="flex items-center justify-between px-5 pt-3 pb-1 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-4 pt-2 pb-1 border-b border-gray-100">
                     <Image 
                       src="/img/logo_ssg.png" 
                       alt="Santri Siap Guna Logo" 
-                      width={90} 
-                      height={25} 
+                      width={80} 
+                      height={22} 
                       className="h-auto"
                     />
                     <Image 
                       src="/img/logo_DT READY.png" 
                       alt="DT Logo" 
-                      width={28} 
-                      height={28} 
+                      width={24} 
+                      height={24} 
                     />
                   </div>
                   
-                  <div className="text-center mt-1">
-                    <h3 className="text-base font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
+                  <div className="text-center my-1">
+                    <h3 className="text-sm font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
                   </div>
 
-                  <div className="flex-grow px-4 overflow-visible">
-                    <ol className="text-sm text-gray-800 list-decimal ml-5 mt-1 space-y-1">
+                  <div className="flex-grow px-4 overflow-visible pb-1">
+                    <ol className="text-xs text-gray-800 list-decimal ml-4 mt-0 space-y-0.5">
                       <li className="font-medium leading-tight">Kartu ini adalah identitas resmi peserta SSG</li>
                       <li className="font-medium leading-tight">Wajib dibawa saat kegiatan SSG berlangsung</li>
                       <li className="font-medium leading-tight">Tunjukkan QR code untuk presensi kehadiran</li>
@@ -227,7 +227,7 @@ export default function ECard() {
                     </ol>
                   </div>
 
-                  <div className="bg-blue-50 py-1 px-4 text-xs text-blue-800 font-semibold text-center border-t border-blue-100">
+                  <div className="bg-blue-50 py-1.5 px-4 text-xs text-blue-800 font-semibold text-center border-t border-blue-100">
                     Kartu ini hanya berlaku selama program Santri Siap Guna 2025
                   </div>
                 </div>
