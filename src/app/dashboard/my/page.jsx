@@ -13,6 +13,8 @@ export default function MutabahYaumiyahPage() {
   const [currentDateTime, setCurrentDateTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportData, setReportData] = useState([]);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -97,12 +99,10 @@ export default function MutabahYaumiyahPage() {
     haid: false
   });
 
-  // Update color whenever haid status or date changes
   useEffect(() => {
     updateHeaderBgColor(formData.date);
   }, [formData.haid, formData.date]);
 
-  // Timer for updating clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -187,7 +187,6 @@ export default function MutabahYaumiyahPage() {
       const updatedFormData = {
         ...formData,
         haid: newValue,
-        // Auto-fill all prayer fields with 0 when checked
         ...(newValue ? {
           sholat_wajib: 0,
           sholat_tahajud: 0,
@@ -276,6 +275,65 @@ export default function MutabahYaumiyahPage() {
     }
   };
 
+  const handleGenerateReport = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      // In a real app, you would fetch report data from your API
+      // For this example, we'll use the current form data
+      const report = {
+        user: user?.name || 'Pengguna',
+        date: new Date().toLocaleDateString('id-ID'),
+        data: formData
+      };
+      
+      setReportData(report);
+      setShowReportModal(true);
+      
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Gagal membuat laporan');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const downloadReport = () => {
+    // Create CSV content
+    let csvContent = "Laporan Mutabaah Yaumiyah\n\n";
+    csvContent += `Nama,${user?.name || '-'}\n`;
+    csvContent += `Tanggal,${new Date().toLocaleDateString('id-ID')}\n\n`;
+    
+    // Add prayer data
+    csvContent += "Sholat Wajib," + formData.sholat_wajib + "/5\n";
+    csvContent += "Sholat Tahajud," + formData.sholat_tahajud + "\n";
+    csvContent += "Sholat Dhuha," + formData.sholat_dhuha + "\n";
+    csvContent += "Sholat Rawatib," + formData.sholat_rawatib + "\n";
+    csvContent += "Sholat Sunnah Lainnya," + formData.sholat_sunnah_lainnya + "\n\n";
+    
+    // Add other activities
+    csvContent += "Tilawah Quran," + formData.tilawah_quran + " halaman\n";
+    csvContent += "Terjemah Quran," + formData.terjemah_quran + " halaman\n";
+    csvContent += "Shaum Sunnah," + formData.shaum_sunnah + " hari\n";
+    csvContent += "Shodaqoh," + formData.shodaqoh + " kali\n";
+    csvContent += "Dzikir Pagi/Petang," + formData.dzikir_pagi_petang + " kali\n";
+    csvContent += "Istighfar (x100)," + formData.istighfar_1000x + "\n";
+    csvContent += "Sholawat (x100)," + formData.sholawat_100x + "\n";
+    csvContent += "Menyimak MQ Pagi," + formData.menyimak_mq_pagi + "\n";
+    csvContent += "Status Haid," + (formData.haid ? "Ya" : "Tidak") + "\n";
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `mutabaah_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const formatTime = (date) => {
     if (!date) return '';
     return date.toLocaleTimeString('id-ID', {
@@ -361,7 +419,6 @@ export default function MutabahYaumiyahPage() {
             </label>
           </div>
 
-          {/* Sholat Wajib dan Sunnah Section */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">1.1 Sholat Wajib dan Sunnah</h2>
             
@@ -372,8 +429,53 @@ export default function MutabahYaumiyahPage() {
                 { label: "Sholat Dhuha 4 rakaat", field: "sholat_dhuha", max: 8 },
                 { label: "Sholat Rawatib 10 rakaat", field: "sholat_rawatib", max: 12 },
                 { label: "Sholat Sunnah Lainnya 6 rakaat", field: "sholat_sunnah_lainnya", max: 10 },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max={item.max}
+                    value={formData[item.field]}
+                    onChange={(e) => handleInputChange(item.field, e.target.value)}
+                    className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
+                      formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
+                    }`}
+                    disabled={formData.haid}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">1.2 Aktivitas Quran</h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {[
                 { label: "Tilawah Quran (halaman)", field: "tilawah_quran", max: 100 },
                 { label: "Terjemah Quran (halaman)", field: "terjemah_quran", max: 50 },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max={item.max}
+                    value={formData[item.field]}
+                    onChange={(e) => handleInputChange(item.field, e.target.value)}
+                    className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">1.3 Aktivitas Sunnah</h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {[
                 { label: "Shaum Sunnah (hari)", field: "shaum_sunnah", max: 5 },
                 { label: "Shodaqoh (kali)", field: "shodaqoh", max: 5 },
                 { label: "Dzikir Pagi/Petang (kali)", field: "dzikir_pagi_petang", max: 2 },
@@ -388,29 +490,13 @@ export default function MutabahYaumiyahPage() {
                     max={item.max}
                     value={formData[item.field]}
                     onChange={(e) => handleInputChange(item.field, e.target.value)}
-                    className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
-                      formData.haid && [
-                        'sholat_wajib',
-                        'sholat_tahajud', 
-                        'sholat_dhuha',
-                        'sholat_rawatib',
-                        'sholat_sunnah_lainnya'
-                      ].includes(item.field) ? 'bg-gray-200 cursor-not-allowed' : ''
-                    }`}
-                    disabled={formData.haid && [
-                      'sholat_wajib',
-                      'sholat_tahajud', 
-                      'sholat_dhuha',
-                      'sholat_rawatib',
-                      'sholat_sunnah_lainnya'
-                    ].includes(item.field)}
+                    className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
                   />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Menyimak MQ Pagi Section - Always editable */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">2.1 Menyimak MQ Pagi</h2>
             
@@ -445,6 +531,16 @@ export default function MutabahYaumiyahPage() {
             </button>
             
             <button
+              onClick={handleGenerateReport}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
+            >
+              Laporan
+            </button>
+            
+            <button
               onClick={handleSubmit}
               disabled={isSubmitting}
               className={`${
@@ -456,6 +552,123 @@ export default function MutabahYaumiyahPage() {
           </div>
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Laporan Mutaba'ah Yaumiyah</h3>
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <div className="flex justify-between mb-2">
+                  <span className="font-medium">Nama:</span>
+                  <span>{user?.name || '-'}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="font-medium">Tanggal Laporan:</span>
+                  <span>{new Date().toLocaleDateString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="font-medium">Status Haid:</span>
+                  <span>{formData.haid ? "Ya" : "Tidak"}</span>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="font-semibold text-lg mb-3">Data Sholat</h4>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-sm text-gray-500">Sholat Wajib</div>
+                    <div className="font-medium">{formData.sholat_wajib || 0}/5</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-sm text-gray-500">Sholat Tahajud</div>
+                    <div className="font-medium">{formData.sholat_tahajud || 0}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-sm text-gray-500">Sholat Dhuha</div>
+                    <div className="font-medium">{formData.sholat_dhuha || 0}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-sm text-gray-500">Sholat Rawatib</div>
+                    <div className="font-medium">{formData.sholat_rawatib || 0}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-sm text-gray-500">Sholat Sunnah Lainnya</div>
+                    <div className="font-medium">{formData.sholat_sunnah_lainnya || 0}</div>
+                  </div>
+                </div>
+                
+                <h4 className="font-semibold text-lg mb-3 mt-6">Aktivitas Quran</h4>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between">
+                    <span>Tilawah Quran:</span>
+                    <span className="font-medium">{formData.tilawah_quran || 0} halaman</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Terjemah Quran:</span>
+                    <span className="font-medium">{formData.terjemah_quran || 0} halaman</span>
+                  </div>
+                </div>
+                
+                <h4 className="font-semibold text-lg mb-3 mt-6">Aktivitas Lainnya</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Shaum Sunnah:</span>
+                    <span className="font-medium">{formData.shaum_sunnah || 0} hari</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shodaqoh:</span>
+                    <span className="font-medium">{formData.shodaqoh || 0} kali</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Dzikir Pagi/Petang:</span>
+                    <span className="font-medium">{formData.dzikir_pagi_petang || 0} kali</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Istighfar (x100):</span>
+                    <span className="font-medium">{formData.istighfar_1000x || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sholawat (x100):</span>
+                    <span className="font-medium">{formData.sholawat_100x || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Menyimak MQ Pagi:</span>
+                    <span className="font-medium">{formData.menyimak_mq_pagi || 0}x</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={downloadReport}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg"
+                >
+                  Download CSV
+                </button>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
