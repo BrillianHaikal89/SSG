@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 /**
  * MutabaahReport Component
  * Displays and manages reporting functionality for Mutaba'ah Yaumiyah data
+ * Updated to handle checkbox fields
  * 
  * @param {Object} props - Component properties
  * @param {Object} props.user - User object containing user data
@@ -35,7 +36,20 @@ const MutabaahReport = ({ user, onClose }) => {
         if (key.startsWith(`mutabaah_${user?.userId}_`)) {
           try {
             const data = JSON.parse(localStorage.getItem(key));
-            allData.push(data);
+            
+            // Ensure checkbox fields are boolean values (for backward compatibility)
+            const normalizedData = {
+              ...data,
+              sholat_tahajud: typeof data.sholat_tahajud === 'boolean' ? data.sholat_tahajud : Boolean(data.sholat_tahajud),
+              tilawah_quran: typeof data.tilawah_quran === 'boolean' ? data.tilawah_quran : Boolean(data.tilawah_quran),
+              terjemah_quran: typeof data.terjemah_quran === 'boolean' ? data.terjemah_quran : Boolean(data.terjemah_quran),
+              shaum_sunnah: typeof data.shaum_sunnah === 'boolean' ? data.shaum_sunnah : Boolean(data.shaum_sunnah),
+              shodaqoh: typeof data.shodaqoh === 'boolean' ? data.shodaqoh : Boolean(data.shodaqoh),
+              dzikir_pagi_petang: typeof data.dzikir_pagi_petang === 'boolean' ? data.dzikir_pagi_petang : Boolean(data.dzikir_pagi_petang),
+              menyimak_mq_pagi: typeof data.menyimak_mq_pagi === 'boolean' ? data.menyimak_mq_pagi : Boolean(data.menyimak_mq_pagi)
+            };
+            
+            allData.push(normalizedData);
           } catch (e) {
             console.error('Error parsing data for key:', key);
           }
@@ -70,13 +84,13 @@ const MutabaahReport = ({ user, onClose }) => {
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
       csvContent += "Istighfar (x100),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
 
-      // Add data rows
+      // Add data rows - with checkboxes shown as "Ya" or "Tidak"
       allUserData.forEach(data => {
-        csvContent += `${data.date},${data.sholat_wajib},${data.sholat_tahajud},${data.sholat_dhuha},`;
-        csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
-        csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
-        csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi},${data.haid ? "Ya" : "Tidak"}\n`;
+        csvContent += `${data.date},${data.sholat_wajib},${data.sholat_tahajud ? "Ya" : "Tidak"},${data.sholat_dhuha},`;
+        csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran ? "Ya" : "Tidak"},`;
+        csvContent += `${data.terjemah_quran ? "Ya" : "Tidak"},${data.shaum_sunnah ? "Ya" : "Tidak"},${data.shodaqoh ? "Ya" : "Tidak"},`;
+        csvContent += `${data.dzikir_pagi_petang ? "Ya" : "Tidak"},${data.istighfar_1000x},${data.sholawat_100x},`;
+        csvContent += `${data.menyimak_mq_pagi ? "Ya" : "Tidak"},${data.haid ? "Ya" : "Tidak"}\n`;
       });
 
       // Create download link
@@ -102,10 +116,19 @@ const MutabaahReport = ({ user, onClose }) => {
       allUserData.reduce((sum, data) => sum + data.sholat_wajib, 0) / totalEntries
     ).toFixed(1);
     
-    const totalTilawah = allUserData.reduce((sum, data) => sum + data.tilawah_quran, 0);
+    // Count completed days for checkbox items
+    const tahajudDays = allUserData.filter(data => data.sholat_tahajud).length;
+    const tilawahDays = allUserData.filter(data => data.tilawah_quran).length;
+    const terjemahDays = allUserData.filter(data => data.terjemah_quran).length;
     const haidDays = allUserData.filter(data => data.haid).length;
     
-    return { avgSholatWajib, totalTilawah, haidDays };
+    return { 
+      avgSholatWajib, 
+      tahajudDays, 
+      tilawahDays, 
+      terjemahDays, 
+      haidDays
+    };
   };
 
   const stats = calculateStatistics();
@@ -159,8 +182,7 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Tahajud</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Dhuha</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah Quran</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                         </tr>
@@ -175,16 +197,26 @@ const MutabaahReport = ({ user, onClose }) => {
                               {data.sholat_wajib}/5
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.sholat_tahajud}
+                              {/* Display checkmark/X for boolean values */}
+                              {data.sholat_tahajud ? (
+                                <span className="text-green-600">✓</span>
+                              ) : (
+                                <span className="text-red-600">✗</span>
+                              )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.sholat_dhuha}
+                              {data.tilawah_quran ? (
+                                <span className="text-green-600">✓</span>
+                              ) : (
+                                <span className="text-red-600">✗</span>
+                              )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.tilawah_quran} hlm
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.menyimak_mq_pagi}x
+                              {data.menyimak_mq_pagi ? (
+                                <span className="text-green-600">✓</span>
+                              ) : (
+                                <span className="text-red-600">✗</span>
+                              )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.haid ? 'Ya' : 'Tidak'}
@@ -206,15 +238,15 @@ const MutabaahReport = ({ user, onClose }) => {
                         </div>
                       </div>
                       <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-sm text-green-800">Tilawah Quran (Total)</div>
+                        <div className="text-sm text-green-800">Tahajud (Hari)</div>
                         <div className="text-2xl font-bold text-green-600">
-                          {stats.totalTilawah} hlm
+                          {stats.tahajudDays}/{allUserData.length}
                         </div>
                       </div>
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <div className="text-sm text-purple-800">Hari Berhalangan</div>
-                        <div className="text-2xl font-bold text-purple-600">
-                          {stats.haidDays} hari
+                      <div className="bg-indigo-50 p-4 rounded-lg">
+                        <div className="text-sm text-indigo-800">Tilawah Quran (Hari)</div>
+                        <div className="text-2xl font-bold text-indigo-600">
+                          {stats.tilawahDays}/{allUserData.length}
                         </div>
                       </div>
                     </div>
