@@ -4,34 +4,33 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
-// Import the report component
 import MutabaahReport from '../../../components/my/MutabaahReport';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Hijri month names
 const HIJRI_MONTHS = [
   "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
   "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
   "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
 ];
 
-// Default form data structure
 const DEFAULT_FORM_DATA = {
   date: new Date().toISOString().split('T')[0],
   sholat_wajib: 0,
-  sholat_tahajud: false, // Changed to boolean for checkbox
+  sholat_tahajud: false,
   sholat_dhuha: 0,
   sholat_rawatib: 0,
   sholat_sunnah_lainnya: 0,
-  tilawah_quran: false, // Changed to boolean for checkbox (1 Halaman)
-  terjemah_quran: false, // Changed to boolean for checkbox (1 Halaman)
-  shaum_sunnah: false, // Changed to boolean for checkbox (3x/bulan)
-  shodaqoh: false, // Changed to boolean for checkbox
-  dzikir_pagi_petang: false, // Changed to boolean for checkbox
-  istighfar_1000x: 0,
-  sholawat_100x: 0,
-  menyimak_mq_pagi: false, // Changed to boolean for checkbox
+  tilawah_quran: false,
+  terjemah_quran: false,
+  shaum_sunnah: false,
+  shodaqoh: false,
+  dzikir_pagi_petang: false,
+  istighfar_1000x: false,
+  istighfar_manual: 0,
+  sholawat_100x: false,
+  sholawat_manual: 0,
+  menyimak_mq_pagi: false,
   haid: false
 };
 
@@ -39,33 +38,23 @@ export default function MutabaahYaumiyahPage() {
   const router = useRouter();
   const { user, userId } = useAuthStore();
   
-  // Date and time states
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [selectedDateTime, setSelectedDateTime] = useState(new Date());
   const [hijriDate, setHijriDate] = useState("");
-  
-  // UI states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
   const [showReportModal, setShowReportModal] = useState(false);
 
-  // Form data
   const today = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateOptions, setDateOptions] = useState([]);
   const [formData, setFormData] = useState({...DEFAULT_FORM_DATA});
 
-  /**
-   * Calculate approximate Hijri date from Gregorian date with fix for 4 Dhu al-Qi'dah
-   * @param {Date} gregorianDate - Gregorian date to convert
-   * @returns {Object} - Hijri date details
-   */
   const calculateHijriDate = (gregorianDate) => {
     try {
       const date = new Date(gregorianDate);
       date.setHours(12, 0, 0, 0);
       
-      // For today specifically, return 4 Dhu al-Qi'dah 1446 H
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const inputDate = new Date(gregorianDate);
@@ -74,43 +63,33 @@ export default function MutabaahYaumiyahPage() {
       if (today.getTime() === inputDate.getTime()) {
         return {
           day: 4,
-          month: 10, // Dhu al-Qi'dah is index 10 in the array
-          year: 1446, // Current Hijri year as of May 2025
+          month: 10,
+          year: 1446,
           formatted: `4 ${HIJRI_MONTHS[10]} 1446 H`
         };
       }
 
-      // Julian day calculation
       const day = date.getDate();
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
       
       let jd = Math.floor((365.25 * (year + 4716)) + Math.floor((30.6001 * (month + 1))) + day - 1524.5);
       
-      // Adjust for Gregorian calendar
       if (date > new Date(1582, 9, 4)) {
         const a = Math.floor(year / 100);
         jd = jd + 2 - a + Math.floor(a / 4);
       }
       
-      // Calculate Hijri date
       const b = Math.floor(((jd - 1867216.25) / 36524.25));
       const c = jd + b - Math.floor(b / 4) + 1525;
-      
-      // Days since start of Islamic calendar (approximately)
       const days = Math.floor(jd - 1948084);
-      
-      // Approximate Hijri year, month, day
       const hijriYear = Math.floor((days * 30 + 10646) / 10631);
       const daysInYear = Math.floor(((hijriYear - 1) * 10631 + 10646) / 30);
       const dayOfYear = days - daysInYear;
-      
-      // Calculate month and day with improved accuracy
       const daysPassed = dayOfYear;
-      const hijriMonth = Math.min(Math.floor(daysPassed / 29.53), 11); // Using more accurate lunar month length
+      const hijriMonth = Math.min(Math.floor(daysPassed / 29.53), 11);
       const hijriDay = Math.floor(daysPassed - (hijriMonth * 29.53)) + 1;
       
-      // Return formatted Hijri date
       return {
         day: Math.round(hijriDay),
         month: hijriMonth,
@@ -120,7 +99,6 @@ export default function MutabaahYaumiyahPage() {
     } catch (error) {
       console.error('Error calculating Hijri date:', error);
       
-      // Return today's correct date even on error if it's today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const inputDate = new Date(gregorianDate);
@@ -144,14 +122,8 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Get Hijri date from Gregorian date using browser API or fallback
-   * @param {Date} date - Gregorian date to convert
-   * @returns {string} - Formatted Hijri date 
-   */
   const getHijriDate = (date) => {
     try {
-      // For today specifically, always return 4 Dhu al-Qi'dah 1446 H
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const inputDate = new Date(date);
@@ -161,7 +133,6 @@ export default function MutabaahYaumiyahPage() {
         return "4 Dhu al-Qi'dah 1446 H";
       }
       
-      // Try using Intl.DateTimeFormat first if browser supports it
       if (typeof Intl !== 'undefined' && 
           Intl.DateTimeFormat && 
           Intl.DateTimeFormat.supportedLocalesOf(['ar-SA-u-ca-islamic']).length > 0) {
@@ -175,13 +146,11 @@ export default function MutabaahYaumiyahPage() {
         
         return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(date);
       } else {
-        // Fallback to our algorithm
         return calculateHijriDate(date).formatted;
       }
     } catch (error) {
       console.error('Error getting Hijri date:', error);
       
-      // Return today's correct date even on error if it's today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const inputDate = new Date(date);
@@ -195,21 +164,14 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format Hijri date for display
-   * @param {string} hijriString - Raw Hijri date string 
-   * @returns {string} - Formatted Hijri date
-   */
   const formatHijriDate = (hijriString) => {
     if (!hijriString) return '';
     
-    // If it's already a formatted string from our calculation function
     if (hijriString.includes('H')) {
       return hijriString;
     }
     
     try {
-      // Convert Arabic numerals to Latin
       const arabicToLatinNumerals = {
         '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
         '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
@@ -220,7 +182,6 @@ export default function MutabaahYaumiyahPage() {
         latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
       }
       
-      // Check if it's today's date and ensure it shows correctly
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const currentDate = new Date();
@@ -236,7 +197,6 @@ export default function MutabaahYaumiyahPage() {
     } catch (error) {
       console.error('Error formatting Hijri date:', error);
       
-      // For today, ensure correct display even on error
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const currentDate = new Date();
@@ -246,15 +206,10 @@ export default function MutabaahYaumiyahPage() {
         return "4 Dhu al-Qi'dah 1446 H";
       }
       
-      return hijriString; // Return original if formatting fails
+      return hijriString;
     }
   };
 
-  /**
-   * Format date for display in UI
-   * @param {Date} date - Date to format
-   * @returns {string} - Formatted date string
-   */
   const formatDate = (date) => {
     if (!date) return '';
     try {
@@ -270,11 +225,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format time for display in UI
-   * @param {Date} date - Date to extract time from
-   * @returns {string} - Formatted time string
-   */
   const formatTime = (date) => {
     if (!date) return '';
     try {
@@ -289,11 +239,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Calculate days difference between selected date and today
-   * @param {string} dateString - Date string to compare
-   * @returns {number} - Number of days difference
-   */
   const calculateDaysDifference = (dateString) => {
     try {
       const selected = new Date(dateString);
@@ -308,10 +253,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Update Hijri date state safely
-   * @param {Date} date - Date to calculate Hijri from
-   */
   const updateHijriDate = (date) => {
     try {
       const hijri = getHijriDate(date);
@@ -319,7 +260,6 @@ export default function MutabaahYaumiyahPage() {
     } catch (error) {
       console.error('Failed to update Hijri date:', error);
       
-      // For today, ensure correct display even on error
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const inputDate = new Date(date);
@@ -328,15 +268,11 @@ export default function MutabaahYaumiyahPage() {
       if (today.getTime() === inputDate.getTime()) {
         setHijriDate("4 Dhu al-Qi'dah 1446 H");
       } else {
-        setHijriDate(""); // Set empty string for other dates on error
+        setHijriDate("");
       }
     }
   };
 
-  /**
-   * Update header background color based on date difference and haid status
-   * @param {string} dateString - Selected date string
-   */
   const updateHeaderBgColor = (dateString) => {
     if (formData.haid) {
       setHeaderBgColor('bg-red-600');
@@ -354,11 +290,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format date for display in dropdown
-   * @param {Date} date - Date to format
-   * @returns {string} - Formatted date string
-   */
   const formatDateForDisplay = (date) => {
     try {
       return date.toLocaleDateString('id-ID', {
@@ -373,10 +304,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Get selected date info for display
-   * @returns {Object} - Object containing day name and full date
-   */
   const getSelectedDateInfo = () => {
     try {
       const dayName = selectedDateTime ? formatDate(selectedDateTime).split(',')[0] : '';
@@ -388,10 +315,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Get text to display date status
-   * @returns {string} - Status text
-   */
   const getStatusText = () => {
     const daysDiff = calculateDaysDifference(selectedDate);
     if (daysDiff === 0) return "Hari Ini";
@@ -400,17 +323,12 @@ export default function MutabaahYaumiyahPage() {
     return "";
   };
 
-  /**
-   * Handle date selection change
-   * @param {Event} e - Change event
-   */
   const handleDateChange = (e) => {
     try {
       const newDate = e.target.value;
       setSelectedDate(newDate);
       setFormData(prev => ({ ...prev, date: newDate }));
       
-      // Update selected date time for Hijri date calculation
       const selectedDate = new Date(newDate);
       if (!isNaN(selectedDate.getTime())) {
         setSelectedDateTime(selectedDate);
@@ -424,11 +342,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Handle form input changes
-   * @param {string} field - Field to update
-   * @param {any} value - New value
-   */
   const handleInputChange = (field, value) => {
     try {
       if (field === 'haid') {
@@ -438,7 +351,7 @@ export default function MutabaahYaumiyahPage() {
           haid: newValue,
           ...(newValue ? {
             sholat_wajib: 0,
-            sholat_tahajud: false, // Updated to boolean for checkbox
+            sholat_tahajud: false,
             sholat_dhuha: 0,
             sholat_rawatib: 0,
             sholat_sunnah_lainnya: 0
@@ -451,18 +364,25 @@ export default function MutabaahYaumiyahPage() {
           setHeaderBgColor('bg-red-600');
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
-                  'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
-        // Handle checkbox fields (boolean values)
+                  'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi', 
+                  'istighfar_1000x', 'sholawat_100x'].includes(field)) {
         setFormData(prev => ({
           ...prev,
-          [field]: value
+          [field]: value,
+          ...(value ? {
+            [`${field.replace('_1000x', '_manual')}`]: 0,
+            [`${field.replace('_100x', '_manual')}`]: 0
+          } : {})
         }));
       } else {
-        // Handle number fields
         const numValue = Math.max(0, parseInt(value) || 0);
+        const maxValue = field === 'istighfar_manual' ? 1000 : 
+                       field === 'sholawat_manual' ? 100 : 
+                       undefined;
+        
         setFormData(prev => ({
           ...prev,
-          [field]: numValue
+          [field]: maxValue ? Math.min(numValue, maxValue) : numValue
         }));
       }
     } catch (error) {
@@ -470,10 +390,6 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Check for existing data for the selected date
-   * @param {string} date - Date to check
-   */
   const checkExistingData = async (date) => {
     try {
       const storageKey = `mutabaah_${user?.userId}_${date}`;
@@ -483,7 +399,6 @@ export default function MutabaahYaumiyahPage() {
         try {
           const parsedData = JSON.parse(localData);
           
-          // Handle legacy data format (convert numbers to booleans for checkbox fields)
           const convertedData = {
             ...parsedData,
             sholat_tahajud: parsedData.sholat_tahajud ? true : parsedData.sholat_tahajud === 0 ? false : Boolean(parsedData.sholat_tahajud),
@@ -492,7 +407,9 @@ export default function MutabaahYaumiyahPage() {
             shaum_sunnah: parsedData.shaum_sunnah ? true : parsedData.shaum_sunnah === 0 ? false : Boolean(parsedData.shaum_sunnah),
             shodaqoh: parsedData.shodaqoh ? true : parsedData.shodaqoh === 0 ? false : Boolean(parsedData.shodaqoh),
             dzikir_pagi_petang: parsedData.dzikir_pagi_petang ? true : parsedData.dzikir_pagi_petang === 0 ? false : Boolean(parsedData.dzikir_pagi_petang), 
-            menyimak_mq_pagi: parsedData.menyimak_mq_pagi ? true : parsedData.menyimak_mq_pagi === 0 ? false : Boolean(parsedData.menyimak_mq_pagi)
+            menyimak_mq_pagi: parsedData.menyimak_mq_pagi ? true : parsedData.menyimak_mq_pagi === 0 ? false : Boolean(parsedData.menyimak_mq_pagi),
+            istighfar_1000x: parsedData.istighfar_1000x ? true : parsedData.istighfar_1000x === 0 ? false : Boolean(parsedData.istighfar_1000x),
+            sholawat_100x: parsedData.sholawat_100x ? true : parsedData.sholawat_100x === 0 ? false : Boolean(parsedData.sholawat_100x)
           };
           
           setFormData(convertedData);
@@ -517,17 +434,10 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Navigation to dashboard
-   */
   const handleRouteBack = () => {
     router.push('/dashboard');
   };
 
-  /**
-   * Submit form data
-   * @param {Event} e - Form submit event
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -592,14 +502,10 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Generate and open report modal
-   */
   const handleGenerateReport = () => {
     setShowReportModal(true);
   };
 
-  // Generate date options for dropdown
   useEffect(() => {
     const generateDateOptions = () => {
       try {
@@ -628,17 +534,13 @@ export default function MutabaahYaumiyahPage() {
     };
     
     setDateOptions(generateDateOptions());
-    
-    // Initialize hijri date
     updateHijriDate(new Date());
   }, []);
 
-  // Update header color and hijri date when form data changes
   useEffect(() => {
     updateHeaderBgColor(formData.date);
   }, [formData.haid, formData.date]);
 
-  // Effect to update current time
   useEffect(() => {
     const updateTime = () => {
       try {
@@ -658,7 +560,6 @@ export default function MutabaahYaumiyahPage() {
     return () => clearInterval(timer);
   }, [selectedDate, formData.haid]);
 
-  // Effect to update selected date time and hijri date when form date changes
   useEffect(() => {
     try {
       const newSelectedDate = new Date(formData.date);
@@ -671,7 +572,6 @@ export default function MutabaahYaumiyahPage() {
     }
   }, [formData.date]);
 
-  // Input sections data for rendering
   const sholatSection = [
     { label: "Sholat Wajib 5 waktu", field: "sholat_wajib", max: 5, type: "number" },
     { label: "Sholat Tahajud & atau Witir 3 rakaat/hari", field: "sholat_tahajud", type: "checkbox" },
@@ -689,8 +589,20 @@ export default function MutabaahYaumiyahPage() {
     { label: "Shaum Sunnah (3x/bulan)", field: "shaum_sunnah", type: "checkbox" },
     { label: "Shodaqoh Maal", field: "shodaqoh", type: "checkbox" },
     { label: "Dzikir Pagi/Petang", field: "dzikir_pagi_petang", type: "checkbox" },
-    { label: "Istighfar (x100)", field: "istighfar_1000x", max: 15, type: "number" },
-    { label: "Sholawat (x100)", field: "sholawat_100x", max: 15, type: "number" },
+    { 
+      label: "Istighfar (x1000)", 
+      field: "istighfar_1000x", 
+      manualField: "istighfar_manual",
+      max: 1000,
+      type: "checkboxWithManual" 
+    },
+    { 
+      label: "Sholawat (x100)", 
+      field: "sholawat_100x", 
+      manualField: "sholawat_manual",
+      max: 100,
+      type: "checkboxWithManual" 
+    },
   ];
 
   return (
@@ -702,7 +614,6 @@ export default function MutabaahYaumiyahPage() {
           <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
           
-          {/* Hijri and Gregorian dates below the name */}
           <div className="flex justify-center mt-1">
             <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
               <span className="font-medium">{formatHijriDate(hijriDate) || '...'}</span>
@@ -835,27 +746,53 @@ export default function MutabaahYaumiyahPage() {
             
             <div className="space-y-3 sm:space-y-4">
               {sunnahSection.map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
-                  
-                  {item.type === "checkbox" ? (
-                    <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        checked={formData[item.field]}
-                        onChange={(e) => handleInputChange(item.field, e.target.checked)}
-                        className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                <div key={index} className="flex flex-col p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                    
+                    {item.type === "checkbox" ? (
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          checked={formData[item.field]}
+                          onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                          className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                        />
+                      </div>
+                    ) : item.type === "checkboxWithManual" ? (
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          checked={formData[item.field]}
+                          onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                          className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        min="0"
+                        max={item.max}
+                        value={formData[item.field]}
+                        onChange={(e) => handleInputChange(item.field, e.target.value)}
+                        className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
                       />
+                    )}
+                  </div>
+                  
+                  {item.type === "checkboxWithManual" && !formData[item.field] && (
+                    <div className="flex items-center mt-2">
+                      <span className="text-xs text-gray-500 mr-2">Jumlah yang dicapai:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max={item.max}
+                        value={formData[item.manualField]}
+                        onChange={(e) => handleInputChange(item.manualField, e.target.value)}
+                        className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
+                      />
+                      <span className="text-xs text-gray-500 ml-1">/ {item.max}</span>
                     </div>
-                  ) : (
-                    <input
-                      type="number"
-                      min="0"
-                      max={item.max}
-                      value={formData[item.field]}
-                      onChange={(e) => handleInputChange(item.field, e.target.value)}
-                      className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
-                    />
                   )}
                 </div>
               ))}
@@ -916,7 +853,6 @@ export default function MutabaahYaumiyahPage() {
         </div>
       </div>
 
-      {/* Use Report Component here */}
       {showReportModal && (
         <MutabaahReport 
           user={user} 

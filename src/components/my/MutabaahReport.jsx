@@ -1,145 +1,207 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import useAuthStore from '../../../stores/authStore';
 
-/**
- * MutabaahReport Component
- * Displays and manages reporting functionality for Mutaba'ah Yaumiyah data
- * Updated to handle checkbox fields
- * 
- * @param {Object} props - Component properties
- * @param {Object} props.user - User object containing user data
- * @param {Function} props.onClose - Function to call when closing the modal
- */
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const HIJRI_MONTHS = [
+  "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+];
+
 const MutabaahReport = ({ user, onClose }) => {
-  // State management
-  const [allUserData, setAllUserData] = useState([]);
-  const [loadingReport, setLoadingReport] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [reportData, setReportData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [hijriMonth, setHijriMonth] = useState("");
+  const [hijriYear, setHijriYear] = useState("");
 
-  // Fetch user data when component mounts
-  useEffect(() => {
-    fetchAllUserData();
-  }, [user]);
-
-  /**
-   * Fetch all user data for reports from localStorage
-   */
-  const fetchAllUserData = async () => {
+  const formatDate = (dateString) => {
     try {
-      setLoadingReport(true);
+      const date = new Date(dateString);
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
+
+  const calculateHijriDate = (gregorianDate) => {
+    try {
+      const date = new Date(gregorianDate);
+      date.setHours(12, 0, 0, 0);
       
-      // For demo purposes, we'll use localStorage data
-      const allData = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith(`mutabaah_${user?.userId}_`)) {
-          try {
-            const data = JSON.parse(localStorage.getItem(key));
-            
-            // Ensure checkbox fields are boolean values (for backward compatibility)
-            const normalizedData = {
-              ...data,
-              sholat_tahajud: typeof data.sholat_tahajud === 'boolean' ? data.sholat_tahajud : Boolean(data.sholat_tahajud),
-              tilawah_quran: typeof data.tilawah_quran === 'boolean' ? data.tilawah_quran : Boolean(data.tilawah_quran),
-              terjemah_quran: typeof data.terjemah_quran === 'boolean' ? data.terjemah_quran : Boolean(data.terjemah_quran),
-              shaum_sunnah: typeof data.shaum_sunnah === 'boolean' ? data.shaum_sunnah : Boolean(data.shaum_sunnah),
-              shodaqoh: typeof data.shodaqoh === 'boolean' ? data.shodaqoh : Boolean(data.shodaqoh),
-              dzikir_pagi_petang: typeof data.dzikir_pagi_petang === 'boolean' ? data.dzikir_pagi_petang : Boolean(data.dzikir_pagi_petang),
-              menyimak_mq_pagi: typeof data.menyimak_mq_pagi === 'boolean' ? data.menyimak_mq_pagi : Boolean(data.menyimak_mq_pagi)
-            };
-            
-            allData.push(normalizedData);
-          } catch (e) {
-            console.error('Error parsing data for key:', key);
-          }
-        }
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      
+      let jd = Math.floor((365.25 * (year + 4716)) + Math.floor((30.6001 * (month + 1))) + day - 1524.5);
+      
+      if (date > new Date(1582, 9, 4)) {
+        const a = Math.floor(year / 100);
+        jd = jd + 2 - a + Math.floor(a / 4);
       }
       
-      // Sort by date descending
-      allData.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setAllUserData(allData);
+      const b = Math.floor(((jd - 1867216.25) / 36524.25));
+      const c = jd + b - Math.floor(b / 4) + 1525;
+      const days = Math.floor(jd - 1948084);
+      const hijriYear = Math.floor((days * 30 + 10646) / 10631);
+      const daysInYear = Math.floor(((hijriYear - 1) * 10631 + 10646) / 30);
+      const dayOfYear = days - daysInYear;
+      const daysPassed = dayOfYear;
+      const hijriMonth = Math.min(Math.floor(daysPassed / 29.53), 11);
+      const hijriDay = Math.floor(daysPassed - (hijriMonth * 29.53)) + 1;
       
+      return {
+        day: Math.round(hijriDay),
+        month: hijriMonth,
+        year: hijriYear,
+        formatted: `${Math.round(hijriDay)} ${HIJRI_MONTHS[hijriMonth]} ${hijriYear} H`
+      };
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      toast.error(error.message || 'Gagal mengambil data laporan');
-    } finally {
-      setLoadingReport(false);
+      console.error('Error calculating Hijri date:', error);
+      return { 
+        day: 1, 
+        month: 0, 
+        year: 1443, 
+        formatted: "1 Muharram 1443 H" 
+      };
     }
   };
 
-  /**
-   * Download report as CSV
-   */
-  const downloadReport = () => {
+  const getHijriMonthYear = (dateString) => {
     try {
-      // Create CSV content
-      let csvContent = "Laporan Lengkap Mutaba'ah Yaumiyah\n\n";
-      csvContent += `Nama,${user?.name || '-'}\n`;
-      csvContent += `Tanggal Laporan,${new Date().toLocaleDateString('id-ID')}\n`;
-      csvContent += `Total Data,${allUserData.length}\n\n`;
+      const hijriDate = calculateHijriDate(dateString);
+      return {
+        month: hijriDate.month,
+        year: hijriDate.year,
+        formatted: `${HIJRI_MONTHS[hijriDate.month]} ${hijriDate.year} H`
+      };
+    } catch (error) {
+      console.error('Error getting Hijri month year:', error);
+      return {
+        month: 0,
+        year: 1443,
+        formatted: "Muharram 1443 H"
+      };
+    }
+  };
 
-      // Add headers
-      csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
-      csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x100),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
-
-      // Add data rows - with checkboxes shown as "Ya" or "Tidak"
-      allUserData.forEach(data => {
-        csvContent += `${data.date},${data.sholat_wajib},${data.sholat_tahajud ? "Ya" : "Tidak"},${data.sholat_dhuha},`;
-        csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran ? "Ya" : "Tidak"},`;
-        csvContent += `${data.terjemah_quran ? "Ya" : "Tidak"},${data.shaum_sunnah ? "Ya" : "Tidak"},${data.shodaqoh ? "Ya" : "Tidak"},`;
-        csvContent += `${data.dzikir_pagi_petang ? "Ya" : "Tidak"},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi ? "Ya" : "Tidak"},${data.haid ? "Ya" : "Tidak"}\n`;
+  const fetchReportData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/users/report-my?userId=${user.userId}&month=${selectedMonth}&year=${selectedYear}`, {
+        credentials: 'include'
       });
 
-      // Create download link
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `laporan_mutabaah_${user?.name || 'user'}_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (!response.ok) {
+        throw new Error('Failed to fetch report data');
+      }
+
+      const data = await response.json();
+      setReportData(data);
+
+      // Calculate Hijri month and year from the first date in the report
+      if (data.length > 0) {
+        const hijriInfo = getHijriMonthYear(data[0].date);
+        setHijriMonth(hijriInfo.month);
+        setHijriYear(hijriInfo.year);
+      }
     } catch (error) {
-      console.error('Error downloading report:', error);
-      toast.error('Gagal mengunduh laporan');
+      console.error('Error fetching report data:', error);
+      toast.error('Gagal memuat data laporan');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Calculate statistics for the report summary
-  const calculateStatistics = () => {
-    const totalEntries = allUserData.length || 1;
-    const avgSholatWajib = (
-      allUserData.reduce((sum, data) => sum + data.sholat_wajib, 0) / totalEntries
-    ).toFixed(1);
-    
-    // Count completed days for checkbox items
-    const tahajudDays = allUserData.filter(data => data.sholat_tahajud).length;
-    const tilawahDays = allUserData.filter(data => data.tilawah_quran).length;
-    const terjemahDays = allUserData.filter(data => data.terjemah_quran).length;
-    const haidDays = allUserData.filter(data => data.haid).length;
-    
-    return { 
-      avgSholatWajib, 
-      tahajudDays, 
-      tilawahDays, 
-      terjemahDays, 
-      haidDays
-    };
+  useEffect(() => {
+    if (user) {
+      fetchReportData();
+    }
+  }, [user, selectedMonth, selectedYear]);
+
+  const calculatePercentage = (value, total) => {
+    return total > 0 ? Math.round((value / total) * 100) : 0;
   };
 
-  const stats = calculateStatistics();
+  const calculateMonthlyStats = () => {
+    const stats = {
+      sholat_wajib: { total: 0, max: 0 },
+      sholat_tahajud: { total: 0, max: 0 },
+      sholat_dhuha: { total: 0, max: 0 },
+      sholat_rawatib: { total: 0, max: 0 },
+      tilawah_quran: { total: 0, max: 0 },
+      terjemah_quran: { total: 0, max: 0 },
+      shaum_sunnah: { total: 0, max: 0 },
+      dzikir_pagi_petang: { total: 0, max: 0 },
+      menyimak_mq_pagi: { total: 0, max: 0 }
+    };
+
+    reportData.forEach(entry => {
+      stats.sholat_wajib.total += entry.sholat_wajib || 0;
+      stats.sholat_wajib.max += 5;
+      
+      stats.sholat_tahajud.total += entry.sholat_tahajud ? 1 : 0;
+      stats.sholat_tahajud.max += 1;
+      
+      stats.sholat_dhuha.total += entry.sholat_dhuha || 0;
+      stats.sholat_dhuha.max += 4;
+      
+      stats.sholat_rawatib.total += entry.sholat_rawatib || 0;
+      stats.sholat_rawatib.max += 12;
+      
+      stats.tilawah_quran.total += entry.tilawah_quran ? 1 : 0;
+      stats.tilawah_quran.max += 1;
+      
+      stats.terjemah_quran.total += entry.terjemah_quran ? 1 : 0;
+      stats.terjemah_quran.max += 1;
+      
+      stats.shaum_sunnah.total += entry.shaum_sunnah ? 1 : 0;
+      stats.shaum_sunnah.max += 1;
+      
+      stats.dzikir_pagi_petang.total += entry.dzikir_pagi_petang ? 1 : 0;
+      stats.dzikir_pagi_petang.max += 1;
+      
+      stats.menyimak_mq_pagi.total += entry.menyimak_mq_pagi ? 1 : 0;
+      stats.menyimak_mq_pagi.max += 1;
+    });
+
+    return stats;
+  };
+
+  const monthlyStats = calculateMonthlyStats();
+
+  const generateMonthOptions = () => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      value: i + 1,
+      label: new Date(2000, i, 1).toLocaleDateString('id-ID', { month: 'long' })
+    }));
+  };
+
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => ({
+      value: currentYear - i,
+      label: currentYear - i
+    }));
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          {/* Modal Header */}
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-gray-800">Laporan Lengkap Mutaba'ah Yaumiyah</h3>
+            <h2 className="text-xl font-bold text-green-700">Laporan Mutaba'ah Yaumiyah</h2>
             <button 
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
@@ -149,133 +211,156 @@ const MutabaahReport = ({ user, onClose }) => {
               </svg>
             </button>
           </div>
-          
-          {/* Report Info */}
-          <div className="mb-4">
-            <div className="flex justify-between mb-2">
-              <span className="font-medium">Nama:</span>
-              <span>{user?.name || '-'}</span>
+
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                >
+                  {generateMonthOptions().map((month) => (
+                    <option key={month.value} value={month.value}>{month.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                >
+                  {generateYearOptions().map((year) => (
+                    <option key={year.value} value={year.value}>{year.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="flex justify-between mb-2">
-              <span className="font-medium">Total Data:</span>
-              <span>{allUserData.length} hari</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span className="font-medium">Tanggal Laporan:</span>
-              <span>{new Date().toLocaleDateString('id-ID')}</span>
+
+            <div className="bg-green-50 p-3 rounded-md mb-4">
+              <p className="text-sm text-green-800">
+                <span className="font-semibold">Periode:</span> {new Date(selectedYear, selectedMonth - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+                {hijriMonth !== "" && hijriYear !== "" && (
+                  <span className="ml-2">({HIJRI_MONTHS[hijriMonth]} {hijriYear} H)</span>
+                )}
+              </p>
             </div>
           </div>
 
-          {/* Report Content */}
-          {loadingReport ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
+          ) : reportData.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Tidak ada data mutabaah untuk periode ini
             </div>
           ) : (
             <>
-              {allUserData.length > 0 ? (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Tahajud</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah Quran</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {allUserData.map((data, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(data.date).toLocaleDateString('id-ID')}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.sholat_wajib}/5
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {/* Display checkmark/X for boolean values */}
-                              {data.sholat_tahajud ? (
-                                <span className="text-green-600">✓</span>
-                              ) : (
-                                <span className="text-red-600">✗</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.tilawah_quran ? (
-                                <span className="text-green-600">✓</span>
-                              ) : (
-                                <span className="text-red-600">✗</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.menyimak_mq_pagi ? (
-                                <span className="text-green-600">✓</span>
-                              ) : (
-                                <span className="text-red-600">✗</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.haid ? 'Ya' : 'Tidak'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4 text-green-700">Statistik Bulanan</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Sholat Wajib</h4>
+                    <div className="flex items-center">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-green-600 h-2.5 rounded-full" 
+                          style={{ width: `${calculatePercentage(monthlyStats.sholat_wajib.total, monthlyStats.sholat_wajib.max)}%` }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-xs font-medium text-gray-700">
+                        {calculatePercentage(monthlyStats.sholat_wajib.total, monthlyStats.sholat_wajib.max)}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {monthlyStats.sholat_wajib.total} dari {monthlyStats.sholat_wajib.max} waktu
+                    </p>
                   </div>
 
-                  {/* Report Statistics */}
-                  <div className="mt-6">
-                    <h4 className="font-semibold text-lg mb-3">Statistik Ringkasan</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-sm text-blue-800">Sholat Wajib (Rata-rata)</div>
-                        <div className="text-2xl font-bold text-blue-600">
-                          {stats.avgSholatWajib}/5
-                        </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Sholat Tahajud</h4>
+                    <div className="flex items-center">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-green-600 h-2.5 rounded-full" 
+                          style={{ width: `${calculatePercentage(monthlyStats.sholat_tahajud.total, monthlyStats.sholat_tahajud.max)}%` }}
+                        ></div>
                       </div>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-sm text-green-800">Tahajud (Hari)</div>
-                        <div className="text-2xl font-bold text-green-600">
-                          {stats.tahajudDays}/{allUserData.length}
-                        </div>
-                      </div>
-                      <div className="bg-indigo-50 p-4 rounded-lg">
-                        <div className="text-sm text-indigo-800">Tilawah Quran (Hari)</div>
-                        <div className="text-2xl font-bold text-indigo-600">
-                          {stats.tilawahDays}/{allUserData.length}
-                        </div>
-                      </div>
+                      <span className="ml-2 text-xs font-medium text-gray-700">
+                        {calculatePercentage(monthlyStats.sholat_tahajud.total, monthlyStats.sholat_tahajud.max)}%
+                      </span>
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {monthlyStats.sholat_tahajud.total} dari {monthlyStats.sholat_tahajud.max} hari
+                    </p>
                   </div>
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  Tidak ada data laporan yang tersedia
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Tilawah Quran</h4>
+                    <div className="flex items-center">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-green-600 h-2.5 rounded-full" 
+                          style={{ width: `${calculatePercentage(monthlyStats.tilawah_quran.total, monthlyStats.tilawah_quran.max)}%` }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-xs font-medium text-gray-700">
+                        {calculatePercentage(monthlyStats.tilawah_quran.total, monthlyStats.tilawah_quran.max)}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {monthlyStats.tilawah_quran.total} dari {monthlyStats.tilawah_quran.max} hari
+                    </p>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <h3 className="text-lg font-semibold mb-4 text-green-700">Detail Harian</h3>
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahajud</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {reportData.map((entry, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                          {formatDate(entry.date)}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                          {entry.sholat_wajib || 0}/5
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                          {entry.sholat_tahajud ? '✓' : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                          {entry.tilawah_quran ? '✓' : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                          {entry.menyimak_mq_pagi ? '✓' : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
-          
-          {/* Modal Footer */}
-          <div className="mt-6 flex justify-end space-x-3">
-            {allUserData.length > 0 && (
-              <button
-                onClick={downloadReport}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-                Download CSV
-              </button>
-            )}
+
+          <div className="mt-6 flex justify-end">
             <button
               onClick={onClose}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg"
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               Tutup
             </button>
