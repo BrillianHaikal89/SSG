@@ -115,20 +115,15 @@ export default function ECard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-12"
+            className="mb-12 print:mb-0"
           >
-            <div className="flex flex-col md:flex-row gap-8 justify-center print:gap-0 print:justify-between">
-              {/* Front Card - Enhanced design */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="print-card front-card bg-gradient-to-br from-blue-900 to-blue-800 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border-2 border-blue-700"
-              >
+            {/* Front Card for printing - will be positioned absolutely during print */}
+            <div className="print-card print:absolute print:left-0 print:top-0 print:w-85mm print:h-54mm print:m-0 print:p-0 print:border-none print:shadow-none print:rounded-none">
+              <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col border-2 border-blue-700 print:rounded-none print:shadow-none print:border-none">
                 <div className="flex h-full">
                   {/* Left side with QR code - dark blue background */}
                   <div className="w-[40%] bg-blue-950 flex flex-col justify-center items-center py-4 px-3">
-                    <div className="bg-white p-2 rounded-lg shadow-md w-full aspect-square flex items-center justify-center front-qr">
+                    <div className="bg-white p-2 rounded-lg shadow-md w-full aspect-square flex items-center justify-center">
                       {qrcode ? (
                         <QRCode 
                           value={qrcode} 
@@ -144,7 +139,7 @@ export default function ECard() {
                     <p className="text-xs text-blue-200 mt-2 text-center">Scan untuk verifikasi</p>
                   </div>
                   
-                  {/* Right side with user info - medium blue background */}
+                  {/* Right side with user info */}
                   <div className="w-[60%] flex flex-col py-5 px-4 bg-gradient-to-b from-blue-800 to-blue-700">
                     <div className="flex items-start mb-2">
                       <Image 
@@ -177,22 +172,12 @@ export default function ECard() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
-
-              {/* Card labels - only shown when not printing */}
-              <div className="hidden md:flex flex-col justify-center items-center mx-4 print:hidden">
-                <div className="bg-gray-300 h-px w-10 my-3"></div>
-                <span className="text-sm text-gray-500 transform -rotate-90 font-medium">KARTU PESERTA</span>
-                <div className="bg-gray-300 h-px w-10 my-3"></div>
               </div>
-              
-              {/* Back Card - Enhanced with new design */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="print-card back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border-2 border-gray-300"
-              >
+            </div>
+
+            {/* Back Card for printing - will be positioned absolutely during print */}
+            <div className="print-card print:absolute print:left-0 print:top-0 print:w-85mm print:h-54mm print:m-0 print:p-0 print:border-none print:shadow-none print:rounded-none print:transform print:translate-x-full">
+              <div className="bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col border-2 border-gray-300 mt-8 md:mt-0 print:rounded-none print:shadow-none print:border-none">
                 <div className="flex h-full flex-col p-5 bg-gradient-to-br from-gray-50 to-white">
                   <div className="flex items-center justify-between">
                     <Image 
@@ -232,7 +217,7 @@ export default function ECard() {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
 
@@ -242,13 +227,13 @@ export default function ECard() {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Instruksi Penggunaan:
+              Instruksi Cetak:
             </h3>
             <ul className="text-sm mt-2 pl-7 space-y-2 list-disc">
-              <li>Kartu ini adalah identitas digital Anda sebagai peserta Santri Siap Guna</li>
-              <li>Tunjukkan QR code saat diminta untuk presensi kehadiran</li>
-              <li>Anda dapat mencetak kartu ini dengan mengklik tombol "Cetak Kartu" di bawah</li>
-              <li>Untuk hasil cetak terbaik, gunakan kertas berkualitas dengan ukuran 85mm x 54mm</li>
+              <li>Pastikan kedua sisi kartu (depan dan belakang) terlihat saat print preview</li>
+              <li>Untuk hasil terbaik, gunakan kertas tebal (minimal 260gsm)</li>
+              <li>Ukuran kartu akan otomatis menyesuaikan ke 85mm x 54mm saat dicetak</li>
+              <li>Periksa kembali bahwa QR Code terlihat jelas sebelum mencetak</li>
             </ul>
           </div>
 
@@ -292,16 +277,12 @@ export default function ECard() {
       {/* Print-specific styles */}
       <style jsx global>{`
         @media print {
-          /* Basic page setup */
-          @page {
-            size: 85mm 54mm landscape;
-            margin: 0;
-          }
-          
-          body {
-            margin: 0;
-            padding: 0;
-            background: white;
+          /* Reset all margins and padding */
+          body, html {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 170mm !important; /* 2 x 85mm */
+            height: 54mm !important;
           }
           
           /* Hide everything except the cards */
@@ -316,7 +297,7 @@ export default function ECard() {
           }
           
           /* Position the front card for printing */
-          .front-card {
+          .print-card:first-child {
             position: absolute;
             left: 0;
             top: 0;
@@ -327,13 +308,12 @@ export default function ECard() {
             border: none !important;
             box-shadow: none !important;
             border-radius: 0 !important;
-            page-break-after: always;
           }
           
           /* Position the back card for printing */
-          .back-card {
+          .print-card:last-child {
             position: absolute;
-            left: 0;
+            left: 85mm;
             top: 0;
             width: 85mm;
             height: 54mm;
@@ -342,17 +322,25 @@ export default function ECard() {
             border: none !important;
             box-shadow: none !important;
             border-radius: 0 !important;
-            page-break-before: always;
           }
           
-          /* Style QR code properly for printing */
-          .front-qr {
-            padding: 6px !important;
+          /* Ensure QR code is properly sized for printing */
+          .print-card:first-child svg {
+            width: 60px !important;
+            height: 60px !important;
           }
           
-          .front-qr svg {
-            height: 80px !important;
-            width: 80px !important;
+          /* Remove background gradients for better print contrast */
+          .print-card > div {
+            background: white !important;
+          }
+          
+          .print-card:first-child > div > div:first-child {
+            background: #1e3a8a !important;
+          }
+          
+          .print-card:first-child > div > div:last-child {
+            background: #1e40af !important;
           }
         }
       `}</style>
