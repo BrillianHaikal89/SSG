@@ -305,27 +305,50 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
+   * Check if a date string is yesterday
+   * @param {string} dateString - Date string to check in YYYY-MM-DD format
+   * @returns {boolean} - True if date is yesterday
+   */
+  const isYesterday = (dateString) => {
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayFormatted = yesterday.toISOString().split('T')[0];
+      return dateString === yesterdayFormatted;
+    } catch (error) {
+      console.error('Error checking if date is yesterday:', error);
+      return false;
+    }
+  };
+
+  /**
    * Calculate days difference between selected date and today
    * @param {string} dateString - Date string to compare
    * @returns {number} - Number of days difference
    */
   const calculateDaysDifference = (dateString) => {
     try {
-      // Convert both dates to YYYY-MM-DD format for comparison
+      // Get today's date in YYYY-MM-DD format
       const today = new Date();
-      const todayFormatted = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+      const todayFormatted = today.toISOString().split('T')[0];
       
-      // Direct string comparison of dates in YYYY-MM-DD format
+      // Direct check for today
       if (dateString === todayFormatted) {
         return 0; // It's today
       }
       
-      // For other dates, calculate day difference
-      const selected = new Date(dateString + 'T00:00:00'); // Add time to ensure consistent parsing
-      today.setHours(0, 0, 0, 0); // Reset hours for accurate day comparison
+      // Direct check for yesterday
+      if (isYesterday(dateString)) {
+        return -1; // It's exactly yesterday
+      }
       
-      const diffTime = selected.getTime() - today.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      // For dates before yesterday, calculate exact difference
+      // Create dates at noon to avoid timezone issues
+      const selected = new Date(dateString + 'T12:00:00');
+      const todayNoon = new Date(todayFormatted + 'T12:00:00');
+      
+      const diffTime = selected.getTime() - todayNoon.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
       return diffDays;
     } catch (error) {
@@ -370,9 +393,15 @@ export default function MutabaahYaumiyahPage() {
       return;
     }
     
-    // Check if it's today first (most direct comparison)
+    // Check if it's today
     if (isToday(dateString)) {
       setHeaderBgColor('bg-green-600'); // Today is always green
+      return;
+    }
+    
+    // Check if it's yesterday
+    if (isYesterday(dateString)) {
+      setHeaderBgColor('bg-orange-500'); // Yesterday is orange (1 day late)
       return;
     }
     
@@ -382,8 +411,8 @@ export default function MutabaahYaumiyahPage() {
     if (daysDiff > 0) {
       // Future date (green)
       setHeaderBgColor('bg-green-600');
-    } else if (daysDiff >= -2 && daysDiff < 0) {
-      // 1-2 days late (orange)
+    } else if (daysDiff === -2) {
+      // 2 days late (orange)
       setHeaderBgColor('bg-orange-500');
     } else {
       // 3 or more days late (brown)
@@ -430,26 +459,26 @@ export default function MutabaahYaumiyahPage() {
    * @returns {string} - Status text
    */
   const getStatusText = () => {
-    // If today, show "Tepat Waktu"
+    // Direct check for today
     if (isToday(selectedDate)) {
       return "Tepat Waktu";
     }
     
-    // If it's a future date
+    // Direct check for yesterday
+    if (isYesterday(selectedDate)) {
+      return "Terlambat 1 hari";
+    }
+    
+    // Get days difference
     const daysDiff = calculateDaysDifference(selectedDate);
+    
+    // Future date
     if (daysDiff > 0) {
       return `${daysDiff} hari ke depan`;
     }
     
-    // Calculate late days (positive number)
+    // Past date (more than yesterday)
     const lateDays = Math.abs(daysDiff);
-    
-    // If it's 1 day late
-    if (lateDays === 1) {
-      return "Terlambat 1 hari";
-    }
-    
-    // If it's more than 1 day late
     return `Terlambat ${lateDays} hari`;
   };
 
