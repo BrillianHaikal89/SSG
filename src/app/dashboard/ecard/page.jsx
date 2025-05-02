@@ -118,17 +118,17 @@ export default function ECard() {
             className="mb-12"
           >
             <div className="flex flex-col md:flex-row gap-8 justify-center print:gap-0 print:justify-between">
-              {/* Front Card - Now in landscape orientation */}
+              {/* Front Card - Updated design */}
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="print-card front-card bg-blue-800 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500"
+                className="print-card front-card bg-blue-900 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500"
               >
                 <div className="flex h-full">
-                  {/* Left side with QR code */}
-                  <div className="w-2/5 bg-blue-900 flex flex-col justify-center items-center py-4 px-3">
-                    <div className="bg-white p-2 rounded-lg mb-3 front-qr shadow-md">
+                  {/* Left side with QR code - dark blue background */}
+                  <div className="w-[40%] bg-blue-950 flex flex-col justify-center items-center py-4 px-3">
+                    <div className="bg-white p-2 rounded-lg shadow-md w-full aspect-square flex items-center justify-center front-qr">
                       {qrcode ? (
                         <QRCode 
                           value={qrcode} 
@@ -139,33 +139,32 @@ export default function ECard() {
                         <div className="w-28 h-28 bg-gray-200 animate-pulse rounded"></div>
                       )}
                     </div>
-                    
                   </div>
                   
-                  {/* Right side with user info */}
-                  <div className="w-3/5 pl-3 flex flex-col py-4 pr-3">
-                    <div className="flex items-center">
+                  {/* Right side with user info - medium blue background */}
+                  <div className="w-[60%] flex flex-col py-5 px-4 bg-blue-800">
+                    <div className="flex items-start mb-2">
                       <Image 
                         src="/img/logossg_white.png" 
                         alt="Logo" 
-                        width={30} 
-                        height={30} 
-                        className="mr-2"
+                        width={24} 
+                        height={24} 
+                        className="mr-2 mt-1"
                       />
                       <div>
-                        <h3 className="text-base font-bold leading-tight tracking-wide">SANTRI SIAP</h3>
-                        <h3 className="text-base font-bold leading-tight tracking-wide">GUNA</h3>
+                        <h3 className="text-lg font-bold leading-tight tracking-wide">SANTRI SIAP</h3>
+                        <h3 className="text-lg font-bold leading-tight tracking-wide">GUNA</h3>
                         <p className="text-xs text-white font-medium">KARTU PESERTA</p>
                       </div>
                     </div>
                     
-                    <div className="flex-grow flex flex-col justify-center mt-2">
-                      <h2 className="text-xl font-bold mb-2 text-white">
-                        {user?.name || "Muhamad Brillian Haikal"}
+                    <div className="mt-4">
+                      <h2 className="text-xl font-bold text-white">
+                        {user?.name || "MUHAMAD BRILLIAN HAIKAL"}
                       </h2>
                       
-                      <div className="mt-1">
-                        <div className="bg-blue-700 py-1 px-3 rounded-md mb-2 text-sm">
+                      <div className="mt-5 space-y-2">
+                        <div className="bg-blue-700 py-1 px-3 rounded-md text-sm">
                           Peserta Angkatan 2025
                         </div>
                         <div className="bg-blue-700 py-1 px-3 rounded-md text-sm">
@@ -184,40 +183,38 @@ export default function ECard() {
                 <div className="bg-gray-300 h-px w-10 my-3"></div>
               </div>
               
-              {/* Back Card - Improved with better logo placement */}
+              {/* Back Card - Updated with new design */}
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
                 className="print-card back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200"
               >
-                <div className="flex h-full flex-col">
-                  <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                <div className="flex h-full flex-col p-5">
+                  <div className="flex items-center justify-between">
                     <Image 
-                      src="/img/logo_ssg.png" 
+                      src="/img/logo_santri_siap_guna_full.png" 
                       alt="Santri Siap Guna Logo" 
-                      width={80} 
-                      height={25} 
+                      width={120} 
+                      height={50} 
                       className="h-auto"
                     />
                     <Image 
                       src="/img/logo_DT READY.png" 
                       alt="DT Logo" 
-                      width={25} 
-                      height={25} 
+                      width={30} 
+                      height={30} 
                     />
                   </div>
                   
-                  <div className="text-center mt-1 mb-2">
-                    <h3 className="text-sm font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
+                  <div className="text-center mt-6 mb-4">
+                    <h3 className="text-lg font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
                   </div>
 
-                  <div className="flex-grow px-5">
-                    <ol className="text-sm text-gray-700 pl-5 list-decimal">
-                      <li className="mb-1">Kartu ini adalah identitas resmi peserta SSG</li>
-                      <li className="mb-1">Wajib dibawa saat kegiatan SSG berlangsung</li>
-                      <li className="mb-1">Tunjukkan QR code untuk presensi kehadiran</li>
-                      <li className="mb-1">Segera laporkan kehilangan kartu kepada panitia</li>
+                  <div className="flex-grow">
+                    <ol className="text-base text-gray-800 pl-8 list-decimal space-y-2">
+                      <li>Kartu ini adalah identitas resmi peserta SSG</li>
+                      <li>Wajib dibawa saat kegiatan SSG berlangsung</li>
                     </ol>
                   </div>
                 </div>
