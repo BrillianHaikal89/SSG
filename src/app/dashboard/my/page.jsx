@@ -386,19 +386,31 @@ export default function MutabaahYaumiyahPage() {
       return;
     }
     
+    // Get days difference
+    const daysDiff = calculateDaysDifference(dateString);
+    
     // If it's today or future, set to green
-    if (isSameDay(dateString, new Date()) || calculateDaysDifference(dateString) > 0) {
+    if (daysDiff >= 0) {
       setHeaderBgColor('bg-green-600');
       return;
     }
     
-    // If it's yesterday, set to orange
-    if (isYesterday(dateString)) {
+    // Calculate late days (positive number)
+    const lateDays = Math.abs(daysDiff);
+    
+    // If it's 1-2 days late, set to orange
+    if (lateDays >= 1 && lateDays <= 2) {
       setHeaderBgColor('bg-orange-500');
       return;
     }
     
-    // If it's older than yesterday, set to amber
+    // If it's 3-7 days late, set to brown
+    if (lateDays >= 3 && lateDays <= 7) {
+      setHeaderBgColor('bg-amber-700');
+      return;
+    }
+    
+    // Default (shouldn't reach here with 7-day limit in options)
     setHeaderBgColor('bg-amber-700');
   };
 
@@ -452,13 +464,16 @@ export default function MutabaahYaumiyahPage() {
       return `${daysDiff} hari ke depan`;
     }
     
-    // If it's yesterday, show "Kemarin"
-    if (isYesterday(selectedDate)) {
-      return "Kemarin";
+    // Calculate late days (positive number)
+    const lateDays = Math.abs(daysDiff);
+    
+    // If it's 1 day late
+    if (lateDays === 1) {
+      return "Terlambat 1 hari";
     }
     
-    // If it's older than yesterday
-    return `${Math.abs(daysDiff)} hari yang lalu`;
+    // If it's more than 1 day late
+    return `Terlambat ${lateDays} hari`;
   };
 
   /**
