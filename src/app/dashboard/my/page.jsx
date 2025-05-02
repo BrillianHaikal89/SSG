@@ -53,6 +53,7 @@ export default function MutabahYaumiyahPage() {
   // Function to calculate days difference between selected date and today
   const calculateDaysDifference = (dateString) => {
     const selected = new Date(dateString);
+    selected.setHours(0, 0, 0, 0); // Reset time part for accurate day comparison
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const diffTime = today - selected;
@@ -119,14 +120,24 @@ export default function MutabahYaumiyahPage() {
   useEffect(() => {
     // Only run on client-side
     setCurrentDateTime(new Date());
-    updateHeaderBgColor(today); // Initialize with today's color
+    
+    // Initial update of the header color
+    updateHeaderBgColor(selectedDate);
 
     const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
+      const now = new Date();
+      setCurrentDateTime(now);
+      
+      // Check if the selected date is today
+      // If it is, we need to ensure header color is updated in real-time
+      const currentDate = new Date().toISOString().split('T')[0];
+      if (selectedDate === currentDate) {
+        updateHeaderBgColor(selectedDate);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [selectedDate]);
 
   // Handle date change
   const handleDateChange = (e) => {
