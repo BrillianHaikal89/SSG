@@ -10,8 +10,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function MutabahYaumiyahPage() {
   const router = useRouter();
   const { user, userId } = useAuthStore();
-  const [currentDateTime, setCurrentDateTime] = useState(null);
+  const [selectedDateTime, setSelectedDateTime] = useState(new Date());
   const [hijriDate, setHijriDate] = useState("");
+  const [currentDateTime, setCurrentDateTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
   const [showReportModal, setShowReportModal] = useState(false);
@@ -26,10 +27,6 @@ export default function MutabahYaumiyahPage() {
   // Function to convert Gregorian date to Hijri date
   const getHijriDate = (date) => {
     try {
-      // Simple conversion without external library
-      // This is a basic approximation - in production you should use a library
-      const gregorianDate = new Date(date);
-      
       // Format options for Arabic/Islamic calendar
       const options = {
         calendar: 'islamic',
@@ -39,7 +36,7 @@ export default function MutabahYaumiyahPage() {
       };
       
       // Get Islamic date as string using Intl
-      return new Intl.DateTimeFormat('ar-SA', options).format(gregorianDate);
+      return new Intl.DateTimeFormat('ar-SA', options).format(date);
     } catch (error) {
       console.error('Error calculating Hijri date:', error);
       return "";
@@ -72,12 +69,12 @@ export default function MutabahYaumiyahPage() {
   }, []);
 
   useEffect(() => {
-    // Calculate Hijri date when current date changes
-    if (currentDateTime) {
-      const hijri = getHijriDate(currentDateTime);
-      setHijriDate(hijri);
-    }
-  }, [currentDateTime]);
+    // Update Hijri date and selected date time when selected date changes
+    const selectedDate = new Date(formData.date);
+    setSelectedDateTime(selectedDate);
+    const hijri = getHijriDate(selectedDate);
+    setHijriDate(hijri);
+  }, [formData.date]);
 
   const calculateDaysDifference = (dateString) => {
     const selected = new Date(dateString);
@@ -155,6 +152,11 @@ export default function MutabahYaumiyahPage() {
     const newDate = e.target.value;
     setSelectedDate(newDate);
     setFormData(prev => ({ ...prev, date: newDate }));
+    
+    // Update selected date time for Hijri date calculation
+    const selectedDate = new Date(newDate);
+    setSelectedDateTime(selectedDate);
+    
     checkExistingData(newDate);
   };
   
@@ -447,13 +449,13 @@ export default function MutabahYaumiyahPage() {
             <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
               <span className="font-medium">{formatHijriDate(hijriDate)}</span>
               <span className="mx-1">|</span>
-              <span>{currentDateTime ? formatDate(currentDateTime).split(',')[0] : ''}</span>
+              <span>{selectedDateTime ? formatDate(selectedDateTime).split(',')[0] : ''}</span>
             </div>
           </div>
           
           {currentDateTime && (
             <div className="text-center mt-2">
-              <p className="text-xs sm:text-sm">{formatDate(currentDateTime)}</p>
+              <p className="text-xs sm:text-sm">{formatDate(selectedDateTime)}</p>
               <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
               {calculateDaysDifference(selectedDate) > 0 && (
                 <p className="text-white text-xs sm:text-sm font-medium mt-1">
