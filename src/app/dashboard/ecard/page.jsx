@@ -111,119 +111,112 @@ export default function ECard() {
           <h1 className="text-3xl font-bold text-center mb-12 print:hidden text-gray-800">Kartu Peserta</h1>
           
           {/* Card container */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-12"
-          >
-            <div className="flex flex-col md:flex-row gap-8 justify-center print:gap-0 print:justify-between">
-              {/* Front Card - Now in landscape orientation */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="print-card bg-blue-800 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500"
-              >
-                <div className="flex h-full">
-                  {/* Left side with QR code */}
-                  <div className="w-2/5 bg-blue-900 flex flex-col justify-center items-center py-4 px-3">
-                    <div className="bg-white p-2 rounded-lg mb-3 front-qr shadow-md">
-                      {qrcode ? (
-                        <QRCode 
-                          value={qrcode} 
-                          size={110} 
-                          className="w-full h-auto"
-                        />
-                      ) : (
-                        <div className="w-28 h-28 bg-gray-200 animate-pulse rounded"></div>
-                      )}
-                    </div>
-                    
-                  </div>
-                  
-                  {/* Right side with user info */}
-                  <div className="w-3/5 pl-3 flex flex-col py-4 pr-3">
-                    <div className="flex items-center">
-                      <Image 
-                        src="/img/logossg_white.png" 
-                        alt="Logo" 
-                        width={30} 
-                        height={30} 
-                        className="mr-2"
+          <div className="mb-12 print:mb-0 print:flex print:flex-col">
+            {/* Front Card - Now in landscape orientation */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="print-card front-card bg-blue-800 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-blue-500 mx-auto mb-8 md:mb-0"
+            >
+              <div className="flex h-full">
+                {/* Left side with QR code */}
+                <div className="w-2/5 bg-blue-900 flex flex-col justify-center items-center py-4 px-3">
+                  <div className="bg-white p-2 rounded-lg mb-3 front-qr shadow-md">
+                    {qrcode ? (
+                      <QRCode 
+                        value={qrcode} 
+                        size={110} 
+                        className="w-full h-auto"
                       />
-                      <div>
-                        <h3 className="text-base font-bold leading-tight tracking-wide">SANTRI SIAP</h3>
-                        <h3 className="text-base font-bold leading-tight tracking-wide">GUNA</h3>
-                        <p className="text-xs text-white font-medium">KARTU PESERTA</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-grow flex flex-col justify-center mt-2">
-                      <h2 className="text-xl font-bold mb-2 text-white">
-                        {user?.name || "Muhamad Brillian Haikal"}
-                      </h2>
-                      
-                      <div className="mt-1">
-                        <div className="bg-blue-700 py-1 px-3 rounded-md mb-2 text-sm">
-                          Peserta Angkatan 2025
-                        </div>
-                        <div className="bg-blue-700 py-1 px-3 rounded-md text-sm">
-                          Pleton: 20 / Grup B
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Card labels - only shown when not printing */}
-              <div className="hidden md:flex flex-col justify-center items-center mx-4 print:hidden">
-                <div className="bg-gray-300 h-px w-10 my-3"></div>
-                <span className="text-sm text-gray-500 transform -rotate-90 font-medium">KARTU PESERTA</span>
-                <div className="bg-gray-300 h-px w-10 my-3"></div>
-              </div>
-              
-              {/* Back Card - Improved with better logo placement */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="print-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200"
-              >
-                <div className="flex h-full flex-col">
-                  <div className="flex items-center justify-between px-4 pt-3 pb-1">
-                    <Image 
-                      src="/img/logo_ssg.png" 
-                      alt="Santri Siap Guna Logo" 
-                      width={80} 
-                      height={25} 
-                      className="h-auto"
-                    />
-                    <Image 
-                      src="/img/logo_DT READY.png" 
-                      alt="DT Logo" 
-                      width={25} 
-                      height={25} 
-                    />
+                    ) : (
+                      <div className="w-28 h-28 bg-gray-200 animate-pulse rounded"></div>
+                    )}
                   </div>
                   
-                  <div className="text-center mt-1 mb-2">
-                    <h3 className="text-sm font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
+                </div>
+                
+                {/* Right side with user info */}
+                <div className="w-3/5 pl-3 flex flex-col py-4 pr-3">
+                  <div className="flex items-center">
+                    <Image 
+                      src="/img/logossg_white.png" 
+                      alt="Logo" 
+                      width={30} 
+                      height={30} 
+                      className="mr-2"
+                    />
+                    <div>
+                      <h3 className="text-base font-bold leading-tight tracking-wide">SANTRI SIAP</h3>
+                      <h3 className="text-base font-bold leading-tight tracking-wide">GUNA</h3>
+                      <p className="text-xs text-white font-medium">KARTU PESERTA</p>
+                    </div>
                   </div>
-
-                  <div className="flex-grow px-5">
-                    <ol className="text-sm text-gray-700 pl-5 list-decimal">
-                      <li className="mb-1">Kartu ini adalah identitas resmi peserta SSG</li>
-                      <li className="mb-1">Wajib dibawa saat kegiatan SSG berlangsung</li>
-                      <li className="mb-1">Tunjukkan QR code untuk presensi kehadiran</li>
-                      <li className="mb-1">Segera laporkan kehilangan kartu kepada panitia</li>
-                    </ol>
+                  
+                  <div className="flex-grow flex flex-col justify-center mt-2">
+                    <h2 className="text-xl font-bold mb-2 text-white">
+                      {user?.name || "Muhamad Brillian Haikal"}
+                    </h2>
+                    
+                    <div className="mt-1">
+                      <div className="bg-blue-700 py-1 px-3 rounded-md mb-2 text-sm">
+                        Peserta Angkatan 2025
+                      </div>
+                      <div className="bg-blue-700 py-1 px-3 rounded-md text-sm">
+                        Pleton: 20 / Grup B
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Card labels - only shown when not printing */}
+            <div className="hidden md:flex flex-col justify-center items-center mx-4 print:hidden">
+              <div className="bg-gray-300 h-px w-10 my-3"></div>
+              <span className="text-sm text-gray-500 transform -rotate-90 font-medium">KARTU PESERTA</span>
+              <div className="bg-gray-300 h-px w-10 my-3"></div>
             </div>
-          </motion.div>
+            
+            {/* Back Card - Improved with better logo placement */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="print-card back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[340px] md:h-[216px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-85mm print:h-54mm border border-gray-200 mx-auto mt-8 md:mt-0"
+            >
+              <div className="flex h-full flex-col">
+                <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                  <Image 
+                    src="/img/logo_ssg.png" 
+                    alt="Santri Siap Guna Logo" 
+                    width={80} 
+                    height={25} 
+                    className="h-auto"
+                  />
+                  <Image 
+                    src="/img/logo_DT READY.png" 
+                    alt="DT Logo" 
+                    width={25} 
+                    height={25} 
+                  />
+                </div>
+                
+                <div className="text-center mt-1 mb-2">
+                  <h3 className="text-sm font-bold text-blue-900">ATURAN PENGGUNAAN KARTU</h3>
+                </div>
+
+                <div className="flex-grow px-5">
+                  <ol className="text-sm text-gray-700 pl-5 list-decimal">
+                    <li className="mb-1">Kartu ini adalah identitas resmi peserta SSG</li>
+                    <li className="mb-1">Wajib dibawa saat kegiatan SSG berlangsung</li>
+                    <li className="mb-1">Tunjukkan QR code untuk presensi kehadiran</li>
+                    <li className="mb-1">Segera laporkan kehilangan kartu kepada panitia</li>
+                  </ol>
+                </div>
+              </div>
+            </motion.div>
+          </div>
 
           {/* Instructions - hide when printing */}
           <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-5 rounded-lg mb-10 print:hidden shadow-sm">
@@ -284,35 +277,58 @@ export default function ECard() {
             size: 85mm 54mm landscape;
             margin: 0;
           }
+          
           body {
             margin: 0;
             padding: 0;
             background: white;
           }
-          /* Hide everything except the card being printed */
+          
+          /* Hide everything except the cards being printed */
           body * {
             visibility: hidden;
           }
+          
           .print-card,
           .print-card * {
             visibility: visible;
           }
-          .print-card {
+          
+          /* Style for the front card when printing */
+          .front-card {
             position: absolute;
             left: 0;
             top: 0;
-            width: 85mm;
-            height: 54mm;
+            width: 85mm !important;
+            height: 54mm !important;
             overflow: hidden;
             padding: 0;
             margin: 0;
             box-shadow: none !important;
             border: none !important;
+            page-break-after: always;
           }
+          
+          /* Style for the back card when printing */
+          .back-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 85mm !important;
+            height: 54mm !important;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            box-shadow: none !important;
+            border: none !important;
+            page-break-before: always;
+          }
+          
           /* Fix QR code printing */
           .front-qr {
             padding: 6px !important;
           }
+          
           .front-qr svg {
             height: 80px !important;
             width: 80px !important;
