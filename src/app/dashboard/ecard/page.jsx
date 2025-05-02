@@ -1,16 +1,124 @@
-"use client";
+export default function ECard() {
+  const { user, loading, error, qrcode, fetchUserQRCode } = useAuthStore();
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [activeCard, setActiveCard] = useState('front');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  
+  const frontCardRef = useRef(null);
+  const backCardRef = useRef(null);
 
-import React, { useEffect, useState } from 'react';
+  // Dynamically import the PDF libraries only on client side
+  const [pdfModules, setPdfModules] = useState({ html2canvas: null, jsPDF: null });
+  
+  useEffect(() => {
+    const loadPdfModules = async () => {
+      const html2canvasModule = (await import('html2canvas')).default;
+      const jsPdfModule = (await import('jspdf')).default;
+      setPdfModules({
+        html2canvas: html2canvasModule,
+        jsPDF: jsPdfModule
+      });
+    };
+    
+    loadPdfModules();
+    fetchUserQRCode();
+  }, [fetchUserQRCode]);
+
+  const navigateBack = () => {
+    window.history.back();
+  };
+
+  const handlePrint = (cardSide) => {
+    setActiveCard(cardSide);
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        setIsPrinting(false);
+      }, 500);
+    }, 300);
+  };
+  
+  const generatePDF = async (cardSide) => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      const { html2canvas, jsPDF } = pdfModules;
+      
+      if (!html2canvas || !jsPDF) {
+        alert('Sedang memuat modul PDF. Silakan coba lagi dalam beberapa detik.');
+        setIsGeneratingPDF(false);
+        return;
+      }
+      
+      const element = cardSide === 'front' ? frontCardRef.current : backCardRef.current;
+      
+      if (!element) {
+        alert('Gagal menemukan elemen kartu');
+        setIsGeneratingPDF(false);
+        return;
+      }
+      
+      // Store original display style
+      const originalDisplay = element.style.display;
+      
+      // Ensure element is visible for capture
+      element.style.display = 'flex';
+      
+      const canvas = await html2canvas(element, {
+        scale: 3, // Higher scale for better quality
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: cardSide === 'front' ? '#1e40af' : 'white'
+      });
+      
+      // Card dimensions in mm (ID-1 format)
+      const width = 85;
+      const height = 54;
+      
+      // Create PDF of ID card size
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [width, height]
+      });
+      
+      // Add the image to the PDF centered
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+      
+      // Download the PDF
+      const fileName = cardSide === 'front' ? 'kartu_peserta_depan.pdf' : 'kartu_peserta_belakang.pdf';
+      pdf.save(fileName);
+      
+      // Restore element display if needed
+      element.style.display = originalDisplay;
+      
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Terjadi kesalahan saat membuat PDF: ' + err.message);
+    }
+    
+    setIsGeneratingPDF(false);
+  };"use client";
+
+import React, { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import useAuthStore from '../../../stores/authStore';
 import QRCode from "react-qr-code";
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 
 export default function ECard() {
   const { user, loading, error, qrcode, fetchUserQRCode } = useAuthStore();
   const [isPrinting, setIsPrinting] = useState(false);
-  const [activeCard, setActiveCard] = useState('front'); // 'front' or 'back'
+  const [activeCard, setActiveCard] = useState('front');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  
+  const frontCardRef = useRef(null);
+  const backCardRef = useRef(null);
 
   useEffect(() => {
     fetchUserQRCode();
@@ -29,6 +137,61 @@ export default function ECard() {
         setIsPrinting(false);
       }, 500);
     }, 300);
+  };
+  
+  const generatePDF = async (cardSide) => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      const element = cardSide === 'front' ? frontCardRef.current : backCardRef.current;
+      
+      if (!element) {
+        alert('Gagal menemukan elemen kartu');
+        setIsGeneratingPDF(false);
+        return;
+      }
+      
+      // Ensure element is visible for capture
+      element.style.display = 'flex';
+      
+      const canvas = await html2canvas(element, {
+        scale: 3, // Higher scale for better quality
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: cardSide === 'front' ? '#1e40af' : 'white'
+      });
+      
+      // Card dimensions in mm (ID-1 format)
+      const width = 85;
+      const height = 54;
+      
+      // Create PDF of ID card size
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [width, height]
+      });
+      
+      // Add the image to the PDF centered
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+      
+      // Download the PDF
+      const fileName = cardSide === 'front' ? 'kartu_peserta_depan.pdf' : 'kartu_peserta_belakang.pdf';
+      pdf.save(fileName);
+      
+      // Restore element display if needed
+      if (cardSide !== activeCard) {
+        element.style.display = '';
+      }
+      
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Terjadi kesalahan saat membuat PDF');
+    }
+    
+    setIsGeneratingPDF(false);
   };
 
   if (loading) {
@@ -127,6 +290,7 @@ export default function ECard() {
             <div className="flex flex-col md:flex-row gap-8 justify-center print:gap-0 print:justify-center">
               {/* Front Card - Now in landscape orientation */}
               <motion.div 
+                ref={frontCardRef}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
@@ -193,6 +357,7 @@ export default function ECard() {
               
               {/* Back Card - Improved with better logo placement */}
               <motion.div 
+                ref={backCardRef}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
@@ -246,8 +411,8 @@ export default function ECard() {
             </h3>
             <p className="text-sm mt-2 pl-7">
               Kartu ini adalah identitas digital Anda sebagai peserta Santri Siap Guna. 
-              Tunjukkan QR code saat diminta untuk presensi kehadiran. Anda dapat mencetak kartu ini
-              dengan mengklik tombol "Cetak Depan" atau "Cetak Belakang" di bawah.
+              Tunjukkan QR code saat diminta untuk presensi kehadiran. Anda dapat mengunduh kartu ini
+              dalam format PDF dengan mengklik tombol "Unduh" di bawah, lalu mencetaknya.
             </p>
           </div>
 
@@ -262,10 +427,59 @@ export default function ECard() {
               </svg>
               Kembali
             </button>
+            
+            {/* PDF Buttons */}
+            <button 
+              onClick={() => generatePDF('front')}
+              disabled={isGeneratingPDF}
+              className="bg-blue-800 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-900 transition-colors flex items-center justify-center shadow-sm"
+            >
+              {isGeneratingPDF && activeCard === 'front' ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Menyiapkan...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Unduh Depan (PDF)
+                </>
+              )}
+            </button>
+            
+            <button 
+              onClick={() => generatePDF('back')}
+              disabled={isGeneratingPDF}
+              className="bg-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-800 transition-colors flex items-center justify-center shadow-sm"
+            >
+              {isGeneratingPDF && activeCard === 'back' ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Menyiapkan...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Unduh Belakang (PDF)
+                </>
+              )}
+            </button>
+            
+            {/* Old Print buttons - can hide these if PDF works better */}
             <button 
               onClick={() => handlePrint('front')}
               disabled={isPrinting}
-              className="bg-blue-800 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-900 transition-colors flex items-center justify-center shadow-sm"
+              className="hidden bg-gray-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center justify-center shadow-sm"
             >
               {isPrinting && activeCard === 'front' ? (
                 <>
@@ -287,7 +501,7 @@ export default function ECard() {
             <button 
               onClick={() => handlePrint('back')}
               disabled={isPrinting}
-              className="bg-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-800 transition-colors flex items-center justify-center shadow-sm"
+              className="hidden bg-gray-500 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-600 transition-colors flex items-center justify-center shadow-sm"
             >
               {isPrinting && activeCard === 'back' ? (
                 <>
@@ -421,4 +635,5 @@ export default function ECard() {
       `}</style>
     </div>
   );
+}
 }
