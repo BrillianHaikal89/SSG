@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 /**
  * MutabaahReport Component
  * Displays and manages reporting functionality for Mutaba'ah Yaumiyah data
- * Updated to handle checkbox fields
+ * Updated to handle istighfar and sholawat checkbox fields
  * 
  * @param {Object} props - Component properties
  * @param {Object} props.user - User object containing user data
@@ -46,7 +46,10 @@ const MutabaahReport = ({ user, onClose }) => {
               shaum_sunnah: typeof data.shaum_sunnah === 'boolean' ? data.shaum_sunnah : Boolean(data.shaum_sunnah),
               shodaqoh: typeof data.shodaqoh === 'boolean' ? data.shodaqoh : Boolean(data.shodaqoh),
               dzikir_pagi_petang: typeof data.dzikir_pagi_petang === 'boolean' ? data.dzikir_pagi_petang : Boolean(data.dzikir_pagi_petang),
-              menyimak_mq_pagi: typeof data.menyimak_mq_pagi === 'boolean' ? data.menyimak_mq_pagi : Boolean(data.menyimak_mq_pagi)
+              menyimak_mq_pagi: typeof data.menyimak_mq_pagi === 'boolean' ? data.menyimak_mq_pagi : Boolean(data.menyimak_mq_pagi),
+              // Handle new fields with defaults
+              istighfar_1000x_completed: data.istighfar_1000x_completed || (data.istighfar_1000x === 1000),
+              sholawat_100x_completed: data.sholawat_100x_completed || (data.sholawat_100x === 100)
             };
             
             allData.push(normalizedData);
@@ -82,14 +85,15 @@ const MutabaahReport = ({ user, onClose }) => {
       // Add headers
       csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x100),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
+      csvContent += "Istighfar 1000x Selesai,Istighfar (Jumlah),Sholawat 100x Selesai,Sholawat (Jumlah),Menyimak MQ Pagi,Status Haid\n";
 
       // Add data rows - with checkboxes shown as "Ya" or "Tidak"
       allUserData.forEach(data => {
         csvContent += `${data.date},${data.sholat_wajib},${data.sholat_tahajud ? "Ya" : "Tidak"},${data.sholat_dhuha},`;
         csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran ? "Ya" : "Tidak"},`;
         csvContent += `${data.terjemah_quran ? "Ya" : "Tidak"},${data.shaum_sunnah ? "Ya" : "Tidak"},${data.shodaqoh ? "Ya" : "Tidak"},`;
-        csvContent += `${data.dzikir_pagi_petang ? "Ya" : "Tidak"},${data.istighfar_1000x},${data.sholawat_100x},`;
+        csvContent += `${data.dzikir_pagi_petang ? "Ya" : "Tidak"},${data.istighfar_1000x_completed ? "Ya" : "Tidak"},${data.istighfar_1000x},`;
+        csvContent += `${data.sholawat_100x_completed ? "Ya" : "Tidak"},${data.sholawat_100x},`;
         csvContent += `${data.menyimak_mq_pagi ? "Ya" : "Tidak"},${data.haid ? "Ya" : "Tidak"}\n`;
       });
 
@@ -122,12 +126,29 @@ const MutabaahReport = ({ user, onClose }) => {
     const terjemahDays = allUserData.filter(data => data.terjemah_quran).length;
     const haidDays = allUserData.filter(data => data.haid).length;
     
+    // Count istighfar and sholawat statistics
+    const istighfarCompletedDays = allUserData.filter(data => data.istighfar_1000x_completed).length;
+    const sholawatCompletedDays = allUserData.filter(data => data.sholawat_100x_completed).length;
+
+    // Calculate average istighfar and sholawat counts (including partial completions)
+    const avgIstighfar = (
+      allUserData.reduce((sum, data) => sum + data.istighfar_1000x, 0) / totalEntries
+    ).toFixed(0);
+    
+    const avgSholawat = (
+      allUserData.reduce((sum, data) => sum + data.sholawat_100x, 0) / totalEntries
+    ).toFixed(0);
+    
     return { 
       avgSholatWajib, 
       tahajudDays, 
       tilawahDays, 
       terjemahDays, 
-      haidDays
+      haidDays,
+      istighfarCompletedDays,
+      sholawatCompletedDays,
+      avgIstighfar,
+      avgSholawat
     };
   };
 
@@ -183,6 +204,8 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Tahajud</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah Quran</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Istighfar 1000x</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholawat 100x</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                         </tr>
@@ -209,6 +232,20 @@ const MutabaahReport = ({ user, onClose }) => {
                                 <span className="text-green-600">✓</span>
                               ) : (
                                 <span className="text-red-600">✗</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {data.istighfar_1000x_completed ? (
+                                <span className="text-green-600">✓</span>
+                              ) : (
+                                <span className="text-orange-500">{data.istighfar_1000x}/1000</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {data.sholawat_100x_completed ? (
+                                <span className="text-green-600">✓</span>
+                              ) : (
+                                <span className="text-orange-500">{data.sholawat_100x}/100</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
@@ -247,6 +284,28 @@ const MutabaahReport = ({ user, onClose }) => {
                         <div className="text-sm text-indigo-800">Tilawah Quran (Hari)</div>
                         <div className="text-2xl font-bold text-indigo-600">
                           {stats.tilawahDays}/{allUserData.length}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* New Statistics for Istighfar and Sholawat */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="bg-amber-50 p-4 rounded-lg">
+                        <div className="text-sm text-amber-800">Istighfar 1000x (Hari Selesai)</div>
+                        <div className="text-2xl font-bold text-amber-600">
+                          {stats.istighfarCompletedDays}/{allUserData.length}
+                        </div>
+                        <div className="text-sm text-amber-700 mt-1">
+                          Rata-rata: {stats.avgIstighfar}/1000
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <div className="text-sm text-purple-800">Sholawat 100x (Hari Selesai)</div>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {stats.sholawatCompletedDays}/{allUserData.length}
+                        </div>
+                        <div className="text-sm text-purple-700 mt-1">
+                          Rata-rata: {stats.avgSholawat}/100
                         </div>
                       </div>
                     </div>
