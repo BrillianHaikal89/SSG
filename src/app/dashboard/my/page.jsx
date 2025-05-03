@@ -60,6 +60,8 @@ export default function MutabaahYaumiyahPage() {
   
   // Track if data exists for the current date
   const [dataExistsForToday, setDataExistsForToday] = useState(false);
+  // Debugging flag
+  const [debug, setDebug] = useState(false);
 
   /**
    * Check if two dates are the same day
@@ -170,8 +172,19 @@ export default function MutabaahYaumiyahPage() {
    * @returns {boolean} - True if data exists
    */
   const checkIfDataExists = (dateString) => {
+    if (!user?.userId) return false;
+    
     const storageKey = `mutabaah_${user?.userId}_${dateString}`;
     const localData = localStorage.getItem(storageKey);
+    
+    if (debug) {
+      console.log(`Checking if data exists for ${dateString}:`, {
+        storageKey,
+        exists: localData !== null,
+        data: localData
+      });
+    }
+    
     return localData !== null;
   };
 
@@ -187,7 +200,7 @@ export default function MutabaahYaumiyahPage() {
         setPreviousHeaderColor(headerBgColor);
       }
       setHeaderBgColor('bg-red-600');
-      console.log('Header set to red due to haid status');
+      if (debug) console.log('Header set to red due to haid status');
       return;
     }
     
@@ -200,7 +213,7 @@ export default function MutabaahYaumiyahPage() {
       // Selalu tampilkan hijau jika hari ini
       setHeaderBgColor('bg-green-600');
       setPreviousHeaderColor('bg-green-600');
-      console.log('Header set to green - today');
+      if (debug) console.log('Header set to green - today');
       return;
     }
     
@@ -209,7 +222,7 @@ export default function MutabaahYaumiyahPage() {
     if (isYesterday(dateString)) {
       setHeaderBgColor('bg-orange-500'); // Kemarin berwarna oranye (terlambat 1 hari)
       setPreviousHeaderColor('bg-orange-500');
-      console.log('Header set to orange - yesterday');
+      if (debug) console.log('Header set to orange - yesterday');
       return;
     }
     
@@ -217,30 +230,32 @@ export default function MutabaahYaumiyahPage() {
     const daysDiff = calculateDaysDifference(dateString);
     
     // Log untuk debugging
-    console.log('Date difference calculation:', {
-      dateString,
-      currentDateString,
-      isToday: dateString === currentDateString,
-      isYesterday: isYesterday(dateString),
-      daysDiff,
-      dataExistsForToday
-    });
+    if (debug) {
+      console.log('Date difference calculation:', {
+        dateString,
+        currentDateString,
+        isToday: dateString === currentDateString,
+        isYesterday: isYesterday(dateString),
+        daysDiff,
+        dataExistsForToday
+      });
+    }
     
     if (daysDiff > 0) {
       // Tanggal masa depan (hijau)
       setHeaderBgColor('bg-green-600');
       setPreviousHeaderColor('bg-green-600');
-      console.log('Header set to green - future date');
+      if (debug) console.log('Header set to green - future date');
     } else if (daysDiff === -2) {
       // Terlambat 2 hari (oranye)
       setHeaderBgColor('bg-orange-500');
       setPreviousHeaderColor('bg-orange-500');
-      console.log('Header set to orange - 2 days late');
+      if (debug) console.log('Header set to orange - 2 days late');
     } else {
       // Terlambat 3 hari atau lebih (coklat)
       setHeaderBgColor('bg-amber-700');
       setPreviousHeaderColor('bg-amber-700');
-      console.log('Header set to amber - 3+ days late');
+      if (debug) console.log('Header set to amber - 3+ days late');
     }
   };
 
@@ -403,11 +418,11 @@ export default function MutabaahYaumiyahPage() {
             setPreviousHeaderColor(headerBgColor);
           }
           setHeaderBgColor('bg-red-600');
-          console.log('Header set to red due to haid status');
+          if (debug) console.log('Header set to red due to haid status');
         } else {
           // Ketika checkbox tidak dicentang, kembalikan ke warna sebelumnya
           setHeaderBgColor(previousHeaderColor);
-          console.log('Header restored to previous color:', previousHeaderColor);
+          if (debug) console.log('Header restored to previous color:', previousHeaderColor);
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
                   'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
@@ -436,12 +451,18 @@ export default function MutabaahYaumiyahPage() {
    */
   const checkExistingData = async (date) => {
     try {
+      if (!user?.userId) {
+        return Promise.resolve(false);
+      }
+      
       const storageKey = `mutabaah_${user?.userId}_${date}`;
-      console.log('Checking data for date:', date);
-      console.log('Storage key:', storageKey);
+      if (debug) {
+        console.log('Checking data for date:', date);
+        console.log('Storage key:', storageKey);
+      }
       
       const localData = localStorage.getItem(storageKey);
-      console.log('Data exists:', localData ? 'Yes' : 'No');
+      if (debug) console.log('Data exists:', localData ? 'Yes' : 'No');
       
       // Update the global state for today's data existence
       if (isToday(date)) {
@@ -496,24 +517,44 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
-   * Clear data for a specific date (debugging function)
+   * Clear data for a specific date
    * @param {string} date - Date to clear
    */
   const clearDataForDate = (date) => {
     try {
+      if (!user?.userId) return;
+      
       const storageKey = `mutabaah_${user?.userId}_${date}`;
       localStorage.removeItem(storageKey);
-      console.log(`Cleared data for ${date}`);
+      if (debug) console.log(`Cleared data for ${date}`);
       
       // Update state if cleared today's data
       if (isToday(date)) {
         setDataExistsForToday(false);
+        updateHeaderBgColor(date); // Update header color
+      }
+      
+      // Reset form data for the cleared date
+      if (date === formData.date) {
+        setFormData({
+          ...DEFAULT_FORM_DATA,
+          date: date
+        });
       }
       
       toast.success(`Data untuk tanggal ${date} berhasil dihapus`);
     } catch (error) {
       console.error('Error clearing data:', error);
+      toast.error('Gagal menghapus data');
     }
+  };
+
+  /**
+   * Toggle debug mode
+   */
+  const toggleDebug = () => {
+    setDebug(!debug);
+    toast.success(`Debug mode ${!debug ? 'aktif' : 'nonaktif'}`);
   };
 
   /**
@@ -534,8 +575,29 @@ export default function MutabaahYaumiyahPage() {
     setIsSubmitting(true);
     
     try {
+      if (!user?.userId) {
+        toast.error('User ID tidak ditemukan. Silakan login kembali');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const todayString = new Date().toISOString().split('T')[0];
       const storageKey = `mutabaah_${user?.userId}_${formData.date}`;
+      
+      // Debug info
+      if (debug) {
+        console.log('Attempting to save data:', {
+          date: formData.date,
+          isToday: isToday(formData.date),
+          storageKey,
+          existingData: localStorage.getItem(storageKey),
+          formData
+        });
+      }
+      
+      // Force save regardless of existing data
       localStorage.setItem(storageKey, JSON.stringify(formData));
+      if (debug) console.log('Data berhasil disimpan ke localStorage:', storageKey);
       
       // Update data exists for today if applicable
       if (isToday(formData.date)) {
@@ -635,12 +697,14 @@ export default function MutabaahYaumiyahPage() {
     setLastRefreshDate(todayString);
     
     // Log for debugging
-    console.log('Forced refresh date info:', {
-      now: now.toISOString(),
-      todayString,
-      isToday: isToday(formData.date),
-      dataExistsForToday: exists
-    });
+    if (debug) {
+      console.log('Forced refresh date info:', {
+        now: now.toISOString(),
+        todayString,
+        isToday: isToday(formData.date),
+        dataExistsForToday: exists
+      });
+    }
   };
 
   // Generate date options for dropdown on component mount
@@ -659,6 +723,7 @@ export default function MutabaahYaumiyahPage() {
     
     // Clear all cached data for debugging (uncomment if needed)
     /*
+    if (!user?.userId) return;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key.startsWith(`mutabaah_${user?.userId}_`)) {
@@ -666,7 +731,7 @@ export default function MutabaahYaumiyahPage() {
       }
     }
     */
-  }, []);
+  }, [user?.userId]);
 
   // Effect to update current time and handle date changes
   useEffect(() => {
@@ -689,12 +754,14 @@ export default function MutabaahYaumiyahPage() {
         
         // If day has changed OR we're near midnight OR this is the first render
         if (dayChanged || shouldForceRefresh || !previousDateString) {
-          console.log('Day changed or force refresh needed', {
-            dayChanged, 
-            isNearMidnight, 
-            isJustAfterMidnight,
-            now: now.toISOString()
-          });
+          if (debug) {
+            console.log('Day changed or force refresh needed', {
+              dayChanged, 
+              isNearMidnight, 
+              isJustAfterMidnight,
+              now: now.toISOString()
+            });
+          }
           
           // Do a complete refresh of date-related states
           forceRefreshDateInfo();
@@ -707,7 +774,7 @@ export default function MutabaahYaumiyahPage() {
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [currentDateTime]);
+  }, [currentDateTime, debug]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
@@ -776,6 +843,19 @@ export default function MutabaahYaumiyahPage() {
             </button>
             
             <div className="flex gap-3">
+              {isToday(selectedDate) && (
+                <button
+                  onClick={() => {
+                    const todayString = new Date().toISOString().split('T')[0];
+                    clearDataForDate(todayString);
+                  }}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline"
+                  type="button"
+                >
+                  Reset Hari Ini
+                </button>
+              )}
+              
               <button
                 onClick={handleGenerateReport}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline"
@@ -795,6 +875,34 @@ export default function MutabaahYaumiyahPage() {
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>
+          </div>
+          
+          {/* Debug Mode Toggle (hidden in UI, tap 5 times on title to activate) */}
+          <div className="mt-4 text-center">
+            <span 
+              className="text-xs text-gray-400"
+              onClick={(e) => {
+                // Count clicks for debug mode
+                window._debugClicks = (window._debugClicks || 0) + 1;
+                if (window._debugClicks >= 5) {
+                  toggleDebug();
+                  window._debugClicks = 0;
+                }
+              }}
+            >
+              {debug && 'Debug Mode Aktif'}
+            </span>
+            
+            {debug && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-left">
+                <div>Data exists for today: {dataExistsForToday ? 'Yes' : 'No'}</div>
+                <div>Header color: {headerBgColor}</div>
+                <div>Previous color: {previousHeaderColor}</div>
+                <div>Selected date: {selectedDate}</div>
+                <div>Is today: {isToday(selectedDate) ? 'Yes' : 'No'}</div>
+                <div>Storage key: {`mutabaah_${user?.userId}_${selectedDate}`}</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
