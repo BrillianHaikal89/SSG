@@ -269,12 +269,11 @@ export default function MutabaahYaumiyahPage() {
   const getSelectedDateInfo = () => {
     try {
       // Always use current date time for display in header
-      const dayName = currentDateTime ? formatDate(currentDateTime).split(',')[0] : '';
       const fullDate = currentDateTime ? formatDate(currentDateTime) : '';
-      return { dayName, fullDate };
+      return { fullDate };
     } catch (error) {
       console.error('Error getting selected date info:', error);
-      return { dayName: '', fullDate: '' };
+      return { fullDate: '' };
     }
   };
 
