@@ -13,43 +13,35 @@ const MutabaahHeader = ({
   const [hijriDate, setHijriDate] = useState("");
   const [statusText, setStatusText] = useState("");
   
-  // Update Hijri date when selected date changes
   useEffect(() => {
-    try {
-      const hijri = calculateHijriDate(selectedDate);
-      setHijriDate(hijri.formatted);
-    } catch (error) {
-      console.error('Failed to update Hijri date:', error);
-      setHijriDate("1 Muharram 1445 H"); // Default fallback
-    }
+    const updateDateInfo = () => {
+      try {
+        // Update Hijri date
+        const hijri = calculateHijriDate(selectedDate);
+        setHijriDate(hijri.formatted);
+        
+        // Update status
+        const today = new Date();
+        const selected = new Date(selectedDate);
+        
+        // Normalize to noon to avoid timezone issues
+        today.setHours(12, 0, 0, 0);
+        selected.setHours(12, 0, 0, 0);
+        
+        const diffDays = Math.round((selected - today) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) setStatusText("Hari Ini");
+        else if (diffDays === -1) setStatusText("Kemarin");
+        else if (diffDays < 0) setStatusText(`${Math.abs(diffDays)} Hari Lalu`);
+        else setStatusText(`${diffDays} Hari Mendatang`);
+      } catch (error) {
+        console.error('Error updating date info:', error);
+      }
+    };
+    
+    updateDateInfo();
   }, [selectedDate]);
 
-  // Update status text when date changes
-  useEffect(() => {
-    if (!selectedDate) return;
-    
-    const today = new Date();
-    const selected = new Date(selectedDate);
-    
-    // Normalize to noon to avoid timezone issues
-    today.setHours(12, 0, 0, 0);
-    selected.setHours(12, 0, 0, 0);
-    
-    const diffTime = selected.getTime() - today.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      setStatusText("Hari Ini");
-    } else if (diffDays === -1) {
-      setStatusText("Kemarin");
-    } else if (diffDays < -1) {
-      setStatusText(`${Math.abs(diffDays)} Hari Yang Lalu`);
-    } else {
-      setStatusText(`${diffDays} Hari Mendatang`);
-    }
-  }, [selectedDate]);
-
-  // Format time display
   const formatTime = (date) => {
     return date.toLocaleTimeString('id-ID', {
       hour: '2-digit',
@@ -66,14 +58,12 @@ const MutabaahHeader = ({
         {user?.name || 'Pengguna'}
       </p>
       
-      {/* Tanggal Hijriah */}
       <div className="flex justify-center mt-1">
         <div className="bg-white/20 rounded-full px-3 py-1 text-xs">
           <span className="font-medium">{hijriDate}</span>
         </div>
       </div>
       
-      {/* Tanggal Masehi dan Waktu */}
       <div className="text-center mt-2">
         <p className="text-xs sm:text-sm">
           {formatGregorianDate(selectedDate)}

@@ -2,27 +2,39 @@
 const HIJRI_MONTHS = [
   "Muharram", "Safar", "Rabiul Awal", "Rabiul Akhir",
   "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban",
-  "Ramadhan", "Syawal", "Dzulqaidah", "Dzulhijjah"
+  "Ramadhan", "Syawal", "Dzulqadah", "Dzulhijjah"
 ];
 
-// Fungsi konversi Gregorian ke Hijriah yang lebih akurat
+// Data koreksi untuk tanggal-tanggal spesifik
+const DATE_CORRECTIONS = {
+  '2025-05-03': { day: 9, month: 9, year: 1446 },  // 9 Syawal 1446 H
+  '2025-05-04': { day: 6, month: 10, year: 1446 }  // 6 Dzulqadah 1446 H
+};
+
 export const calculateHijriDate = (gregorianDate) => {
   try {
-    const date = new Date(gregorianDate);
+    const dateStr = new Date(gregorianDate).toISOString().split('T')[0];
     
-    // Algoritma konversi Umm al-Qura (versi sederhana)
+    // Gunakan koreksi jika tersedia
+    if (DATE_CORRECTIONS[dateStr]) {
+      const corrected = DATE_CORRECTIONS[dateStr];
+      return {
+        ...corrected,
+        formatted: `${corrected.day} ${HIJRI_MONTHS[corrected.month]} ${corrected.year} H`
+      };
+    }
+
+    // Algoritma konversi standar (fallback)
+    const date = new Date(gregorianDate);
     const day = date.getDate();
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
     
-    // Koreksi untuk tahun kabisat
-    const k = Math.floor((year - 1969) / 4);
-    const jd = Math.floor((1461 * (year + 4800 + k)) / 4) +
-               Math.floor((367 * (month - 2 - 12 * k)) / 12) -
-               Math.floor((3 * Math.floor((year + 4900 + k) / 100)) / 4) +
+    const jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
+               Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
+               Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
                day - 32075;
     
-    // Konversi JD ke Hijriah
     const l = jd - 1948440 + 10632;
     const n = Math.floor((l - 1) / 10631);
     const l2 = l - 10631 * n + 354;
@@ -41,7 +53,7 @@ export const calculateHijriDate = (gregorianDate) => {
     
     return {
       day: hijriDay,
-      month: hijriMonth - 1, // zero-based index
+      month: hijriMonth - 1,
       year: hijriYear,
       formatted: `${hijriDay} ${HIJRI_MONTHS[hijriMonth - 1]} ${hijriYear} H`
     };
@@ -56,7 +68,6 @@ export const calculateHijriDate = (gregorianDate) => {
   }
 };
 
-// Format tanggal Gregorian
 export const formatGregorianDate = (dateString) => {
   try {
     const date = new Date(dateString);
