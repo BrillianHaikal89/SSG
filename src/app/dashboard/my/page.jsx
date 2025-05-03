@@ -55,6 +55,7 @@ export default function MutabaahYaumiyahPage() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateOptions, setDateOptions] = useState([]);
   const [formData, setFormData] = useState({...DEFAULT_FORM_DATA});
+  const [lastRefreshDate, setLastRefreshDate] = useState('');
 
   /**
    * Check if two dates are the same day
@@ -80,6 +81,7 @@ export default function MutabaahYaumiyahPage() {
     try {
       const inputDate = new Date(dateString);
       const today = new Date();
+      
       return (
         inputDate.getFullYear() === today.getFullYear() &&
         inputDate.getMonth() === today.getMonth() &&
@@ -98,10 +100,15 @@ export default function MutabaahYaumiyahPage() {
    */
   const isYesterday = (dateString) => {
     try {
+      const inputDate = new Date(dateString);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayFormatted = yesterday.toISOString().split('T')[0];
-      return dateString === yesterdayFormatted;
+      
+      return (
+        inputDate.getFullYear() === yesterday.getFullYear() &&
+        inputDate.getMonth() === yesterday.getMonth() &&
+        inputDate.getDate() === yesterday.getDate()
+      );
     } catch (error) {
       console.error('Error checking if date is yesterday:', error);
       return false;
@@ -115,26 +122,35 @@ export default function MutabaahYaumiyahPage() {
    */
   const calculateDaysDifference = (dateString) => {
     try {
-      // Get today's date in YYYY-MM-DD format
+      // Create date objects with no time component
       const today = new Date();
-      const todayFormatted = today.toISOString().split('T')[0];
+      today.setHours(0, 0, 0, 0);
+      
+      const selected = new Date(dateString);
+      selected.setHours(0, 0, 0, 0);
       
       // Direct check for today
-      if (dateString === todayFormatted) {
+      if (
+        selected.getFullYear() === today.getFullYear() &&
+        selected.getMonth() === today.getMonth() &&
+        selected.getDate() === today.getDate()
+      ) {
         return 0; // It's today
       }
       
       // Direct check for yesterday
-      if (isYesterday(dateString)) {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      if (
+        selected.getFullYear() === yesterday.getFullYear() &&
+        selected.getMonth() === yesterday.getMonth() &&
+        selected.getDate() === yesterday.getDate()
+      ) {
         return -1; // It's exactly yesterday
       }
       
-      // For dates before yesterday, calculate exact difference
-      // Create dates at noon to avoid timezone issues
-      const selected = new Date(dateString + 'T12:00:00');
-      const todayNoon = new Date(todayFormatted + 'T12:00:00');
-      
-      const diffTime = selected.getTime() - todayNoon.getTime();
+      // For other dates, calculate difference
+      const diffTime = selected.getTime() - today.getTime();
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
       return diffDays;
@@ -169,7 +185,7 @@ export default function MutabaahYaumiyahPage() {
       return;
     }
     
-    // Check if it's today
+    // Force green for today's date
     if (isToday(dateString)) {
       setHeaderBgColor('bg-green-600'); // Today is always green
       return;
@@ -183,6 +199,14 @@ export default function MutabaahYaumiyahPage() {
     
     // For other dates, calculate day difference
     const daysDiff = calculateDaysDifference(dateString);
+    
+    // Log for debugging
+    console.log('Date difference calculation:', {
+      dateString, 
+      isToday: isToday(dateString),
+      isYesterday: isYesterday(dateString),
+      daysDiff
+    });
     
     if (daysDiff > 0) {
       // Future date (green)
@@ -252,8 +276,9 @@ export default function MutabaahYaumiyahPage() {
    */
   const getSelectedDateInfo = () => {
     try {
-      const dayName = selectedDateTime ? formatDate(selectedDateTime).split(',')[0] : '';
-      const fullDate = selectedDateTime ? formatDate(selectedDateTime) : '';
+      // Always use current date time for display in header
+      const dayName = currentDateTime ? formatDate(currentDateTime).split(',')[0] : '';
+      const fullDate = currentDateTime ? formatDate(currentDateTime) : '';
       return { dayName, fullDate };
     } catch (error) {
       console.error('Error getting selected date info:', error);
@@ -303,7 +328,11 @@ export default function MutabaahYaumiyahPage() {
       const selectedDate = new Date(newDate);
       if (!isNaN(selectedDate.getTime())) {
         setSelectedDateTime(selectedDate);
-        updateHijriDate(selectedDate);
+        
+        // Only update Hijri date if not today
+        if (!isToday(newDate)) {
+          updateHijriDate(selectedDate);
+        }
       }
       
       checkExistingData(newDate);
@@ -338,6 +367,9 @@ export default function MutabaahYaumiyahPage() {
         
         if (newValue) {
           setHeaderBgColor('bg-red-600');
+        } else {
+          // Restore appropriate color when unchecking haid
+          updateHeaderBgColor(formData.date);
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
                   'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
@@ -487,21 +519,65 @@ export default function MutabaahYaumiyahPage() {
   const handleGenerateReport = () => {
     setShowReportModal(true);
   };
+  
+  /**
+   * Force a complete refresh of date-related states
+   */
+  const forceRefreshDateInfo = () => {
+    const now = new Date();
+    const todayString = now.toISOString().split('T')[0];
+    
+    // Only set if selected date is today or on initial page load
+    if (isToday(selectedDate) || !lastRefreshDate) {
+      setSelectedDate(todayString);
+      setFormData(prev => ({ ...prev, date: todayString }));
+    }
+    
+    // Always update these regardless of selected date
+    setCurrentDateTime(now);
+    setSelectedDateTime(now);
+    updateHijriDate(now);
+    setDateOptions(generateDateOptions());
+    
+    // Update header color if not in haid state
+    if (!formData.haid) {
+      updateHeaderBgColor(formData.date);
+    }
+    
+    // Remember when we did the refresh
+    setLastRefreshDate(todayString);
+    
+    // Log for debugging
+    console.log('Forced refresh date info:', {
+      now: now.toISOString(),
+      todayString,
+      isToday: isToday(formData.date)
+    });
+  };
 
   // Generate date options for dropdown on component mount
   useEffect(() => {
-    setDateOptions(generateDateOptions());
+    // Force full date refresh on mount
+    forceRefreshDateInfo();
     
     // Set initial state with today's date
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
     setSelectedDate(todayString);
     setFormData(prev => ({ ...prev, date: todayString }));
-    setSelectedDateTime(today);
-    updateHijriDate(today);
+    
+    // Clear all cached data for debugging
+    /* Uncomment to clear cached data
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith(`mutabaah_${user?.userId}_`)) {
+        localStorage.removeItem(key);
+      }
+    }
+    */
   }, []);
 
-  // Update header color and hijri date when form data changes
+  // Update header color when form data changes
   useEffect(() => {
     updateHeaderBgColor(formData.date);
   }, [formData.haid, formData.date]);
@@ -514,7 +590,7 @@ export default function MutabaahYaumiyahPage() {
         const currentDateString = now.toISOString().split('T')[0];
         const previousDateString = currentDateTime ? currentDateTime.toISOString().split('T')[0] : '';
         
-        // Update current date time state
+        // Always update current time display
         setCurrentDateTime(now);
         
         // Check if the day has changed (by comparing date strings)
@@ -525,26 +601,17 @@ export default function MutabaahYaumiyahPage() {
         const isJustAfterMidnight = now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() <= 10;
         const shouldForceRefresh = isNearMidnight || isJustAfterMidnight;
         
-        // If day has changed OR this is the first render OR we're near midnight
-        if (dayChanged || !previousDateString || shouldForceRefresh) {
-          // Update the hijri date with the new date
-          updateHijriDate(now);
+        // If day has changed OR we're near midnight OR this is the first render
+        if (dayChanged || shouldForceRefresh || !previousDateString) {
+          console.log('Day changed or force refresh needed', {
+            dayChanged, 
+            isNearMidnight, 
+            isJustAfterMidnight,
+            now: now.toISOString()
+          });
           
-          // If the selected date was today (now yesterday), update it to the new day
-          if (isToday(formData.date) || !previousDateString || shouldForceRefresh) {
-            const todayString = now.toISOString().split('T')[0];
-            setSelectedDate(todayString);
-            setFormData(prev => ({ ...prev, date: todayString }));
-            setSelectedDateTime(now);
-          }
-          
-          // Refresh date options in the dropdown
-          setDateOptions(generateDateOptions());
-          
-          // Always update header color when day changes
-          if (!formData.haid) {
-            updateHeaderBgColor(formData.date);
-          }
+          // Do a complete refresh of date-related states
+          forceRefreshDateInfo();
         }
       } catch (error) {
         console.error('Error updating time:', error);
@@ -554,20 +621,7 @@ export default function MutabaahYaumiyahPage() {
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [currentDateTime, formData.haid, formData.date]);
-
-  // Effect to update selected date time and hijri date when form date changes
-  useEffect(() => {
-    try {
-      const newSelectedDate = new Date(formData.date);
-      if (!isNaN(newSelectedDate.getTime())) {
-        setSelectedDateTime(newSelectedDate);
-        updateHijriDate(newSelectedDate);
-      }
-    } catch (error) {
-      console.error('Error updating selected date:', error);
-    }
-  }, [formData.date]);
+  }, [currentDateTime]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
