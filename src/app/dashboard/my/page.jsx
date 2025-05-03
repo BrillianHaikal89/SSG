@@ -55,11 +55,7 @@ export default function MutabaahYaumiyahPage() {
   const [dateOptions, setDateOptions] = useState([]);
   const [formData, setFormData] = useState({...DEFAULT_FORM_DATA});
 
-  /**
-   * Calculate Hijri date from Gregorian date
-   * @param {Date} gregorianDate - Gregorian date to convert
-   * @returns {Object} - Hijri date details
-   */
+  // Calculate Hijri date from Gregorian date
   const calculateHijriDate = (gregorianDate) => {
     try {
       const date = new Date(gregorianDate);
@@ -105,11 +101,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Get Hijri date from Gregorian date using browser API or fallback
-   * @param {Date} date - Gregorian date to convert
-   * @returns {string} - Formatted Hijri date 
-   */
+  // Get Hijri date from Gregorian date using browser API or fallback
   const getHijriDate = (date) => {
     try {
       // Try using Intl.DateTimeFormat first if browser supports it
@@ -135,11 +127,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format Hijri date for display - Latin numerals only
-   * @param {string} hijriString - Raw Hijri date string 
-   * @returns {string} - Formatted Hijri date
-   */
+  // Format Hijri date for display - Latin numerals only
   const formatHijriDate = (hijriString) => {
     if (!hijriString) return '';
     
@@ -171,11 +159,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format date for display in UI
-   * @param {Date} date - Date to format
-   * @returns {string} - Formatted date string
-   */
+  // Format date for display in UI
   const formatDate = (date) => {
     if (!date) return '';
     try {
@@ -191,11 +175,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format time for display in UI
-   * @param {Date} date - Date to extract time from
-   * @returns {string} - Formatted time string
-   */
+  // Format time for display in UI
   const formatTime = (date) => {
     if (!date) return '';
     try {
@@ -210,11 +190,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Check if a date string is today
-   * @param {string} dateString - Date string to check in YYYY-MM-DD format
-   * @returns {boolean} - True if date is today
-   */
+  // Check if a date string is today
   const isToday = (dateString) => {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -225,11 +201,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Check if a date string is yesterday
-   * @param {string} dateString - Date string to check in YYYY-MM-DD format
-   * @returns {boolean} - True if date is yesterday
-   */
+  // Check if a date string is yesterday
   const isYesterday = (dateString) => {
     try {
       const yesterday = new Date();
@@ -242,11 +214,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Calculate days difference between selected date and today
-   * @param {string} dateString - Date string to compare
-   * @returns {number} - Number of days difference
-   */
+  // Calculate days difference between selected date and today
   const calculateDaysDifference = (dateString) => {
     try {
       // Get today's date in YYYY-MM-DD format
@@ -278,10 +246,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Update Hijri date state safely
-   * @param {Date} date - Date to calculate Hijri from
-   */
+  // Update Hijri date state safely
   const updateHijriDate = (date) => {
     try {
       const hijri = getHijriDate(date);
@@ -292,10 +257,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Update header background color based on date difference and haid status
-   * @param {string} dateString - Selected date string
-   */
+  // Update header background color based on date difference and haid status
   const updateHeaderBgColor = (dateString) => {
     // If menstruation status is active, always show red header
     if (formData.haid) {
@@ -330,11 +292,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Format date for display in dropdown
-   * @param {Date} date - Date to format
-   * @returns {string} - Formatted date string
-   */
+  // Format date for display in dropdown
   const formatDateForDisplay = (date) => {
     try {
       return date.toLocaleDateString('id-ID', {
@@ -349,10 +307,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Get selected date info for display
-   * @returns {Object} - Object containing day name and full date
-   */
+  // Get selected date info for display
   const getSelectedDateInfo = () => {
     try {
       const dayName = selectedDateTime ? formatDate(selectedDateTime).split(',')[0] : '';
@@ -364,10 +319,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Get text to display date status
-   * @returns {string} - Status text
-   */
+  // Get text to display date status
   const getStatusText = () => {
     // Direct check for today
     if (isToday(selectedDate)) {
@@ -392,10 +344,7 @@ export default function MutabaahYaumiyahPage() {
     return `Terlambat ${lateDays} hari`;
   };
 
-  /**
-   * Handle date selection change
-   * @param {Event} e - Change event
-   */
+  // Handle date selection change
   const handleDateChange = (e) => {
     try {
       const newDate = e.target.value;
@@ -416,11 +365,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Handle form input changes
-   * @param {string} field - Field to update
-   * @param {any} value - New value
-   */
+  // Handle form input changes
   const handleInputChange = (field, value) => {
     try {
       if (field === 'haid') {
@@ -443,7 +388,7 @@ export default function MutabaahYaumiyahPage() {
           setHeaderBgColor('bg-red-600');
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
-                  'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
+                'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
         // Handle checkbox fields (boolean values)
         setFormData(prev => ({
           ...prev,
@@ -462,10 +407,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Check for existing data for the selected date
-   * @param {string} date - Date to check
-   */
+  // Check for existing data for the selected date
   const checkExistingData = async (date) => {
     try {
       const storageKey = `mutabaah_${user?.userId}_${date}`;
@@ -509,17 +451,12 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Navigation to dashboard
-   */
+  // Navigation to dashboard
   const handleRouteBack = () => {
     router.push('/dashboard');
   };
 
-  /**
-   * Submit form data
-   * @param {Event} e - Form submit event
-   */
+  // Submit form data
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -584,9 +521,7 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  /**
-   * Generate and open report modal
-   */
+  // Generate and open report modal
   const handleGenerateReport = () => {
     setShowReportModal(true);
   };
@@ -720,7 +655,7 @@ export default function MutabaahYaumiyahPage() {
           
           {currentDateTime && (
             <div className="text-center mt-2">
-              <p className="text-xs sm:text-sm">{getSelectedDateInfo().fullDate || 'Loading...'}</p>
+              <p className="text-xs sm:text-sm">{formatDate(currentDateTime)}</p>
               <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
               {getStatusText() && (
                 <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-white/20 px-2 py-1 rounded-full inline-block">
