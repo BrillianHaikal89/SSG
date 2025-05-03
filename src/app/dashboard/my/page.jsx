@@ -722,9 +722,11 @@ export default function MutabaahYaumiyahPage() {
             <div className="text-center mt-2">
               <p className="text-xs sm:text-sm">{getSelectedDateInfo().fullDate || 'Loading...'}</p>
               <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
-              <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-white/20 px-2 py-1 rounded-full inline-block">
-                {getStatusText()}
-              </p>
+              {getStatusText() && (
+                <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-white/20 px-2 py-1 rounded-full inline-block">
+                  {getStatusText()}
+                </p>
+              )}
             </div>
           )}
         </div>
