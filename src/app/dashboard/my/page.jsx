@@ -558,4 +558,71 @@ export default function MutabaahYaumiyahPage() {
         {/* Date Selector */}
         <div className="p-4 sm:p-6">
           <div className="mb-4 sm:mb-6">
-            <label className="block text-gray
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Pilih Tanggal
+            </label>
+            <select
+              value={selectedDate}
+              onChange={handleDateChange}
+              className="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline"
+            >
+              {dateOptions.map((option, index) => (
+                <option key={index} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Form Sections */}
+          <MutabaahFormSections 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            headerBgColor={headerBgColor}
+            isSubmitting={isSubmitting}
+          />
+
+          {/* Action Buttons */}
+          <div className="mt-6 flex flex-col sm:flex-row justify-between gap-3">
+            <button
+              onClick={handleRouteBack}
+              className="flex-1 sm:flex-none border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-100 focus:outline-none focus:shadow-outline"
+              type="button"
+            >
+              Kembali
+            </button>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleGenerateReport}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline"
+                type="button"
+              >
+                Lihat Laporan
+              </button>
+              
+              <button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className={`flex-1 ${
+                  isSubmitting ? 'bg-green-400' : headerBgColor
+                } hover:opacity-90 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline`}
+              >
+                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <MutabaahReport 
+          user={user}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+    </div>
+  );
+}
