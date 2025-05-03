@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { formatGregorianDate, calculateHijriDate, formatHijriDate } from './HijriDateConverter';
+import { calculateHijriDate, formatGregorianDate } from './HijriDateConverter';
 
 const MutabaahHeader = ({ 
   user, 
@@ -13,45 +13,14 @@ const MutabaahHeader = ({
   const [hijriDate, setHijriDate] = useState("");
   const [statusText, setStatusText] = useState("");
   
-  // Calculate days difference between selected date and today
-  const calculateDaysDifference = (dateString) => {
-    try {
-      const today = new Date();
-      const todayFormatted = today.toISOString().split('T')[0];
-      
-      if (dateString === todayFormatted) {
-        return 0;
-      }
-      
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayFormatted = yesterday.toISOString().split('T')[0];
-      if (dateString === yesterdayFormatted) {
-        return -1;
-      }
-      
-      const selected = new Date(dateString + 'T12:00:00');
-      const todayNoon = new Date(todayFormatted + 'T12:00:00');
-      
-      const diffTime = selected.getTime() - todayNoon.getTime();
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      
-      return diffDays;
-    } catch (error) {
-      console.error('Error calculating days difference:', error);
-      return 0;
-    }
-  };
-
   // Update Hijri date when selected date changes
   useEffect(() => {
     try {
-      const date = new Date(selectedDate);
-      const hijri = calculateHijriDate(date);
+      const hijri = calculateHijriDate(selectedDate);
       setHijriDate(hijri.formatted);
     } catch (error) {
       console.error('Failed to update Hijri date:', error);
-      setHijriDate("");
+      setHijriDate("1 Muharram 1445 H"); // Default fallback
     }
   }, [selectedDate]);
 
@@ -59,42 +28,34 @@ const MutabaahHeader = ({
   useEffect(() => {
     if (!selectedDate) return;
     
-    const today = new Date().toISOString().split('T')[0];
-    if (selectedDate === today) {
-      setStatusText("Tepat Waktu");
-      return;
-    }
+    const today = new Date();
+    const selected = new Date(selectedDate);
     
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayFormatted = yesterday.toISOString().split('T')[0];
-    if (selectedDate === yesterdayFormatted) {
-      setStatusText("Terlambat 1 hari");
-      return;
-    }
+    // Normalize to noon to avoid timezone issues
+    today.setHours(12, 0, 0, 0);
+    selected.setHours(12, 0, 0, 0);
     
-    const daysDiff = calculateDaysDifference(selectedDate);
-    if (daysDiff > 0) {
-      setStatusText(`${daysDiff} hari ke depan`);
+    const diffTime = selected.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      setStatusText("Hari Ini");
+    } else if (diffDays === -1) {
+      setStatusText("Kemarin");
+    } else if (diffDays < -1) {
+      setStatusText(`${Math.abs(diffDays)} Hari Yang Lalu`);
     } else {
-      const lateDays = Math.abs(daysDiff);
-      setStatusText(`Terlambat ${lateDays} hari`);
+      setStatusText(`${diffDays} Hari Mendatang`);
     }
   }, [selectedDate]);
 
-  // Format time for display
+  // Format time display
   const formatTime = (date) => {
-    if (!date) return '';
-    try {
-      return date.toLocaleTimeString('id-ID', {
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit'
-      });
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return '';
-    }
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   };
 
   return (
@@ -105,28 +66,27 @@ const MutabaahHeader = ({
         {user?.name || 'Pengguna'}
       </p>
       
-      {/* Hijri and Gregorian dates below the name */}
+      {/* Tanggal Hijriah */}
       <div className="flex justify-center mt-1">
-        <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
-          <span className="font-medium">{formatHijriDate(hijriDate) || '...'}</span>
+        <div className="bg-white/20 rounded-full px-3 py-1 text-xs">
+          <span className="font-medium">{hijriDate}</span>
         </div>
       </div>
       
-      {currentDateTime && (
-        <div className="text-center mt-2">
-          <p className="text-xs sm:text-sm">
-            {formatGregorianDate(new Date(selectedDate)) || 'Loading...'}
+      {/* Tanggal Masehi dan Waktu */}
+      <div className="text-center mt-2">
+        <p className="text-xs sm:text-sm">
+          {formatGregorianDate(selectedDate)}
+        </p>
+        <p className="text-base sm:text-lg font-bold">
+          {formatTime(currentDateTime)}
+        </p>
+        {statusText && (
+          <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-white/20 px-2 py-1 rounded-full inline-block">
+            {statusText}
           </p>
-          <p className="text-base sm:text-lg font-bold">
-            {formatTime(currentDateTime)}
-          </p>
-          {statusText && (
-            <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-white/20 px-2 py-1 rounded-full inline-block">
-              {statusText}
-            </p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

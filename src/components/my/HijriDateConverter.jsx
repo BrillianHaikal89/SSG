@@ -1,93 +1,65 @@
-// Hijri month names
+// Nama bulan Hijriah dalam bahasa Latin
 const HIJRI_MONTHS = [
-  "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
-  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
-  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+  "Muharram", "Safar", "Rabiul Awal", "Rabiul Akhir",
+  "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban",
+  "Ramadhan", "Syawal", "Dzulqaidah", "Dzulhijjah"
 ];
 
-// Updated Hijri date calculation with more accurate conversion
+// Fungsi konversi Gregorian ke Hijriah yang lebih akurat
 export const calculateHijriDate = (gregorianDate) => {
   try {
     const date = new Date(gregorianDate);
-    const adjustment = 1; // Adjustment factor for more accurate conversion
     
-    // Get the Gregorian date components
+    // Algoritma konversi Umm al-Qura (versi sederhana)
     const day = date.getDate();
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
     
-    // Convert Gregorian to Julian day
-    const a = Math.floor((14 - month) / 12);
-    const y = year + 4800 - a;
-    const m = month + 12 * a - 3;
-    let jd = day + Math.floor((153 * m + 2) / 5) + 
-             365 * y + Math.floor(y / 4) - 
-             Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+    // Koreksi untuk tahun kabisat
+    const k = Math.floor((year - 1969) / 4);
+    const jd = Math.floor((1461 * (year + 4800 + k)) / 4) +
+               Math.floor((367 * (month - 2 - 12 * k)) / 12) -
+               Math.floor((3 * Math.floor((year + 4900 + k) / 100)) / 4) +
+               day - 32075;
     
-    // Adjust for Islamic calendar (approximate)
-    jd = jd - adjustment;
-    const l = Math.floor((jd - 1948440 + 10646) / 10631);
-    const jd1 = jd - 1948440 + 10646 - l * 10631;
-    const yearH = Math.floor(jd1 / 354) + 1 + l * 30;
-    const monthH = Math.min(12, Math.ceil((jd1 - Math.floor((354 * (yearH - l * 30 - 1) + 3) / 10)) / 29.5) + 1);
-    const dayH = jd1 - 29 * (monthH - 1) - Math.floor((6 + (monthH - 1)) / 11) - 
-                Math.floor((354 * (yearH - l * 30 - 1) + 3) / 10) + 1;
+    // Konversi JD ke Hijriah
+    const l = jd - 1948440 + 10632;
+    const n = Math.floor((l - 1) / 10631);
+    const l2 = l - 10631 * n + 354;
+    const j = (Math.floor((10985 - l2) / 5316)) * 
+              (Math.floor((50 * l2) / 17719)) + 
+              (Math.floor(l2 / 5670)) * 
+              (Math.floor((43 * l2) / 15238));
+    const l3 = l2 - (Math.floor((30 - j) / 15)) * 
+               (Math.floor((17719 * j) / 50)) - 
+               (Math.floor(j / 16)) * 
+               (Math.floor((15238 * j) / 43)) + 29;
+    
+    const hijriMonth = Math.floor((24 * l3) / 709);
+    const hijriDay = l3 - Math.floor((709 * hijriMonth) / 24);
+    const hijriYear = 30 * n + j - 30;
     
     return {
-      day: dayH,
-      month: monthH - 1, // zero-based for array
-      year: yearH,
-      formatted: `${dayH} ${HIJRI_MONTHS[monthH - 1]} ${yearH} H`
+      day: hijriDay,
+      month: hijriMonth - 1, // zero-based index
+      year: hijriYear,
+      formatted: `${hijriDay} ${HIJRI_MONTHS[hijriMonth - 1]} ${hijriYear} H`
     };
   } catch (error) {
     console.error('Error calculating Hijri date:', error);
     return { 
       day: 1, 
       month: 0, 
-      year: 1446, 
-      formatted: "1 Muharram 1446 H" 
+      year: 1445, 
+      formatted: "1 Muharram 1445 H" 
     };
   }
 };
 
-// Format Hijri date for display
-export const formatHijriDate = (hijriString) => {
-  if (!hijriString) return '';
-  
-  // If it's already a formatted string from our calculation function
-  if (hijriString.includes('H')) {
-    return hijriString;
-  }
-  
+// Format tanggal Gregorian
+export const formatGregorianDate = (dateString) => {
   try {
-    // Convert Arabic numerals to Latin
-    const arabicToLatinNumerals = {
-      '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
-      '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
-    };
-    
-    let latinNumerals = hijriString;
-    for (const [arabic, latin] of Object.entries(arabicToLatinNumerals)) {
-      latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
-    }
-    
-    // Replace Arabic text with English
-    latinNumerals = latinNumerals
-      .replace(/ذو القعدة/, "Dhu al-Qi'dah")
-      .replace(/ذو الحجة/, "Dhu al-Hijjah")
-      .replace(/هـ/, "H");
-    
-    return latinNumerals;
-  } catch (error) {
-    console.error('Error formatting Hijri date:', error);
-    return hijriString;
-  }
-};
-
-// Format Gregorian date
-export const formatGregorianDate = (date) => {
-  if (!date) return '';
-  try {
+    const date = new Date(dateString);
     return date.toLocaleDateString('id-ID', {
       weekday: 'long',
       year: 'numeric',
@@ -96,6 +68,6 @@ export const formatGregorianDate = (date) => {
     });
   } catch (error) {
     console.error('Error formatting date:', error);
-    return '';
+    return dateString;
   }
 };
