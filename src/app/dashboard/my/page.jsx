@@ -56,6 +56,9 @@ export default function MutabaahYaumiyahPage() {
   const [dateOptions, setDateOptions] = useState([]);
   const [formData, setFormData] = useState({...DEFAULT_FORM_DATA});
   const [lastRefreshDate, setLastRefreshDate] = useState('');
+  
+  // Track if data exists for the current date
+  const [dataExistsForToday, setDataExistsForToday] = useState(false);
 
   /**
    * Check if two dates are the same day
@@ -161,6 +164,17 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
+   * Check if data exists for a given date
+   * @param {string} dateString - Date to check in YYYY-MM-DD format
+   * @returns {boolean} - True if data exists
+   */
+  const checkIfDataExists = (dateString) => {
+    const storageKey = `mutabaah_${user?.userId}_${dateString}`;
+    const localData = localStorage.getItem(storageKey);
+    return localData !== null;
+  };
+
+  /**
    * Update header background color based on date difference and haid status
    * @param {string} dateString - Selected date string
    */
@@ -175,9 +189,16 @@ export default function MutabaahYaumiyahPage() {
     const now = new Date();
     const currentDateString = now.toISOString().split('T')[0];
     
-    // If the selected date is today's date, ALWAYS show green regardless of any other factors
+    // If the selected date is today's date, check if data exists
     if (dateString === currentDateString) {
-      setHeaderBgColor('bg-green-600'); // Today is always green when on time
+      // Always show green when data doesn't exist for today
+      if (!dataExistsForToday) {
+        setHeaderBgColor('bg-green-600'); // Today is always green when no data
+        return;
+      }
+      
+      // If data exists for today, still show green
+      setHeaderBgColor('bg-green-600');
       return;
     }
     
@@ -197,7 +218,8 @@ export default function MutabaahYaumiyahPage() {
       currentDateString,
       isToday: dateString === currentDateString,
       isYesterday: isYesterday(dateString),
-      daysDiff
+      daysDiff,
+      dataExistsForToday
     });
     
     if (daysDiff > 0) {
@@ -326,11 +348,16 @@ export default function MutabaahYaumiyahPage() {
         }
       }
       
-      // Update header color immediately after changing the date
-      updateHeaderBgColor(newDate);
+      // Check if data exists for this date
+      if (isToday(newDate)) {
+        const exists = checkIfDataExists(newDate);
+        setDataExistsForToday(exists);
+      }
       
-      // Check for existing data
-      checkExistingData(newDate);
+      // Update header color immediately after changing the date
+      checkExistingData(newDate).then(() => {
+        updateHeaderBgColor(newDate);
+      });
     } catch (error) {
       console.error('Error handling date change:', error);
       toast.error('Terjadi kesalahan saat mengubah tanggal');
@@ -389,11 +416,21 @@ export default function MutabaahYaumiyahPage() {
   /**
    * Check for existing data for the selected date
    * @param {string} date - Date to check
+   * @returns {Promise} - Promise that resolves when check is complete
    */
   const checkExistingData = async (date) => {
     try {
       const storageKey = `mutabaah_${user?.userId}_${date}`;
+      console.log('Checking data for date:', date);
+      console.log('Storage key:', storageKey);
+      
       const localData = localStorage.getItem(storageKey);
+      console.log('Data exists:', localData ? 'Yes' : 'No');
+      
+      // Update the global state for today's data existence
+      if (isToday(date)) {
+        setDataExistsForToday(localData !== null);
+      }
       
       if (localData) {
         try {
@@ -417,19 +454,20 @@ export default function MutabaahYaumiyahPage() {
           updateHeaderBgColor(date);
           
           toast.info('Data ditemukan dari penyimpanan lokal');
-          return;
+          return Promise.resolve(true);
         } catch (parseError) {
           console.error('Error parsing local data:', parseError);
         }
+      } else {
+        setFormData({
+          ...DEFAULT_FORM_DATA,
+          date: date
+        });
       }
-      
-      setFormData({
-        ...DEFAULT_FORM_DATA,
-        date: date
-      });
       
       // Update header color for default data
       updateHeaderBgColor(date);
+      return Promise.resolve(false);
       
     } catch (error) {
       console.error('Error checking existing data:', error);
@@ -437,6 +475,28 @@ export default function MutabaahYaumiyahPage() {
         ...DEFAULT_FORM_DATA,
         date: date
       });
+      return Promise.reject(error);
+    }
+  };
+
+  /**
+   * Clear data for a specific date (debugging function)
+   * @param {string} date - Date to clear
+   */
+  const clearDataForDate = (date) => {
+    try {
+      const storageKey = `mutabaah_${user?.userId}_${date}`;
+      localStorage.removeItem(storageKey);
+      console.log(`Cleared data for ${date}`);
+      
+      // Update state if cleared today's data
+      if (isToday(date)) {
+        setDataExistsForToday(false);
+      }
+      
+      toast.success(`Data untuk tanggal ${date} berhasil dihapus`);
+    } catch (error) {
+      console.error('Error clearing data:', error);
     }
   };
 
@@ -460,6 +520,11 @@ export default function MutabaahYaumiyahPage() {
     try {
       const storageKey = `mutabaah_${user?.userId}_${formData.date}`;
       localStorage.setItem(storageKey, JSON.stringify(formData));
+      
+      // Update data exists for today if applicable
+      if (isToday(formData.date)) {
+        setDataExistsForToday(true);
+      }
       
       try {
         const response = await fetch(`${API_URL}/users/input-my`, {
@@ -541,6 +606,10 @@ export default function MutabaahYaumiyahPage() {
     updateHijriDate(now);
     setDateOptions(generateDateOptions());
     
+    // Check if data exists for today
+    const exists = checkIfDataExists(todayString);
+    setDataExistsForToday(exists);
+    
     // Update header color if not in haid state
     if (!formData.haid) {
       updateHeaderBgColor(formData.date);
@@ -553,7 +622,8 @@ export default function MutabaahYaumiyahPage() {
     console.log('Forced refresh date info:', {
       now: now.toISOString(),
       todayString,
-      isToday: isToday(formData.date)
+      isToday: isToday(formData.date),
+      dataExistsForToday: exists
     });
   };
 
