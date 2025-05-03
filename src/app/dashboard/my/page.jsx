@@ -79,14 +79,9 @@ export default function MutabaahYaumiyahPage() {
    */
   const isToday = (dateString) => {
     try {
-      const inputDate = new Date(dateString);
-      const today = new Date();
-      
-      return (
-        inputDate.getFullYear() === today.getFullYear() &&
-        inputDate.getMonth() === today.getMonth() &&
-        inputDate.getDate() === today.getDate()
-      );
+      const now = new Date();
+      const currentDateString = now.toISOString().split('T')[0];
+      return dateString === currentDateString;
     } catch (error) {
       console.error('Error checking if date is today:', error);
       return false;
@@ -100,15 +95,10 @@ export default function MutabaahYaumiyahPage() {
    */
   const isYesterday = (dateString) => {
     try {
-      const inputDate = new Date(dateString);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
-      return (
-        inputDate.getFullYear() === yesterday.getFullYear() &&
-        inputDate.getMonth() === yesterday.getMonth() &&
-        inputDate.getDate() === yesterday.getDate()
-      );
+      const yesterdayFormatted = yesterday.toISOString().split('T')[0];
+      return dateString === yesterdayFormatted;
     } catch (error) {
       console.error('Error checking if date is yesterday:', error);
       return false;
@@ -123,33 +113,29 @@ export default function MutabaahYaumiyahPage() {
   const calculateDaysDifference = (dateString) => {
     try {
       // Create date objects with no time component
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const selected = new Date(dateString);
-      selected.setHours(0, 0, 0, 0);
+      const now = new Date();
+      const todayString = now.toISOString().split('T')[0];
       
       // Direct check for today
-      if (
-        selected.getFullYear() === today.getFullYear() &&
-        selected.getMonth() === today.getMonth() &&
-        selected.getDate() === today.getDate()
-      ) {
+      if (dateString === todayString) {
         return 0; // It's today
       }
       
       // Direct check for yesterday
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      if (
-        selected.getFullYear() === yesterday.getFullYear() &&
-        selected.getMonth() === yesterday.getMonth() &&
-        selected.getDate() === yesterday.getDate()
-      ) {
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const yesterdayString = yesterday.toISOString().split('T')[0];
+      if (dateString === yesterdayString) {
         return -1; // It's exactly yesterday
       }
       
       // For other dates, calculate difference
+      const selected = new Date(dateString);
+      selected.setHours(0, 0, 0, 0);
+      
+      const today = new Date(todayString);
+      today.setHours(0, 0, 0, 0);
+      
       const diffTime = selected.getTime() - today.getTime();
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
@@ -185,12 +171,17 @@ export default function MutabaahYaumiyahPage() {
       return;
     }
     
-    // Force green for today's date
-    if (isToday(dateString)) {
-      setHeaderBgColor('bg-green-600'); // Today is always green
+    // Important: Get the actual current date for comparison
+    const now = new Date();
+    const currentDateString = now.toISOString().split('T')[0];
+    
+    // If the selected date is today's date, ALWAYS show green regardless of any other factors
+    if (dateString === currentDateString) {
+      setHeaderBgColor('bg-green-600'); // Today is always green when on time
       return;
     }
     
+    // Handle all other cases normally
     // Check if it's yesterday
     if (isYesterday(dateString)) {
       setHeaderBgColor('bg-orange-500'); // Yesterday is orange (1 day late)
@@ -202,8 +193,9 @@ export default function MutabaahYaumiyahPage() {
     
     // Log for debugging
     console.log('Date difference calculation:', {
-      dateString, 
-      isToday: isToday(dateString),
+      dateString,
+      currentDateString,
+      isToday: dateString === currentDateString,
       isYesterday: isYesterday(dateString),
       daysDiff
     });
@@ -335,6 +327,10 @@ export default function MutabaahYaumiyahPage() {
         }
       }
       
+      // Update header color immediately after changing the date
+      updateHeaderBgColor(newDate);
+      
+      // Check for existing data
       checkExistingData(newDate);
     } catch (error) {
       console.error('Error handling date change:', error);
@@ -417,6 +413,10 @@ export default function MutabaahYaumiyahPage() {
           };
           
           setFormData(convertedData);
+          
+          // Update header color after loading data
+          updateHeaderBgColor(date);
+          
           toast.info('Data ditemukan dari penyimpanan lokal');
           return;
         } catch (parseError) {
@@ -428,6 +428,9 @@ export default function MutabaahYaumiyahPage() {
         ...DEFAULT_FORM_DATA,
         date: date
       });
+      
+      // Update header color for default data
+      updateHeaderBgColor(date);
       
     } catch (error) {
       console.error('Error checking existing data:', error);
@@ -566,8 +569,11 @@ export default function MutabaahYaumiyahPage() {
     setSelectedDate(todayString);
     setFormData(prev => ({ ...prev, date: todayString }));
     
-    // Clear all cached data for debugging
-    /* Uncomment to clear cached data
+    // Check for existing data for today
+    checkExistingData(todayString);
+    
+    // Clear all cached data for debugging (uncomment if needed)
+    /*
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key.startsWith(`mutabaah_${user?.userId}_`)) {
@@ -576,11 +582,6 @@ export default function MutabaahYaumiyahPage() {
     }
     */
   }, []);
-
-  // Update header color when form data changes
-  useEffect(() => {
-    updateHeaderBgColor(formData.date);
-  }, [formData.haid, formData.date]);
 
   // Effect to update current time and handle date changes
   useEffect(() => {
