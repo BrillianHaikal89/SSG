@@ -2,11 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import useAuthStore from '../../../stores/authStore';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const MutabaahReport = ({ user, onClose }) => {
   const [reportData, setReportData] = useState([]);
@@ -28,7 +24,8 @@ const MutabaahReport = ({ user, onClose }) => {
     const fetchReportData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${API_URL}/users/report-my?user_id=${user.userId}`, {
+        // Use relative path to API endpoint
+        const response = await fetch(`/api/users/report-my?user_id=${user.userId}`, {
           credentials: 'include'
         });
 
