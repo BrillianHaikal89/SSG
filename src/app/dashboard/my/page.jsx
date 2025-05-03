@@ -4,35 +4,34 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
+// Import the report component
 import MutabaahReport from '../../../components/my/MutabaahReport';
-import MutabaahFormSections from '../../../components/my/MutabaahFormSections';
-import { 
-  HIJRI_MONTHS, 
-  calculateHijriDate, 
-  getHijriDate, 
-  formatHijriDate, 
-  formatDate, 
-  formatTime 
-} from '../../../components/my/HijriDateUtils';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Hijri month names
+const HIJRI_MONTHS = [
+  "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+];
 
 // Default form data structure
 const DEFAULT_FORM_DATA = {
   date: new Date().toISOString().split('T')[0],
   sholat_wajib: 0,
-  sholat_tahajud: false,
+  sholat_tahajud: false, // Changed to boolean for checkbox
   sholat_dhuha: 0,
   sholat_rawatib: 0,
   sholat_sunnah_lainnya: 0,
-  tilawah_quran: false,
-  terjemah_quran: false,
-  shaum_sunnah: false,
-  shodaqoh: false,
-  dzikir_pagi_petang: false,
+  tilawah_quran: false, // Changed to boolean for checkbox (1 Halaman)
+  terjemah_quran: false, // Changed to boolean for checkbox (1 Halaman)
+  shaum_sunnah: false, // Changed to boolean for checkbox (3x/bulan)
+  shodaqoh: false, // Changed to boolean for checkbox
+  dzikir_pagi_petang: false, // Changed to boolean for checkbox
   istighfar_1000x: 0,
   sholawat_100x: 0,
-  menyimak_mq_pagi: false,
+  menyimak_mq_pagi: false, // Changed to boolean for checkbox
   haid: false
 };
 
@@ -48,7 +47,6 @@ export default function MutabaahYaumiyahPage() {
   // UI states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
-  const [previousHeaderColor, setPreviousHeaderColor] = useState('bg-green-600'); // Untuk menyimpan warna sebelumnya
   const [showReportModal, setShowReportModal] = useState(false);
 
   // Form data
@@ -56,26 +54,160 @@ export default function MutabaahYaumiyahPage() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateOptions, setDateOptions] = useState([]);
   const [formData, setFormData] = useState({...DEFAULT_FORM_DATA});
-  const [lastRefreshDate, setLastRefreshDate] = useState('');
-  
-  // Track if data exists for the current date
-  const [dataExistsForToday, setDataExistsForToday] = useState(false);
-  // Debugging flag
-  const [debug, setDebug] = useState(false);
 
   /**
-   * Check if two dates are the same day
-   * @param {Date} date1 - First date to compare
-   * @param {Date} date2 - Second date to compare
-   * @returns {boolean} - True if dates are the same day
+   * Calculate Hijri date from Gregorian date
+   * @param {Date} gregorianDate - Gregorian date to convert
+   * @returns {Object} - Hijri date details
    */
-  const isSameDay = (date1, date2) => {
-    if (!date1 || !date2) return false;
-    return (
-      date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate()
-    );
+  const calculateHijriDate = (gregorianDate) => {
+    try {
+      const date = new Date(gregorianDate);
+      
+      // Julian day calculation
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      
+      // Simplified and more accurate Hijri calculation
+      const jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
+                Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
+                Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
+                day - 32075;
+      
+      // Convert to Islamic date
+      const shift1 = 8.01/60;
+      const z = jd + shift1;
+      const a = Math.floor((z + 0.5) * 0.97253);
+      const d = Math.floor((a - 0.5) / 354);
+      const e = z + 0.5 - 354 * d - Math.floor(d / 30) * d;
+      const g = Math.floor(e * 30.6);
+      const h = e - Math.floor(g * 0.0328);
+      
+      const islamicMonth = g;
+      const islamicDay = Math.floor(h + 0.5);
+      const islamicYear = d + 16;
+      
+      return {
+        day: islamicDay,
+        month: islamicMonth,
+        year: islamicYear,
+        formatted: `${islamicDay} ${HIJRI_MONTHS[islamicMonth]} ${islamicYear} H`
+      };
+    } catch (error) {
+      console.error('Error calculating Hijri date:', error);
+      return { 
+        day: 1, 
+        month: 0, 
+        year: 1446, 
+        formatted: "1 Muharram 1446 H" 
+      };
+    }
+  };
+
+  /**
+   * Get Hijri date from Gregorian date using browser API or fallback
+   * @param {Date} date - Gregorian date to convert
+   * @returns {string} - Formatted Hijri date 
+   */
+  const getHijriDate = (date) => {
+    try {
+      // Try using Intl.DateTimeFormat first if browser supports it
+      if (typeof Intl !== 'undefined' && 
+          Intl.DateTimeFormat && 
+          Intl.DateTimeFormat.supportedLocalesOf(['ar-SA-u-ca-islamic']).length > 0) {
+        
+        const options = {
+          calendar: 'islamic',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        };
+        
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(date);
+      } else {
+        // Fallback to our algorithm
+        return calculateHijriDate(date).formatted;
+      }
+    } catch (error) {
+      console.error('Error getting Hijri date:', error);
+      return calculateHijriDate(date).formatted;
+    }
+  };
+
+  /**
+   * Format Hijri date for display - Latin numerals only
+   * @param {string} hijriString - Raw Hijri date string 
+   * @returns {string} - Formatted Hijri date
+   */
+  const formatHijriDate = (hijriString) => {
+    if (!hijriString) return '';
+    
+    // If it's already a formatted string from our calculation function
+    if (hijriString.includes('H')) {
+      return hijriString;
+    }
+    
+    try {
+      // Convert Arabic numerals to Latin
+      const arabicToLatinNumerals = {
+        '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+        '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+      };
+      
+      let latinNumerals = hijriString;
+      for (const [arabic, latin] of Object.entries(arabicToLatinNumerals)) {
+        latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
+      }
+      
+      // Replace Arabic text with English
+      latinNumerals = latinNumerals.replace(/ذو القعدة/, "Dhu al-Qi'dah");
+      latinNumerals = latinNumerals.replace(/هـ/, "H");
+      
+      return latinNumerals;
+    } catch (error) {
+      console.error('Error formatting Hijri date:', error);
+      return hijriString; // Return original if formatting fails
+    }
+  };
+
+  /**
+   * Format date for display in UI
+   * @param {Date} date - Date to format
+   * @returns {string} - Formatted date string
+   */
+  const formatDate = (date) => {
+    if (!date) return '';
+    try {
+      return date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  };
+
+  /**
+   * Format time for display in UI
+   * @param {Date} date - Date to extract time from
+   * @returns {string} - Formatted time string
+   */
+  const formatTime = (date) => {
+    if (!date) return '';
+    try {
+      return date.toLocaleTimeString('id-ID', {
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return '';
+    }
   };
 
   /**
@@ -85,9 +217,8 @@ export default function MutabaahYaumiyahPage() {
    */
   const isToday = (dateString) => {
     try {
-      const now = new Date();
-      const currentDateString = now.toISOString().split('T')[0];
-      return dateString === currentDateString;
+      const today = new Date().toISOString().split('T')[0];
+      return dateString === today;
     } catch (error) {
       console.error('Error checking if date is today:', error);
       return false;
@@ -118,31 +249,26 @@ export default function MutabaahYaumiyahPage() {
    */
   const calculateDaysDifference = (dateString) => {
     try {
-      // Create date objects with no time component
-      const now = new Date();
-      const todayString = now.toISOString().split('T')[0];
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date();
+      const todayFormatted = today.toISOString().split('T')[0];
       
       // Direct check for today
-      if (dateString === todayString) {
+      if (dateString === todayFormatted) {
         return 0; // It's today
       }
       
       // Direct check for yesterday
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      const yesterdayString = yesterday.toISOString().split('T')[0];
-      if (dateString === yesterdayString) {
+      if (isYesterday(dateString)) {
         return -1; // It's exactly yesterday
       }
       
-      // For other dates, calculate difference
-      const selected = new Date(dateString);
-      selected.setHours(0, 0, 0, 0);
+      // For dates before yesterday, calculate exact difference
+      // Create dates at noon to avoid timezone issues
+      const selected = new Date(dateString + 'T12:00:00');
+      const todayNoon = new Date(todayFormatted + 'T12:00:00');
       
-      const today = new Date(todayString);
-      today.setHours(0, 0, 0, 0);
-      
-      const diffTime = selected.getTime() - today.getTime();
+      const diffTime = selected.getTime() - todayNoon.getTime();
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
       return diffDays;
@@ -167,95 +293,40 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
-   * Check if data exists for a given date
-   * @param {string} dateString - Date to check in YYYY-MM-DD format
-   * @returns {boolean} - True if data exists
-   */
-  const checkIfDataExists = (dateString) => {
-    if (!user?.userId) return false;
-    
-    const storageKey = `mutabaah_${user?.userId}_${dateString}`;
-    const localData = localStorage.getItem(storageKey);
-    
-    if (debug) {
-      console.log(`Checking if data exists for ${dateString}:`, {
-        storageKey,
-        exists: localData !== null,
-        data: localData
-      });
-    }
-    
-    return localData !== null;
-  };
-
-  /**
    * Update header background color based on date difference and haid status
    * @param {string} dateString - Selected date string
    */
   const updateHeaderBgColor = (dateString) => {
-    // Jika sedang haid, selalu tampilkan header merah
+    // If menstruation status is active, always show red header
     if (formData.haid) {
-      // Simpan warna sebelumnya untuk digunakan saat tidak lagi haid
-      if (headerBgColor !== 'bg-red-600') {
-        setPreviousHeaderColor(headerBgColor);
-      }
       setHeaderBgColor('bg-red-600');
-      if (debug) console.log('Header set to red due to haid status');
       return;
     }
     
-    // Dapatkan tanggal saat ini untuk perbandingan
-    const now = new Date();
-    const currentDateString = now.toISOString().split('T')[0];
-    
-    // Jika tanggal yang dipilih adalah hari ini, periksa apakah data sudah ada
-    if (dateString === currentDateString) {
-      // Selalu tampilkan hijau jika hari ini
-      setHeaderBgColor('bg-green-600');
-      setPreviousHeaderColor('bg-green-600');
-      if (debug) console.log('Header set to green - today');
+    // Check if it's today
+    if (isToday(dateString)) {
+      setHeaderBgColor('bg-green-600'); // Today is always green
       return;
     }
     
-    // Tangani kasus lainnya
-    // Periksa apakah kemarin
+    // Check if it's yesterday
     if (isYesterday(dateString)) {
-      setHeaderBgColor('bg-orange-500'); // Kemarin berwarna oranye (terlambat 1 hari)
-      setPreviousHeaderColor('bg-orange-500');
-      if (debug) console.log('Header set to orange - yesterday');
+      setHeaderBgColor('bg-orange-500'); // Yesterday is orange (1 day late)
       return;
     }
     
-    // Untuk tanggal lainnya, hitung selisih hari
+    // For other dates, calculate day difference
     const daysDiff = calculateDaysDifference(dateString);
     
-    // Log untuk debugging
-    if (debug) {
-      console.log('Date difference calculation:', {
-        dateString,
-        currentDateString,
-        isToday: dateString === currentDateString,
-        isYesterday: isYesterday(dateString),
-        daysDiff,
-        dataExistsForToday
-      });
-    }
-    
     if (daysDiff > 0) {
-      // Tanggal masa depan (hijau)
+      // Future date (green)
       setHeaderBgColor('bg-green-600');
-      setPreviousHeaderColor('bg-green-600');
-      if (debug) console.log('Header set to green - future date');
     } else if (daysDiff === -2) {
-      // Terlambat 2 hari (oranye)
+      // 2 days late (orange)
       setHeaderBgColor('bg-orange-500');
-      setPreviousHeaderColor('bg-orange-500');
-      if (debug) console.log('Header set to orange - 2 days late');
     } else {
-      // Terlambat 3 hari atau lebih (coklat)
+      // 3 or more days late (brown)
       setHeaderBgColor('bg-amber-700');
-      setPreviousHeaderColor('bg-amber-700');
-      if (debug) console.log('Header set to amber - 3+ days late');
     }
   };
 
@@ -279,48 +350,17 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
-   * Generate date options for dropdown
-   * @returns {Array} - Array of date options
-   */
-  const generateDateOptions = () => {
-    try {
-      const options = [];
-      const currentDate = new Date();
-      const todayString = currentDate.toISOString().split('T')[0];
-      
-      options.push({
-        value: todayString,
-        label: formatDateForDisplay(currentDate)
-      });
-      
-      for (let i = 1; i <= 7; i++) {
-        const pastDate = new Date();
-        pastDate.setDate(currentDate.getDate() - i);
-        options.push({
-          value: pastDate.toISOString().split('T')[0],
-          label: formatDateForDisplay(pastDate)
-        });
-      }
-      
-      return options;
-    } catch (error) {
-      console.error('Error generating date options:', error);
-      return [];
-    }
-  };
-
-  /**
    * Get selected date info for display
    * @returns {Object} - Object containing day name and full date
    */
   const getSelectedDateInfo = () => {
     try {
-      // Always use current date time for display in header
-      const fullDate = currentDateTime ? formatDate(currentDateTime) : '';
-      return { fullDate };
+      const dayName = selectedDateTime ? formatDate(selectedDateTime).split(',')[0] : '';
+      const fullDate = selectedDateTime ? formatDate(selectedDateTime) : '';
+      return { dayName, fullDate };
     } catch (error) {
       console.error('Error getting selected date info:', error);
-      return { fullDate: '' };
+      return { dayName: '', fullDate: '' };
     }
   };
 
@@ -366,23 +406,10 @@ export default function MutabaahYaumiyahPage() {
       const selectedDate = new Date(newDate);
       if (!isNaN(selectedDate.getTime())) {
         setSelectedDateTime(selectedDate);
-        
-        // Only update Hijri date if not today
-        if (!isToday(newDate)) {
-          updateHijriDate(selectedDate);
-        }
+        updateHijriDate(selectedDate);
       }
       
-      // Check if data exists for this date
-      if (isToday(newDate)) {
-        const exists = checkIfDataExists(newDate);
-        setDataExistsForToday(exists);
-      }
-      
-      // Update header color immediately after changing the date
-      checkExistingData(newDate).then(() => {
-        updateHeaderBgColor(newDate);
-      });
+      checkExistingData(newDate);
     } catch (error) {
       console.error('Error handling date change:', error);
       toast.error('Terjadi kesalahan saat mengubah tanggal');
@@ -403,7 +430,7 @@ export default function MutabaahYaumiyahPage() {
           haid: newValue,
           ...(newValue ? {
             sholat_wajib: 0,
-            sholat_tahajud: false,
+            sholat_tahajud: false, // Updated to boolean for checkbox
             sholat_dhuha: 0,
             sholat_rawatib: 0,
             sholat_sunnah_lainnya: 0
@@ -412,17 +439,8 @@ export default function MutabaahYaumiyahPage() {
         
         setFormData(updatedFormData);
         
-        // Ketika checkbox dicentang, set header jadi merah dan simpan warna sebelumnya
         if (newValue) {
-          if (headerBgColor !== 'bg-red-600') {
-            setPreviousHeaderColor(headerBgColor);
-          }
           setHeaderBgColor('bg-red-600');
-          if (debug) console.log('Header set to red due to haid status');
-        } else {
-          // Ketika checkbox tidak dicentang, kembalikan ke warna sebelumnya
-          setHeaderBgColor(previousHeaderColor);
-          if (debug) console.log('Header restored to previous color:', previousHeaderColor);
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
                   'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
@@ -447,27 +465,11 @@ export default function MutabaahYaumiyahPage() {
   /**
    * Check for existing data for the selected date
    * @param {string} date - Date to check
-   * @returns {Promise} - Promise that resolves when check is complete
    */
   const checkExistingData = async (date) => {
     try {
-      if (!user?.userId) {
-        return Promise.resolve(false);
-      }
-      
       const storageKey = `mutabaah_${user?.userId}_${date}`;
-      if (debug) {
-        console.log('Checking data for date:', date);
-        console.log('Storage key:', storageKey);
-      }
-      
       const localData = localStorage.getItem(storageKey);
-      if (debug) console.log('Data exists:', localData ? 'Yes' : 'No');
-      
-      // Update the global state for today's data existence
-      if (isToday(date)) {
-        setDataExistsForToday(localData !== null);
-      }
       
       if (localData) {
         try {
@@ -486,25 +488,17 @@ export default function MutabaahYaumiyahPage() {
           };
           
           setFormData(convertedData);
-          
-          // Update header color after loading data
-          updateHeaderBgColor(date);
-          
           toast.info('Data ditemukan dari penyimpanan lokal');
-          return Promise.resolve(true);
+          return;
         } catch (parseError) {
           console.error('Error parsing local data:', parseError);
         }
-      } else {
-        setFormData({
-          ...DEFAULT_FORM_DATA,
-          date: date
-        });
       }
       
-      // Update header color for default data
-      updateHeaderBgColor(date);
-      return Promise.resolve(false);
+      setFormData({
+        ...DEFAULT_FORM_DATA,
+        date: date
+      });
       
     } catch (error) {
       console.error('Error checking existing data:', error);
@@ -512,49 +506,7 @@ export default function MutabaahYaumiyahPage() {
         ...DEFAULT_FORM_DATA,
         date: date
       });
-      return Promise.reject(error);
     }
-  };
-
-  /**
-   * Clear data for a specific date
-   * @param {string} date - Date to clear
-   */
-  const clearDataForDate = (date) => {
-    try {
-      if (!user?.userId) return;
-      
-      const storageKey = `mutabaah_${user?.userId}_${date}`;
-      localStorage.removeItem(storageKey);
-      if (debug) console.log(`Cleared data for ${date}`);
-      
-      // Update state if cleared today's data
-      if (isToday(date)) {
-        setDataExistsForToday(false);
-        updateHeaderBgColor(date); // Update header color
-      }
-      
-      // Reset form data for the cleared date
-      if (date === formData.date) {
-        setFormData({
-          ...DEFAULT_FORM_DATA,
-          date: date
-        });
-      }
-      
-      toast.success(`Data untuk tanggal ${date} berhasil dihapus`);
-    } catch (error) {
-      console.error('Error clearing data:', error);
-      toast.error('Gagal menghapus data');
-    }
-  };
-
-  /**
-   * Toggle debug mode
-   */
-  const toggleDebug = () => {
-    setDebug(!debug);
-    toast.success(`Debug mode ${!debug ? 'aktif' : 'nonaktif'}`);
   };
 
   /**
@@ -575,34 +527,8 @@ export default function MutabaahYaumiyahPage() {
     setIsSubmitting(true);
     
     try {
-      if (!user?.userId) {
-        toast.error('User ID tidak ditemukan. Silakan login kembali');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      const todayString = new Date().toISOString().split('T')[0];
       const storageKey = `mutabaah_${user?.userId}_${formData.date}`;
-      
-      // Debug info
-      if (debug) {
-        console.log('Attempting to save data:', {
-          date: formData.date,
-          isToday: isToday(formData.date),
-          storageKey,
-          existingData: localStorage.getItem(storageKey),
-          formData
-        });
-      }
-      
-      // Force save regardless of existing data
       localStorage.setItem(storageKey, JSON.stringify(formData));
-      if (debug) console.log('Data berhasil disimpan ke localStorage:', storageKey);
-      
-      // Update data exists for today if applicable
-      if (isToday(formData.date)) {
-        setDataExistsForToday(true);
-      }
       
       try {
         const response = await fetch(`${API_URL}/users/input-my`, {
@@ -664,107 +590,72 @@ export default function MutabaahYaumiyahPage() {
   const handleGenerateReport = () => {
     setShowReportModal(true);
   };
-  
-  /**
-   * Force a complete refresh of date-related states
-   */
-  const forceRefreshDateInfo = () => {
-    const now = new Date();
-    const todayString = now.toISOString().split('T')[0];
-    
-    // Only set if selected date is today or on initial page load
-    if (isToday(selectedDate) || !lastRefreshDate) {
-      setSelectedDate(todayString);
-      setFormData(prev => ({ ...prev, date: todayString }));
-    }
-    
-    // Always update these regardless of selected date
-    setCurrentDateTime(now);
-    setSelectedDateTime(now);
-    updateHijriDate(now);
-    setDateOptions(generateDateOptions());
-    
-    // Check if data exists for today
-    const exists = checkIfDataExists(todayString);
-    setDataExistsForToday(exists);
-    
-    // Update header color if not in haid state
-    if (!formData.haid) {
-      updateHeaderBgColor(formData.date);
-    }
-    
-    // Remember when we did the refresh
-    setLastRefreshDate(todayString);
-    
-    // Log for debugging
-    if (debug) {
-      console.log('Forced refresh date info:', {
-        now: now.toISOString(),
-        todayString,
-        isToday: isToday(formData.date),
-        dataExistsForToday: exists
-      });
-    }
-  };
 
-  // Generate date options for dropdown on component mount
+  // Generate date options for dropdown
   useEffect(() => {
-    // Force full date refresh on mount
-    forceRefreshDateInfo();
+    const generateDateOptions = () => {
+      try {
+        const options = [];
+        const currentDate = new Date();
+        const todayString = currentDate.toISOString().split('T')[0];
+        
+        options.push({
+          value: todayString,
+          label: formatDateForDisplay(currentDate)
+        });
+        
+        for (let i = 1; i <= 7; i++) {
+          const pastDate = new Date();
+          pastDate.setDate(currentDate.getDate() - i);
+          options.push({
+            value: pastDate.toISOString().split('T')[0],
+            label: formatDateForDisplay(pastDate)
+          });
+        }
+        
+        return options;
+      } catch (error) {
+        console.error('Error generating date options:', error);
+        return [];
+      }
+    };
+    
+    setDateOptions(generateDateOptions());
     
     // Set initial state with today's date
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
     setSelectedDate(todayString);
     setFormData(prev => ({ ...prev, date: todayString }));
-    
-    // Check for existing data for today
-    checkExistingData(todayString);
-    
-    // Clear all cached data for debugging (uncomment if needed)
-    /*
-    if (!user?.userId) return;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key.startsWith(`mutabaah_${user?.userId}_`)) {
-        localStorage.removeItem(key);
-      }
-    }
-    */
-  }, [user?.userId]);
+    setSelectedDateTime(today);
+    updateHijriDate(today);
+  }, []);
 
-  // Effect to update current time and handle date changes
+  // Update header color and hijri date when form data changes
+  useEffect(() => {
+    updateHeaderBgColor(formData.date);
+  }, [formData.haid, formData.date]);
+
+  // Effect to update current time and date
   useEffect(() => {
     const updateTime = () => {
       try {
         const now = new Date();
-        const currentDateString = now.toISOString().split('T')[0];
-        const previousDateString = currentDateTime ? currentDateTime.toISOString().split('T')[0] : '';
-        
-        // Always update current time display
         setCurrentDateTime(now);
         
-        // Check if the day has changed (by comparing date strings)
-        const dayChanged = currentDateString !== previousDateString;
+        // Get today's date in YYYY-MM-DD format
+        const todayString = now.toISOString().split('T')[0];
         
-        // Check if it's near midnight or just after midnight for more frequent updates
-        const isNearMidnight = now.getHours() === 23 && now.getMinutes() >= 59 && now.getSeconds() >= 50;
-        const isJustAfterMidnight = now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() <= 10;
-        const shouldForceRefresh = isNearMidnight || isJustAfterMidnight;
+        // Check if the selected date is not today, and update if needed
+        if (selectedDate !== todayString && isToday(formData.date)) {
+          setSelectedDate(todayString);
+          setFormData(prev => ({ ...prev, date: todayString }));
+          setSelectedDateTime(now);
+          updateHijriDate(now);
+        }
         
-        // If day has changed OR we're near midnight OR this is the first render
-        if (dayChanged || shouldForceRefresh || !previousDateString) {
-          if (debug) {
-            console.log('Day changed or force refresh needed', {
-              dayChanged, 
-              isNearMidnight, 
-              isJustAfterMidnight,
-              now: now.toISOString()
-            });
-          }
-          
-          // Do a complete refresh of date-related states
-          forceRefreshDateInfo();
+        if (!formData.haid) {
+          updateHeaderBgColor(formData.date);
         }
       } catch (error) {
         console.error('Error updating time:', error);
@@ -774,7 +665,42 @@ export default function MutabaahYaumiyahPage() {
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [currentDateTime, debug]);
+  }, [selectedDate, formData.haid, formData.date]);
+
+  // Effect to update selected date time and hijri date when form date changes
+  useEffect(() => {
+    try {
+      const newSelectedDate = new Date(formData.date);
+      if (!isNaN(newSelectedDate.getTime())) {
+        setSelectedDateTime(newSelectedDate);
+        updateHijriDate(newSelectedDate);
+      }
+    } catch (error) {
+      console.error('Error updating selected date:', error);
+    }
+  }, [formData.date]);
+
+  // Input sections data for rendering
+  const sholatSection = [
+    { label: "Sholat Wajib 5 waktu", field: "sholat_wajib", max: 5, type: "number" },
+    { label: "Sholat Tahajud & atau Witir 3 rakaat/hari", field: "sholat_tahajud", type: "checkbox" },
+    { label: "Sholat Dhuha 4 rakaat", field: "sholat_dhuha", max: 8, type: "number" },
+    { label: "Sholat Rawatib 10 rakaat", field: "sholat_rawatib", max: 12, type: "number" },
+    { label: "Sholat Sunnah Lainnya 6 rakaat", field: "sholat_sunnah_lainnya", max: 10, type: "number" },
+  ];
+
+  const quranSection = [
+    { label: "Tilawah Quran (1 Halaman)", field: "tilawah_quran", type: "checkbox" },
+    { label: "Terjemah Quran (1 Halaman)", field: "terjemah_quran", type: "checkbox" },
+  ];
+
+  const sunnahSection = [
+    { label: "Shaum Sunnah (3x/bulan)", field: "shaum_sunnah", type: "checkbox" },
+    { label: "Shodaqoh Maal", field: "shodaqoh", type: "checkbox" },
+    { label: "Dzikir Pagi/Petang", field: "dzikir_pagi_petang", type: "checkbox" },
+    { label: "Istighfar (x100)", field: "istighfar_1000x", max: 15, type: "number" },
+    { label: "Sholawat (x100)", field: "sholawat_100x", max: 15, type: "number" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
@@ -805,16 +731,17 @@ export default function MutabaahYaumiyahPage() {
           )}
         </div>
 
-        {/* Date Selector */}
+        {/* Main Form */}
         <div className="p-4 sm:p-6">
+          {/* Date Selector */}
           <div className="mb-4 sm:mb-6">
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Pilih Tanggal
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Pilih Tanggal Input:
             </label>
             <select
               value={selectedDate}
               onChange={handleDateChange}
-              className="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm sm:text-base"
             >
               {dateOptions.map((option, index) => (
                 <option key={index} value={option.value}>
@@ -822,96 +749,185 @@ export default function MutabaahYaumiyahPage() {
                 </option>
               ))}
             </select>
+            <p className="text-xs sm:text-sm text-gray-500 italic mt-1">
+              Pilih tanggal untuk mengisi data Mutaba'ah Yaumiyah yang terlewat (hingga 7 hari ke belakang).
+            </p>
           </div>
 
-          {/* Form Sections */}
-          <MutabaahFormSections 
-            formData={formData}
-            handleInputChange={handleInputChange}
-            headerBgColor={headerBgColor}
-            isSubmitting={isSubmitting}
-          />
+          {/* Haid Checkbox */}
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+            <label className="flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={formData.haid}
+                onChange={(e) => handleInputChange('haid', e.target.checked)}
+                className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
+              />
+              <span className="ml-2 text-xs sm:text-sm text-gray-700">
+                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
+              </span>
+            </label>
+          </div>
+
+          {/* Sholat Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.1 Sholat Wajib dan Sunnah
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {sholatSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  {item.type === "checkbox" ? (
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={formData[item.field]}
+                        onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                        className={`form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 ${
+                          formData.haid ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={formData.haid && item.field === 'sholat_tahajud'}
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      max={item.max}
+                      value={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.value)}
+                      className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
+                        formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
+                      }`}
+                      disabled={formData.haid}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quran Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.2 Aktivitas Quran
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {quranSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sunnah Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.3 Aktivitas Sunnah
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {sunnahSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  {item.type === "checkbox" ? (
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={formData[item.field]}
+                        onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                        className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      max={item.max}
+                      value={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.value)}
+                      className="shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* MQ Pagi Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              2.1 Menyimak MQ Pagi
+            </h2>
+            
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg flex items-center justify-between">
+              <span className="text-xs sm:text-sm text-gray-700">Menyimak MQ Pagi</span>
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  checked={formData.menyimak_mq_pagi}
+                  onChange={(e) => handleInputChange('menyimak_mq_pagi', e.target.checked)}
+                  className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex flex-col sm:flex-row justify-between gap-3">
+          <div className="flex justify-between gap-3 mt-6">
             <button
               onClick={handleRouteBack}
-              className="flex-1 sm:flex-none border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-100 focus:outline-none focus:shadow-outline"
-              type="button"
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
             >
               Kembali
             </button>
             
-            <div className="flex gap-3">
-              {isToday(selectedDate) && (
-                <button
-                  onClick={() => {
-                    const todayString = new Date().toISOString().split('T')[0];
-                    clearDataForDate(todayString);
-                  }}
-                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline"
-                  type="button"
-                >
-                  Reset Hari Ini
-                </button>
-              )}
-              
-              <button
-                onClick={handleGenerateReport}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline"
-                type="button"
-              >
-                Lihat Laporan
-              </button>
-              
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className={`flex-1 ${
-                  isSubmitting ? 'bg-green-400' : headerBgColor
-                } hover:opacity-90 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline`}
-              >
-                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-              </button>
-            </div>
-          </div>
-          
-          {/* Debug Mode Toggle (hidden in UI, tap 5 times on title to activate) */}
-          <div className="mt-4 text-center">
-            <span 
-              className="text-xs text-gray-400"
-              onClick={(e) => {
-                // Count clicks for debug mode
-                window._debugClicks = (window._debugClicks || 0) + 1;
-                if (window._debugClicks >= 5) {
-                  toggleDebug();
-                  window._debugClicks = 0;
-                }
-              }}
+            <button
+              onClick={handleGenerateReport}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
             >
-              {debug && 'Debug Mode Aktif'}
-            </span>
+              Laporan
+            </button>
             
-            {debug && (
-              <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-left">
-                <div>Data exists for today: {dataExistsForToday ? 'Yes' : 'No'}</div>
-                <div>Header color: {headerBgColor}</div>
-                <div>Previous color: {previousHeaderColor}</div>
-                <div>Selected date: {selectedDate}</div>
-                <div>Is today: {isToday(selectedDate) ? 'Yes' : 'No'}</div>
-                <div>Storage key: {`mutabaah_${user?.userId}_${selectedDate}`}</div>
-              </div>
-            )}
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+              } text-white font-bold py-2 px-4 sm:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 text-sm sm:text-base flex-1`}
+            >
+              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Report Modal */}
+      {/* Use Report Component here */}
       {showReportModal && (
         <MutabaahReport 
-          user={user}
-          onClose={() => setShowReportModal(false)}
+          user={user} 
+          onClose={() => setShowReportModal(false)} 
         />
       )}
     </div>
