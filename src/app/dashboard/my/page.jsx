@@ -63,32 +63,36 @@ export default function MutabaahYaumiyahPage() {
   const calculateHijriDate = (gregorianDate) => {
     try {
       const date = new Date(gregorianDate);
-      date.setHours(12, 0, 0, 0);
       
       // Julian day calculation
       const day = date.getDate();
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
       
-      let jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
-              Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
-              Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
-              day - 32075.5;
+      // Simplified and more accurate Hijri calculation
+      const jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
+                Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
+                Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
+                day - 32075;
       
-      // Islamic Julian day
-      const ijDay = jd - 2400000.5;
+      // Convert to Islamic date
+      const shift1 = 8.01/60;
+      const z = jd + shift1;
+      const a = Math.floor((z + 0.5) * 0.97253);
+      const d = Math.floor((a - 0.5) / 354);
+      const e = z + 0.5 - 354 * d - Math.floor(d / 30) * d;
+      const g = Math.floor(e * 30.6);
+      const h = e - Math.floor(g * 0.0328);
       
-      // Approximate Islamic calendar
-      const islamicDate = Math.floor((ijDay - 1948084.5) * 30.0 / 10631.0);
-      const islamicDay = Math.floor(islamicDate % 30.0);
-      const islamicMonth = Math.floor((islamicDate % 355.0) / 30.0);
-      const islamicYear = 1390 + Math.floor(islamicDate / 355.0);
+      const islamicMonth = g;
+      const islamicDay = Math.floor(h + 0.5);
+      const islamicYear = d + 16;
       
       return {
-        day: islamicDay + 1,
+        day: islamicDay,
         month: islamicMonth,
         year: islamicYear,
-        formatted: `${islamicDay + 1} ${HIJRI_MONTHS[islamicMonth]} ${islamicYear} H`
+        formatted: `${islamicDay} ${HIJRI_MONTHS[islamicMonth]} ${islamicYear} H`
       };
     } catch (error) {
       console.error('Error calculating Hijri date:', error);
@@ -132,7 +136,7 @@ export default function MutabaahYaumiyahPage() {
   };
 
   /**
-   * Format Hijri date for display
+   * Format Hijri date for display - Latin numerals only
    * @param {string} hijriString - Raw Hijri date string 
    * @returns {string} - Formatted Hijri date
    */
@@ -155,6 +159,10 @@ export default function MutabaahYaumiyahPage() {
       for (const [arabic, latin] of Object.entries(arabicToLatinNumerals)) {
         latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
       }
+      
+      // Replace Arabic text with English
+      latinNumerals = latinNumerals.replace(/ذو القعدة/, "Dhu al-Qi'dah");
+      latinNumerals = latinNumerals.replace(/هـ/, "H");
       
       return latinNumerals;
     } catch (error) {
@@ -589,9 +597,10 @@ export default function MutabaahYaumiyahPage() {
       try {
         const options = [];
         const currentDate = new Date();
+        const todayString = currentDate.toISOString().split('T')[0];
         
         options.push({
-          value: currentDate.toISOString().split('T')[0],
+          value: todayString,
           label: formatDateForDisplay(currentDate)
         });
         
@@ -613,8 +622,13 @@ export default function MutabaahYaumiyahPage() {
     
     setDateOptions(generateDateOptions());
     
-    // Update hijri date daily
-    updateHijriDate(new Date());
+    // Set initial state with today's date
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    setSelectedDate(todayString);
+    setFormData(prev => ({ ...prev, date: todayString }));
+    setSelectedDateTime(today);
+    updateHijriDate(today);
   }, []);
 
   // Update header color and hijri date when form data changes
@@ -629,14 +643,14 @@ export default function MutabaahYaumiyahPage() {
         const now = new Date();
         setCurrentDateTime(now);
         
-        // Check if the system date has changed (midnight crossed)
+        // Get today's date in YYYY-MM-DD format
         const todayString = now.toISOString().split('T')[0];
-        const currentTodayString = new Date().toISOString().split('T')[0];
         
-        if (todayString !== currentTodayString) {
-          // The date has changed, update everything
+        // Check if the selected date is not today, and update if needed
+        if (selectedDate !== todayString && isToday(formData.date)) {
           setSelectedDate(todayString);
           setFormData(prev => ({ ...prev, date: todayString }));
+          setSelectedDateTime(now);
           updateHijriDate(now);
         }
         
@@ -701,8 +715,6 @@ export default function MutabaahYaumiyahPage() {
           <div className="flex justify-center mt-1">
             <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
               <span className="font-medium">{formatHijriDate(hijriDate) || '...'}</span>
-              <span className="mx-1">|</span>
-              <span>{getSelectedDateInfo().dayName || '...'}</span>
             </div>
           </div>
           
