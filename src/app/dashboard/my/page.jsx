@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
 // Import the report component
-import MutabaahReport from '../../../components/my/MutabaahReport';
+import MutabaahReport from '../../../components/my/MutabaahReport1';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
