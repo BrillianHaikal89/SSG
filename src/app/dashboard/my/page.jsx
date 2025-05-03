@@ -48,6 +48,7 @@ export default function MutabaahYaumiyahPage() {
   // UI states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
+  const [previousHeaderColor, setPreviousHeaderColor] = useState('bg-green-600'); // Untuk menyimpan warna sebelumnya
   const [showReportModal, setShowReportModal] = useState(false);
 
   // Form data
@@ -179,40 +180,43 @@ export default function MutabaahYaumiyahPage() {
    * @param {string} dateString - Selected date string
    */
   const updateHeaderBgColor = (dateString) => {
-    // If menstruation status is active, always show red header
+    // Jika sedang haid, selalu tampilkan header merah
     if (formData.haid) {
+      // Simpan warna sebelumnya untuk digunakan saat tidak lagi haid
+      if (headerBgColor !== 'bg-red-600') {
+        setPreviousHeaderColor(headerBgColor);
+      }
       setHeaderBgColor('bg-red-600');
+      console.log('Header set to red due to haid status');
       return;
     }
     
-    // Important: Get the actual current date for comparison
+    // Dapatkan tanggal saat ini untuk perbandingan
     const now = new Date();
     const currentDateString = now.toISOString().split('T')[0];
     
-    // If the selected date is today's date, check if data exists
+    // Jika tanggal yang dipilih adalah hari ini, periksa apakah data sudah ada
     if (dateString === currentDateString) {
-      // Always show green when data doesn't exist for today
-      if (!dataExistsForToday) {
-        setHeaderBgColor('bg-green-600'); // Today is always green when no data
-        return;
-      }
-      
-      // If data exists for today, still show green
+      // Selalu tampilkan hijau jika hari ini
       setHeaderBgColor('bg-green-600');
+      setPreviousHeaderColor('bg-green-600');
+      console.log('Header set to green - today');
       return;
     }
     
-    // Handle all other cases normally
-    // Check if it's yesterday
+    // Tangani kasus lainnya
+    // Periksa apakah kemarin
     if (isYesterday(dateString)) {
-      setHeaderBgColor('bg-orange-500'); // Yesterday is orange (1 day late)
+      setHeaderBgColor('bg-orange-500'); // Kemarin berwarna oranye (terlambat 1 hari)
+      setPreviousHeaderColor('bg-orange-500');
+      console.log('Header set to orange - yesterday');
       return;
     }
     
-    // For other dates, calculate day difference
+    // Untuk tanggal lainnya, hitung selisih hari
     const daysDiff = calculateDaysDifference(dateString);
     
-    // Log for debugging
+    // Log untuk debugging
     console.log('Date difference calculation:', {
       dateString,
       currentDateString,
@@ -223,14 +227,20 @@ export default function MutabaahYaumiyahPage() {
     });
     
     if (daysDiff > 0) {
-      // Future date (green)
+      // Tanggal masa depan (hijau)
       setHeaderBgColor('bg-green-600');
+      setPreviousHeaderColor('bg-green-600');
+      console.log('Header set to green - future date');
     } else if (daysDiff === -2) {
-      // 2 days late (orange)
+      // Terlambat 2 hari (oranye)
       setHeaderBgColor('bg-orange-500');
+      setPreviousHeaderColor('bg-orange-500');
+      console.log('Header set to orange - 2 days late');
     } else {
-      // 3 or more days late (brown)
+      // Terlambat 3 hari atau lebih (coklat)
       setHeaderBgColor('bg-amber-700');
+      setPreviousHeaderColor('bg-amber-700');
+      console.log('Header set to amber - 3+ days late');
     }
   };
 
@@ -387,11 +397,17 @@ export default function MutabaahYaumiyahPage() {
         
         setFormData(updatedFormData);
         
+        // Ketika checkbox dicentang, set header jadi merah dan simpan warna sebelumnya
         if (newValue) {
+          if (headerBgColor !== 'bg-red-600') {
+            setPreviousHeaderColor(headerBgColor);
+          }
           setHeaderBgColor('bg-red-600');
+          console.log('Header set to red due to haid status');
         } else {
-          // Restore appropriate color when unchecking haid
-          updateHeaderBgColor(formData.date);
+          // Ketika checkbox tidak dicentang, kembalikan ke warna sebelumnya
+          setHeaderBgColor(previousHeaderColor);
+          console.log('Header restored to previous color:', previousHeaderColor);
         }
       } else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
                   'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
