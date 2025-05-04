@@ -1,5 +1,6 @@
 import React from 'react';
 import useAuthStore from '../../../stores/authStore';
+import toast from 'react-hot-toast';
 
 const AyatItem = ({ ayat, selectedSurah }) => {
   const [bookmark, setBookmark] = React.useState(null);
@@ -105,7 +106,7 @@ const AyatItem = ({ ayat, selectedSurah }) => {
       }
 
       const data = await response.json();
-      alert(data.message);
+      toast.success(data.message || 'Bookmark berhasil disimpan');
       setBookmark({
         surah: selectedSurah || ayat.surah_name,
         ayah: ayat.no_ayat,
