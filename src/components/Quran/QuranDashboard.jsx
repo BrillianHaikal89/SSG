@@ -8,10 +8,14 @@ import MobileControls from './Controls/MobileControls';
 import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
+import useAuthStore from '../../stores/authStore';
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [bookmark, setBookmark] = useState(null);
+  const { user } = useAuthStore(); 
+
   
   const {
     surahList,
@@ -41,6 +45,18 @@ const QuranDashboard = () => {
   // Handle client-side rendering and responsive layout
   useEffect(() => {
     setIsClient(true);
+
+    const userId = user?.userId; // ganti dengan user login aktif
+
+    const user = 1; // ganti dengan user login aktif
+    fetch(`http://localhost:3001/bookmark?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setBookmark(data.data);
+        }
+      })
+      .catch(err => console.error("Gagal ambil bookmark:", err));
     
     // Check if mobile view based on screen width
     const checkIsMobile = () => {

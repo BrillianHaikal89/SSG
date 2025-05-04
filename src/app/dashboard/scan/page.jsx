@@ -18,36 +18,15 @@ export default function QrCodeScanner() {
 
   // Initialize QR scanner
   useEffect(() => {
-    if (!scannerRef.current && scanning) {
-      // Create scanner instance
-      scannerRef.current = new Html5QrcodeScanner(
-        "qr-reader",
-        { 
-          fps: 10,
-          qrbox: 250,
-          disableFlip: false,
-          showTorchButtonIfSupported: true,
-        },
-        /* verbose= */ false
-      );
-
-      // Define success callback
-      const onScanSuccess = (decodedText) => {
-        setScannedCode(decodedText);
-        stopScanner();
-      };
-
-      // Start scanner
-      scannerRef.current.render(onScanSuccess, (error) => {
-        console.warn(`QR scan error: ${error}`);
-      });
-    }
-    
-    return () => {
-      stopScanner();
-    };
-  }, [scanning]);
-
+    startScanner();
+  }, []);
+  
+  const onScanSuccess = (decodedText) => {
+    setScannedCode(decodedText);
+    stopScanner();
+    submitAttendance(decodedText);
+  };
+  
   // Stop scanner
   const stopScanner = () => {
     if (scannerRef.current) {
@@ -74,26 +53,23 @@ export default function QrCodeScanner() {
   };
 
   // Submit attendance data
-  const submitAttendance = async () => {
-    if (!scannedCode) return;
-
+  const submitAttendance = async (qrcodeText) => {
+    if (!qrcodeText) return;
+  
     setSubmitting(true);
     setScanResult(null);
-
+  
     try {
       const response = await fetch(`${API_URL}/users/presensi`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          qrcode_text: scannedCode,
-          jenis: attendanceType
-        }),
+        body: JSON.stringify({ qrcode_text: qrcodeText }),
       });
-
+  
       const data = await response.json();
-      
+  
       if (response.ok) {
         toast.success(`${data.message} !`);
       } else {
@@ -103,13 +79,14 @@ export default function QrCodeScanner() {
       console.error('Error submitting attendance:', error);
       setScanResult({
         success: false,
-        message: `Error: ${error.message}`
+        message: `Error: ${error.message}`,
       });
       toast.error(`Error: ${error.message}`);
     } finally {
       setSubmitting(false);
     }
   };
+  
 
   // Reset the form
   const resetForm = () => {
@@ -157,20 +134,7 @@ export default function QrCodeScanner() {
 
       {/* QR Scanner Section */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-        {!scanning && !scannedCode && (
-          <div className="p-10 flex flex-col items-center justify-center">
-            <div className="h-48 w-48 bg-gray-100 rounded-lg flex items-center justify-center mb-6">
-              <CameraOff size={48} className="text-gray-400" />
-            </div>
-            <button
-              onClick={startScanner}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Camera size={20} className="mr-2" />
-              Mulai Scan
-            </button>
-          </div>
-        )}
+        
 
         {scanning && (
           <div className="p-4">
@@ -256,12 +220,9 @@ export default function QrCodeScanner() {
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="font-medium text-blue-800 mb-2">Petunjuk:</h3>
         <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
-          <li>Pilih jenis presensi (Masuk/Keluar)</li>
-          <li>Klik tombol "Mulai Scan" untuk memulai pemindaian</li>
           <li>Arahkan kamera ke QR code</li>
-          <li>Pastikan QR code terlihat jelas dan berada dalam kotak</li>
           <li>Tunggu hingga QR code terdeteksi</li>
-          <li>Klik "Lakukan Presensi" untuk mengirim data</li>
+          <li>Presensi akan dicatat secara otomatis</li>
         </ol>
       </div>
     </div>
