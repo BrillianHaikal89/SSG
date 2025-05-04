@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import useAuthStore from '../../stores/authStore';
 
 /**
  * MutabaahReport Component
@@ -19,7 +18,6 @@ const MutabaahReport = ({ user, onClose }) => {
   const [loadingReport, setLoadingReport] = useState(true);
   const [month, setMonth] = useState(new Date().getMonth() + 1); // Current month (1-12)
   const [year, setYear] = useState(new Date().getFullYear()); // Current year
-  const { user } = useAuthStore(); // Assuming useAuthStore is imported and used here
   // Available months for selection
   const months = [
     { value: 1, label: 'Januari' },
@@ -42,8 +40,8 @@ const MutabaahReport = ({ user, onClose }) => {
 
   // Fetch user data when component mounts or when month/year changes
   useEffect(() => {
-    const userId = user?.userId;
-    if (userId) {
+
+    if (user?.userId) {
       fetchIbadahData();
     }
   }, [user, month, year]);
@@ -54,11 +52,10 @@ const MutabaahReport = ({ user, onClose }) => {
   const fetchIbadahData = async () => {
     try {
       setLoadingReport(true);
-      const userId = user?.userId;
-    
+      
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${userId}&month=${String(month).padStart(2, '0')}&year=${year}`, {
-        method: 'POST',
+      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}&month=${String(month).padStart(2, '0')}&year=${year}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
