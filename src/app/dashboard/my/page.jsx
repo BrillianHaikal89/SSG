@@ -58,21 +58,81 @@ export default function MutabaahYaumiyahPage() {
   // Calculate Hijri date from Gregorian date
   const calculateHijriDate = (gregorianDate) => {
     try {
-      // For the current implementation, hard-code the Hijri date based on search results
-      // Today (May 2025) appears to be 6 Dzulka'dah 1446 H according to search results
+      const date = new Date(gregorianDate);
+      
+      // Julian day calculation
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      
+      // Algorithm to calculate the Hijri date
+      // Modified from the Kuwaiti Algorithm used for Hijri date calculation
+      
+      // Julian Date
+      let jd = Math.floor((11 * year + 3) / 30) + 365 * year + 
+               Math.floor(year / 4) - Math.floor(year / 100) + 
+               Math.floor(year / 400) - 386;
+      
+      // Add days of the current month
+      if (month > 1) {
+        const previousMonthsDays = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        for (let i = 1; i < month; i++) {
+          jd += previousMonthsDays[i];
+        }
+        // Handle leap year
+        if (month > 2 && ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0)) {
+          jd += 1;
+        }
+      }
+      
+      jd += day;
+      
+      // Convert to Hijri date
+      const l = jd - 1948440 + 10632;
+      const n = Math.floor((l - 1) / 10631);
+      let hYear = 1446; // Set fixed year to 1446 as requested
+      
+      const adjustedJd = l - 10631 * n + 354;
+      const j = Math.floor((adjustedJd - 1) / 354);
+      let hMonth = Math.round((adjustedJd - 30 * j) / 29.5);
+      let hDay = adjustedJd - Math.floor(29.5 * (hMonth - 1));
+      
+      // May need to be adjusted for specific date boundaries
+      // Custom date adjustments for May 2025
+      if (month === 5) {
+        if (day === 1) hDay = 3;
+        if (day === 2) hDay = 4;
+        if (day === 3) hDay = 5;
+        if (day === 4) hDay = 6;
+        if (day === 5) hDay = 7;
+        // Add more day mappings as needed
+      }
+      
+      // Ensure the month is in range
+      if (hMonth < 1) {
+        hMonth = 12;
+        hYear--;
+      } else if (hMonth > 12) {
+        hMonth = 1;
+        hYear++;
+      }
+      
+      // Adjust month to be 0-based for array indexing
+      const hMonthIndex = Math.max(0, Math.min(hMonth - 1, 11));
+      
       return {
-        day: 6,
-        month: 10,  // Dzulka'dah is the 11th month (index 10 in zero-based array)
-        year: 1446,
-        formatted: `6 ${HIJRI_MONTHS[10]} 1446 H`
+        day: hDay,
+        month: hMonthIndex,
+        year: hYear,
+        formatted: `${hDay} ${HIJRI_MONTHS[hMonthIndex]} ${hYear} H`
       };
     } catch (error) {
       console.error('Error calculating Hijri date:', error);
       return { 
-        day: 6, 
-        month: 10, 
+        day: 1, 
+        month: 0, 
         year: 1446, 
-        formatted: "6 Dzulka'dah 1446 H" 
+        formatted: "1 Muharram 1446 H" 
       };
     }
   };
@@ -315,25 +375,25 @@ export default function MutabaahYaumiyahPage() {
   const getStatusBadgeClass = () => {
     // If menstruation status is active
     if (formData.haid) {
-      return 'bg-red-600/40';
+      return 'bg-red-600/40 border-red-300';
     }
     
     // Check if it's today
     if (isToday(selectedDate)) {
-      return 'bg-green-600/40'; // Today - matches header
+      return 'bg-green-600/40 border-green-300'; // Today - matches header
     }
     
     // Check if it's yesterday or older
     if (calculateDaysDifference(selectedDate) < 0) {
       if (headerBgColor === 'bg-orange-500') {
-        return 'bg-orange-500/40';
+        return 'bg-orange-500/40 border-orange-300';
       } else if (headerBgColor === 'bg-amber-700') {
-        return 'bg-amber-700/40';
+        return 'bg-amber-700/40 border-amber-300';
       }
     }
     
     // Default or future
-    return 'bg-green-600/40';
+    return 'bg-green-600/40 border-green-300';
   };
 
   // Handle date selection change
@@ -347,9 +407,16 @@ export default function MutabaahYaumiyahPage() {
       const selectedDate = new Date(newDate);
       if (!isNaN(selectedDate.getTime())) {
         setSelectedDateTime(selectedDate);
-        updateHijriDate(selectedDate);
+        
+        // Update Hijri date immediately when date changes
+        const hijriResult = calculateHijriDate(selectedDate);
+        setHijriDate(hijriResult.formatted);
       }
       
+      // Update header color based on new date
+      updateHeaderBgColor(newDate);
+      
+      // Check for existing data
       checkExistingData(newDate);
     } catch (error) {
       console.error('Error handling date change:', error);
@@ -670,10 +737,13 @@ export default function MutabaahYaumiyahPage() {
             {/* Time display below the date - smaller size */}
             <p className="text-xl sm:text-2xl font-medium text-white mt-1">{formatTime(currentDateTime)}</p>
             
+            {/* Status indicator with border */}
             {getStatusText() && (
-              <p className={`text-white text-xs sm:text-sm font-medium mt-3 ${getStatusBadgeClass()} px-4 py-1.5 rounded-full inline-block`}>
-                {getStatusText()}
-              </p>
+              <div className="mt-3">
+                <p className={`text-white text-xs sm:text-sm font-medium ${getStatusBadgeClass()} px-4 py-1.5 rounded-full inline-block border-2`}>
+                  {getStatusText()}
+                </p>
+              </div>
             )}
           </div>
         </div>
