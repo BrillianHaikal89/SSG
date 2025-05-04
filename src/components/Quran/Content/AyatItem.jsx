@@ -119,6 +119,10 @@ const AyatItem = ({ ayat, selectedSurah }) => {
     }
   };
 
+  console.log(" ayat " , ayat);
+  console.log(" selectedSurah " , selectedSurah);
+  console.log(" surah " , ayat.surah_name);
+
   return (
     <div className="ayat-item">
       <div className="flex items-start">
