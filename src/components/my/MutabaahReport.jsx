@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 /**
  * MutabaahReport Component
  * Displays and manages reporting functionality for Mutaba'ah Yaumiyah data
- * Updated to fetch data from API endpoint
+ * Updated to handle numeric values for previously boolean fields
  * 
  * @param {Object} props - Component properties
  * @param {Object} props.user - User object containing user data
@@ -54,38 +54,38 @@ const MutabaahReport = ({ user, onClose }) => {
       setLoadingReport(true);
       
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}&month=${month}&year=${year}`, {
+      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}&month=${String(month).padStart(2, '0')}&year=${year}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          }
-        });
+        }
+      });
       
       const result = await response.json();
-      console.log("my", result);
+      console.log("API Response:", result);
       
       if (response.ok && result.status === 'success') {
         // Process and normalize the data from the API
         const processedData = Array.isArray(result.data) ? result.data : [result.data];
         
-        // Ensure boolean fields are properly formatted
+        // Normalize the data - handling numeric values for all fields
         const normalizedData = processedData.map(item => ({
           ...item,
           date: item.date || item.created_at, // Use appropriate date field
           sholat_wajib: Number(item.sholat_wajib) || 0,
-          sholat_tahajud: Boolean(item.sholat_tahajud),
+          sholat_tahajud: Number(item.sholat_tahajud) || 0,
           sholat_dhuha: Number(item.sholat_dhuha) || 0,
           sholat_rawatib: Number(item.sholat_rawatib) || 0,
           sholat_sunnah_lainnya: Number(item.sholat_sunnah_lainnya) || 0,
-          tilawah_quran: Boolean(item.tilawah_quran),
-          terjemah_quran: Boolean(item.terjemah_quran),
-          shaum_sunnah: Boolean(item.shaum_sunnah),
-          shodaqoh: Boolean(item.shodaqoh),
-          dzikir_pagi_petang: Boolean(item.dzikir_pagi_petang),
+          tilawah_quran: Number(item.tilawah_quran) || 0,
+          terjemah_quran: Number(item.terjemah_quran) || 0,
+          shaum_sunnah: Number(item.shaum_sunnah) || 0,
+          shodaqoh: Number(item.shodaqoh) || 0,
+          dzikir_pagi_petang: Number(item.dzikir_pagi_petang) || 0,
           istighfar_1000x: Number(item.istighfar_1000x) || 0,
           sholawat_100x: Number(item.sholawat_100x) || 0,
-          menyimak_mq_pagi: Boolean(item.menyimak_mq_pagi),
-          haid: Boolean(item.haid)
+          menyimak_mq_pagi: Number(item.menyimak_mq_pagi) || 0,
+          haid: Number(item.haid) || 0
         }));
         
         // Sort by date descending
@@ -124,15 +124,15 @@ const MutabaahReport = ({ user, onClose }) => {
       // Add headers
       csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x100),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
+      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
 
-      // Add data rows - with checkboxes shown as "Ya" or "Tidak"
+      // Add data rows
       allUserData.forEach(data => {
-        csvContent += `${new Date(data.date).toLocaleDateString('id-ID')},${data.sholat_wajib},${data.sholat_tahajud ? "Ya" : "Tidak"},${data.sholat_dhuha},`;
-        csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran ? "Ya" : "Tidak"},`;
-        csvContent += `${data.terjemah_quran ? "Ya" : "Tidak"},${data.shaum_sunnah ? "Ya" : "Tidak"},${data.shodaqoh ? "Ya" : "Tidak"},`;
-        csvContent += `${data.dzikir_pagi_petang ? "Ya" : "Tidak"},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi ? "Ya" : "Tidak"},${data.haid ? "Ya" : "Tidak"}\n`;
+        csvContent += `${new Date(data.date).toLocaleDateString('id-ID')},${data.sholat_wajib},${data.sholat_tahajud},${data.sholat_dhuha},`;
+        csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
+        csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
+        csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
+        csvContent += `${data.menyimak_mq_pagi},${data.haid}\n`;
       });
 
       // Create download link
@@ -153,23 +153,33 @@ const MutabaahReport = ({ user, onClose }) => {
 
   // Calculate statistics for the report summary
   const calculateStatistics = () => {
-    const totalEntries = allUserData.length || 1;
+    if (allUserData.length === 0) {
+      return {
+        avgSholatWajib: '0.0',
+        tahajudDays: 0,
+        tilawahDays: 0,
+        terjemahDays: 0,
+        dhuhaDays: 0
+      };
+    }
+    
+    const totalEntries = allUserData.length;
     const avgSholatWajib = (
       allUserData.reduce((sum, data) => sum + Number(data.sholat_wajib), 0) / totalEntries
     ).toFixed(1);
     
-    // Count completed days for checkbox items
-    const tahajudDays = allUserData.filter(data => data.sholat_tahajud).length;
-    const tilawahDays = allUserData.filter(data => data.tilawah_quran).length;
-    const terjemahDays = allUserData.filter(data => data.terjemah_quran).length;
-    const haidDays = allUserData.filter(data => data.haid).length;
+    // Count completed days for items
+    const tahajudDays = allUserData.filter(data => Number(data.sholat_tahajud) > 0).length;
+    const tilawahDays = allUserData.filter(data => Number(data.tilawah_quran) > 0).length;
+    const terjemahDays = allUserData.filter(data => Number(data.terjemah_quran) > 0).length;
+    const dhuhaDays = allUserData.filter(data => Number(data.sholat_dhuha) > 0).length;
     
     return { 
       avgSholatWajib, 
       tahajudDays, 
       tilawahDays, 
       terjemahDays, 
-      haidDays
+      dhuhaDays
     };
   };
 
@@ -184,6 +194,9 @@ const MutabaahReport = ({ user, onClose }) => {
   const handleYearChange = (e) => {
     setYear(parseInt(e.target.value, 10));
   };
+
+  // Helper to check if a value is considered active/completed
+  const isValueActive = (value) => Number(value) > 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -257,9 +270,9 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Tahajud</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Dhuha</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah Quran</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -272,29 +285,44 @@ const MutabaahReport = ({ user, onClose }) => {
                               {data.sholat_wajib}/5
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {/* Display checkmark/X for boolean values */}
-                              {data.sholat_tahajud ? (
-                                <span className="text-green-600">✓</span>
+                              {isValueActive(data.sholat_tahajud) ? (
+                                <div className="flex items-center">
+                                  <span className="text-green-600 mr-1">✓</span>
+                                  <span>{data.sholat_tahajud}</span>
+                                </div>
                               ) : (
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.tilawah_quran ? (
-                                <span className="text-green-600">✓</span>
+                              {isValueActive(data.sholat_dhuha) ? (
+                                <div className="flex items-center">
+                                  <span className="text-green-600 mr-1">✓</span>
+                                  <span>{data.sholat_dhuha}</span>
+                                </div>
                               ) : (
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.menyimak_mq_pagi ? (
-                                <span className="text-green-600">✓</span>
+                              {isValueActive(data.tilawah_quran) ? (
+                                <div className="flex items-center">
+                                  <span className="text-green-600 mr-1">✓</span>
+                                  <span>{data.tilawah_quran}</span>
+                                </div>
                               ) : (
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {data.haid ? 'Ya' : 'Tidak'}
+                              {isValueActive(data.menyimak_mq_pagi) ? (
+                                <div className="flex items-center">
+                                  <span className="text-green-600 mr-1">✓</span>
+                                  <span>{data.menyimak_mq_pagi}</span>
+                                </div>
+                              ) : (
+                                <span className="text-red-600">✗</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -322,6 +350,22 @@ const MutabaahReport = ({ user, onClose }) => {
                         <div className="text-sm text-indigo-800">Tilawah Quran (Hari)</div>
                         <div className="text-2xl font-bold text-indigo-600">
                           {stats.tilawahDays}/{allUserData.length}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Additional Statistics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <div className="text-sm text-purple-800">Dhuha (Hari)</div>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {stats.dhuhaDays}/{allUserData.length}
+                        </div>
+                      </div>
+                      <div className="bg-amber-50 p-4 rounded-lg">
+                        <div className="text-sm text-amber-800">Terjemah Quran (Hari)</div>
+                        <div className="text-2xl font-bold text-amber-600">
+                          {stats.terjemahDays}/{allUserData.length}
                         </div>
                       </div>
                     </div>
