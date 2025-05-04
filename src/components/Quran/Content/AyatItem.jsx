@@ -85,6 +85,8 @@ const AyatItem = ({ ayat, selectedSurah }) => {
       return;
     }
 
+    
+
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     try {
       const response = await fetch(`${API_URL}/quran/bookmark`, {
@@ -143,9 +145,23 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
           <button 
             onClick={saveBookmark}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
           >
-            {bookmark ? 'Bookmark Tersimpan' : 'Simpan Bookmark'}
+            {bookmark ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
+                </svg>
+                <span>Tersimpan</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                </svg>
+                <span>Simpan</span>
+              </>
+            )}
           </button>
         </div>
       </div>

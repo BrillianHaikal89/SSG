@@ -12,7 +12,33 @@ const DashboardContent = ({
   navigateToPeserta,
   navigateToScan
 }) => {
-  const { role } = useAuthStore();
+  const { role, user } = useAuthStore();
+  // const checkBookmark = async () => {
+  //   if (!user?.userId) return;
+    
+  //   setIsLoading(true);
+  //   try {
+  //     const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  //     const response = await fetch(`${API_URL}/quran/bookmark?user_id=${user?.userId}`);
+      
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch bookmark');
+  //     }
+
+  //     const { data } = await response.json();
+      
+  //     // Cek apakah ayat saat ini sudah di-bookmark
+  //     if (data && data.surah === (selectedSurah || ayat.surah_name) && data.ayah === ayat.no_ayat) {
+  //       setBookmark(data);
+  //     } else {
+  //       setBookmark(null);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error checking bookmark:', error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   
   // Format date for display - showing current date
   const formatDate = () => {
