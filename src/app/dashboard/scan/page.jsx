@@ -3,30 +3,38 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { Camera, CameraOff, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function QrCodeScanner() {
   const [scanning, setScanning] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const scannerRef = useRef(null);
-  const scannerDivRef = useRef(null);
 
-  // Initialize QR scanner
   useEffect(() => {
-    startScanner();
+    // Clean up scanner on component unmount
+    return () => {
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.clear();
+          scannerRef.current = null;
+        } catch (error) {
+          console.error("Error cleaning up scanner:", error);
+        }
+      }
+    };
   }, []);
-  
+
   const onScanSuccess = (decodedText) => {
     setScannedCode(decodedText);
     stopScanner();
     submitAttendance(decodedText);
   };
-  
-  // Stop scanner
+
   const stopScanner = () => {
     if (scannerRef.current) {
       try {
@@ -43,27 +51,50 @@ export default function QrCodeScanner() {
     setScannedCode(null);
     setScanResult(null);
     setScanning(true);
-  
-    const config = {
-      fps: 10,
-      qrbox: 250,
-    };
-  
-    if (!scannerRef.current) {
-      scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
-      scannerRef.current.render(onScanSuccess, (err) => {
-        console.warn("QR scan error:", err);
-      });
-    }
+
+    // Short delay to ensure DOM is fully ready
+    setTimeout(() => {
+      const qrReaderElement = document.getElementById("qr-reader");
+      
+      if (!qrReaderElement) {
+        console.error("QR reader element not found");
+        setScanning(false);
+        toast.error("Gagal memulai scanner. Silakan coba lagi.");
+        return;
+      }
+
+      const config = {
+        fps: 10,
+        qrbox: 250,
+      };
+
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.clear();
+        } catch (error) {
+          console.error("Error clearing existing scanner:", error);
+        }
+      }
+
+      try {
+        scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
+        scannerRef.current.render(onScanSuccess, (err) => {
+          console.warn("QR scan error:", err);
+        });
+      } catch (error) {
+        console.error("Error initializing QR scanner:", error);
+        setScanning(false);
+        toast.error("Gagal memulai scanner. Silakan coba lagi.");
+      }
+    }, 300);
   };
 
-  // Submit attendance data
   const submitAttendance = async (qrcodeText) => {
     if (!qrcodeText) return;
-  
+
     setSubmitting(true);
     setScanResult(null);
-  
+
     try {
       const response = await fetch(`${API_URL}/users/presensi`, {
         method: 'POST',
@@ -72,15 +103,15 @@ export default function QrCodeScanner() {
         },
         body: JSON.stringify({ qrcode_text: qrcodeText }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         setScanResult({
           success: true,
           message: data.message,
         });
-        toast.success(`${data.message} !`);
+        toast.success(`${data.message}`);
       } else {
         setScanResult({
           success: false,
@@ -100,7 +131,6 @@ export default function QrCodeScanner() {
     }
   };
 
-  // Reset the form
   const resetForm = () => {
     setScannedCode(null);
     setScanResult(null);
@@ -130,22 +160,21 @@ export default function QrCodeScanner() {
           </div>
         )}
 
-        {scanning && (
-          <div className="p-4">
-            <div className="mb-4 text-center text-sm text-gray-500">
-              Posisikan QR code di dalam kotak
-            </div>
-            <div id="qr-reader" className="w-full"></div>
-            <div className="text-center mt-4">
-              <button
-                onClick={stopScanner}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-              >
-                Batalkan
-              </button>
-            </div>
+        {/* Always include the QR reader div in the DOM */}
+        <div id="qr-reader-container" className={scanning ? "block p-4" : "hidden"}>
+          <div className="mb-4 text-center text-sm text-gray-500">
+            Posisikan QR code di dalam kotak
           </div>
-        )}
+          <div id="qr-reader" className="w-full"></div>
+          <div className="text-center mt-4">
+            <button
+              onClick={stopScanner}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            >
+              Batalkan
+            </button>
+          </div>
+        </div>
 
         {scannedCode && !scanResult && (
           <div className="p-6">
