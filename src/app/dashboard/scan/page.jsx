@@ -40,12 +40,24 @@ export default function QrCodeScanner() {
     }
   };
 
-  // Start scanner
   const startScanner = () => {
     setScannedCode(null);
     setScanResult(null);
     setScanning(true);
+  
+    const config = {
+      fps: 10,
+      qrbox: 250,
+    };
+  
+    if (!scannerRef.current) {
+      scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
+      scannerRef.current.render(onScanSuccess, (err) => {
+        console.warn("QR scan error:", err);
+      });
+    }
   };
+  
 
   // Handle attendance type selection
   const handleAttendanceTypeChange = (type) => {
@@ -169,7 +181,7 @@ export default function QrCodeScanner() {
                 Scan Ulang
               </button>
               
-              <button
+              {/* <button
                 onClick={submitAttendance}
                 disabled={submitting}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
@@ -185,7 +197,7 @@ export default function QrCodeScanner() {
                     Lakukan Presensi {attendanceType === 'masuk' ? 'Masuk' : 'Keluar'}
                   </>
                 )}
-              </button>
+              </button> */}
             </div>
           </div>
         )}
