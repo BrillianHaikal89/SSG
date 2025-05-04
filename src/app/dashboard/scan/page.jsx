@@ -3,13 +3,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { Camera, CameraOff, LogIn, LogOut, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Camera, CameraOff, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function QrCodeScanner() {
   const [scanning, setScanning] = useState(false);
-  const [attendanceType, setAttendanceType] = useState('masuk'); // Default to 'masuk'
   const [scannedCode, setScannedCode] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [scanResult, setScanResult] = useState(null);
@@ -57,12 +56,6 @@ export default function QrCodeScanner() {
       });
     }
   };
-  
-
-  // Handle attendance type selection
-  const handleAttendanceTypeChange = (type) => {
-    setAttendanceType(type);
-  };
 
   // Submit attendance data
   const submitAttendance = async (qrcodeText) => {
@@ -83,8 +76,16 @@ export default function QrCodeScanner() {
       const data = await response.json();
   
       if (response.ok) {
+        setScanResult({
+          success: true,
+          message: data.message,
+        });
         toast.success(`${data.message} !`);
       } else {
+        setScanResult({
+          success: false,
+          message: data.message || 'Gagal mencatat presensi',
+        });
         toast.error(data.message || `Gagal mencatat presensi`);
       }
     } catch (error) {
@@ -98,12 +99,12 @@ export default function QrCodeScanner() {
       setSubmitting(false);
     }
   };
-  
 
   // Reset the form
   const resetForm = () => {
     setScannedCode(null);
     setScanResult(null);
+    startScanner();
   };
 
   return (
@@ -115,38 +116,19 @@ export default function QrCodeScanner() {
         <p className="text-gray-600">Pindai QR code untuk mencatat kehadiran</p>
       </div>
 
-      {/* Attendance type selector */}
-      <div className="mb-6">
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => handleAttendanceTypeChange('masuk')}
-            className={`flex items-center px-6 py-3 rounded-lg ${
-              attendanceType === 'masuk'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            <LogIn size={20} className="mr-2" />
-            Masuk
-          </button>
-          
-          <button
-            onClick={() => handleAttendanceTypeChange('keluar')}
-            className={`flex items-center px-6 py-3 rounded-lg ${
-              attendanceType === 'keluar'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            <LogOut size={20} className="mr-2" />
-            Keluar
-          </button>
-        </div>
-      </div>
-
       {/* QR Scanner Section */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-        
+        {!scanning && !scannedCode && !scanResult && (
+          <div className="p-6 text-center">
+            <button
+              onClick={startScanner}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center mx-auto"
+            >
+              <Camera size={20} className="mr-2" />
+              Mulai Scan QR Code
+            </button>
+          </div>
+        )}
 
         {scanning && (
           <div className="p-4">
@@ -168,36 +150,18 @@ export default function QrCodeScanner() {
         {scannedCode && !scanResult && (
           <div className="p-6">
             <div className="text-center mb-6">
-              <CheckCircle size={48} className="mx-auto mb-2 text-green-500" />
-              <h3 className="text-lg font-medium">QR Code Terdeteksi!</h3>
-              <p className="text-gray-500 break-all mt-2">{scannedCode}</p>
-            </div>
-            
-            <div className="flex justify-center space-x-3">
-              <button
-                onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Scan Ulang
-              </button>
-              
-              {/* <button
-                onClick={submitAttendance}
-                disabled={submitting}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {submitting ? (
-                  <>
-                    <RefreshCw size={20} className="mr-2 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle size={20} className="mr-2" />
-                    Lakukan Presensi {attendanceType === 'masuk' ? 'Masuk' : 'Keluar'}
-                  </>
-                )}
-              </button> */}
+              {submitting ? (
+                <div className="flex items-center justify-center">
+                  <RefreshCw size={48} className="animate-spin text-blue-500" />
+                  <span className="ml-2 text-lg">Memproses...</span>
+                </div>
+              ) : (
+                <>
+                  <CheckCircle size={48} className="mx-auto mb-2 text-green-500" />
+                  <h3 className="text-lg font-medium">QR Code Terdeteksi!</h3>
+                  <p className="text-gray-500 break-all mt-2">{scannedCode}</p>
+                </>
+              )}
             </div>
           </div>
         )}
