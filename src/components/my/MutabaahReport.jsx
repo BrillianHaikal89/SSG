@@ -54,13 +54,12 @@ const MutabaahReport = ({ user, onClose }) => {
       setLoadingReport(true);
       
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}`, {
+      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}&month=${month}&year=${year}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ month, year }),
-      });
+          }
+        });
       
       const result = await response.json();
       console.log("my", result);
