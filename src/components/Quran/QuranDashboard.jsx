@@ -44,20 +44,7 @@ const QuranDashboard = () => {
   
   // Handle client-side rendering and responsive layout
   useEffect(() => {
-    setIsClient(true);
-
-    const userId = user?.userId; // ganti dengan user login aktif
-
-    const user = 1; // ganti dengan user login aktif
-    fetch(`http://localhost:3001/bookmark?user_id=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setBookmark(data.data);
-        }
-      })
-      .catch(err => console.error("Gagal ambil bookmark:", err));
-    
+    setIsClient(true);    
     // Check if mobile view based on screen width
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 640);
