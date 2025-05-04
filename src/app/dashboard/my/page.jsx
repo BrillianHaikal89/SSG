@@ -9,11 +9,11 @@ import MutabaahReport from '../../../components/my/MutabaahReport';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Hijri month names - updated to match the format shown
+// Hijri month names
 const HIJRI_MONTHS = [
-  "Muharram", "Safar", "Rabi'ul Awal", "Rabi'ul Akhir",
-  "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban",
-  "Ramadhan", "Syawal", "Dzulka'dah", "Dzulhijjah"
+  "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+  "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+  "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
 ];
 
 // Default form data structure
@@ -60,130 +60,43 @@ export default function MutabaahYaumiyahPage() {
     try {
       const date = new Date(gregorianDate);
       
-      // For May 2025, use a mapping table approach for accurate Hijri dates
-      // This ensures the correct day sequences for Dzulka'dah 1446
-      
-      // Get day and month from the Gregorian date
+      // Julian day calculation
       const day = date.getDate();
-      const month = date.getMonth() + 1; // 1-12 for months
+      const month = date.getMonth() + 1;
       const year = date.getFullYear();
       
-      // Default Hijri values
-      let hDay = 1;
-      let hMonthIndex = 10; // Dzulka'dah (11th month, 0-indexed is 10)
-      const hYear = 1446;
+      // Simplified and more accurate Hijri calculation
+      const jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
+                Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
+                Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
+                day - 32075;
       
-      // Mapping table for May 2025
-      if (year === 2025 && month === 5) {
-        // May 2025 mapping to Dzulka'dah 1446
-        const mayMapping = {
-          1: 3,   // May 1 → 3 Dzulka'dah
-          2: 4,   // May 2 → 4 Dzulka'dah
-          3: 5,   // May 3 → 5 Dzulka'dah
-          4: 6,   // May 4 (today) → 6 Dzulka'dah
-          5: 7,   // May 5 → 7 Dzulka'dah
-          6: 8,   // May 6 → 8 Dzulka'dah
-          7: 9,   // etc.
-          8: 10,
-          9: 11,
-          10: 12,
-          11: 13,
-          12: 14,
-          13: 15,
-          14: 16,
-          15: 17,
-          16: 18,
-          17: 19,
-          18: 20,
-          19: 21,
-          20: 22,
-          21: 23,
-          22: 24,
-          23: 25,
-          24: 26,
-          25: 27,
-          26: 28,
-          27: 29,
-          28: 30,
-          29: 1,   // May 29 → 1 Dzulhijjah
-          30: 2,   // May 30 → 2 Dzulhijjah
-          31: 3    // May 31 → 3 Dzulhijjah
-        };
-        
-        hDay = mayMapping[day] || day;
-        
-        // If we're at the end of Dzulka'dah and into Dzulhijjah
-        if (day >= 29) {
-          hMonthIndex = 11; // Dzulhijjah (12th month, 0-indexed is 11)
-        }
-      }
+      // Convert to Islamic date
+      const shift1 = 8.01/60;
+      const z = jd + shift1;
+      const a = Math.floor((z + 0.5) * 0.97253);
+      const d = Math.floor((a - 0.5) / 354);
+      const e = z + 0.5 - 354 * d - Math.floor(d / 30) * d;
+      const g = Math.floor(e * 30.6);
+      const h = e - Math.floor(g * 0.0328);
       
-      // April 2025 mapping
-      else if (year === 2025 && month === 4) {
-        // April 2025 mapping to Shawwal/Dzulka'dah 1446
-        const aprilMapping = {
-          1: 3,    // April 1 → 3 Shawwal
-          2: 4,
-          3: 5,
-          4: 6,
-          5: 7,
-          6: 8,
-          7: 9,
-          8: 10,
-          9: 11,
-          10: 12,
-          11: 13,
-          12: 14,
-          13: 15,
-          14: 16,
-          15: 17,
-          16: 18,
-          17: 19,
-          18: 20,
-          19: 21,
-          20: 22,
-          21: 23,
-          22: 24,
-          23: 25,
-          24: 26,
-          25: 27,
-          26: 28,
-          27: 29,
-          28: 30,  // April 28 → 30 Shawwal
-          29: 1,   // April 29 → 1 Dzulka'dah
-          30: 2    // April 30 → 2 Dzulka'dah
-        };
-        
-        hDay = aprilMapping[day] || day;
-        
-        // If we're at the end of Shawwal and into Dzulka'dah
-        if (day >= 29) {
-          hMonthIndex = 10; // Dzulka'dah
-        } else {
-          hMonthIndex = 9; // Shawwal (10th month, 0-indexed is 9)
-        }
-      }
-      
-      // For any other date, use a simpler approximation
-      else {
-        // Simple offset-based approximation
-        const offset = day % 30;
-        hDay = offset + 1;
-      }
+      const islamicMonth = g;
+      const islamicDay = Math.floor(h + 0.5);
+      const islamicYear = d + 16;
       
       return {
-        day: hDay,
-        month: hMonthIndex,
-        year: hYear,
-        formatted: `${hDay} ${HIJRI_MONTHS[hMonthIndex]} ${hYear} H`
+        day: islamicDay,
+        month: islamicMonth,
+        year: islamicYear,
+        formatted: `${islamicDay} ${HIJRI_MONTHS[islamicMonth]} ${islamicYear} H`
       };
     } catch (error) {
       console.error('Error calculating Hijri date:', error);
       return { 
-        day: 6, 
-        month: 10, 
+        day: 1, 
+        month: 0, 
         year: 1446, 
-        formatted: "6 Dzulka'dah 1446 H" 
+        formatted: "1 Muharram 1446 H" 
       };
     }
   };
@@ -191,49 +104,71 @@ export default function MutabaahYaumiyahPage() {
   // Get Hijri date from Gregorian date using browser API or fallback
   const getHijriDate = (date) => {
     try {
-      // Skip browser's Intl.DateTimeFormat which returns Arabic text
-      // Always use our custom algorithm for consistent Latin/English output
-      return calculateHijriDate(date).formatted;
+      // Try using Intl.DateTimeFormat first if browser supports it
+      if (typeof Intl !== 'undefined' && 
+          Intl.DateTimeFormat && 
+          Intl.DateTimeFormat.supportedLocalesOf(['ar-SA-u-ca-islamic']).length > 0) {
+        
+        const options = {
+          calendar: 'islamic',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        };
+        
+        return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(date);
+      } else {
+        // Fallback to our algorithm
+        return calculateHijriDate(date).formatted;
+      }
     } catch (error) {
       console.error('Error getting Hijri date:', error);
-      return "1 Muharram 1446 H"; // Default fallback in Latin script
+      return calculateHijriDate(date).formatted;
     }
   };
 
-  // Format Hijri date for display - ensures Latin script only
+  // Format Hijri date for display - Latin numerals only
   const formatHijriDate = (hijriString) => {
     if (!hijriString) return '';
     
-    // Since we're now always using our algorithm that returns Latin/English,
-    // this function is simpler - just return the already-formatted string
-    return hijriString;
+    // If it's already a formatted string from our calculation function
+    if (hijriString.includes('H')) {
+      return hijriString;
+    }
+    
+    try {
+      // Convert Arabic numerals to Latin
+      const arabicToLatinNumerals = {
+        '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+        '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+      };
+      
+      let latinNumerals = hijriString;
+      for (const [arabic, latin] of Object.entries(arabicToLatinNumerals)) {
+        latinNumerals = latinNumerals.replace(new RegExp(arabic, 'g'), latin);
+      }
+      
+      // Replace Arabic text with English
+      latinNumerals = latinNumerals.replace(/ذو القعدة/, "Dhu al-Qi'dah");
+      latinNumerals = latinNumerals.replace(/هـ/, "H");
+      
+      return latinNumerals;
+    } catch (error) {
+      console.error('Error formatting Hijri date:', error);
+      return hijriString; // Return original if formatting fails
+    }
   };
 
   // Format date for display in UI
   const formatDate = (date) => {
     if (!date) return '';
     try {
-      // Map day names in Indonesian - using Ahad for Sunday
-      const dayNames = {
-        0: 'Ahad',
-        1: 'Senin', 
-        2: 'Selasa', 
-        3: 'Rabu', 
-        4: 'Kamis', 
-        5: 'Jumat', 
-        6: 'Sabtu'
-      };
-      
-      // Get day of week (0-6, where 0 is Sunday)
-      const dayOfWeek = date.getDay();
-      
-      // Get day, month, year
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = date.toLocaleDateString('id-ID', { month: 'long' });
-      const year = date.getFullYear();
-      
-      // Format: "Ahad, 04 Mei 2025"
-      return `${dayNames[dayOfWeek]}, ${day} ${month} ${year}`;
+      return date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     } catch (error) {
       console.error('Error formatting date:', error);
       return '';
@@ -244,12 +179,10 @@ export default function MutabaahYaumiyahPage() {
   const formatTime = (date) => {
     if (!date) return '';
     try {
-      // Format: "10:27:12"
       return date.toLocaleTimeString('id-ID', {
         hour: '2-digit', 
         minute: '2-digit', 
-        second: '2-digit',
-        hour12: false
+        second: '2-digit'
       });
     } catch (error) {
       console.error('Error formatting time:', error);
@@ -362,23 +295,12 @@ export default function MutabaahYaumiyahPage() {
   // Format date for display in dropdown
   const formatDateForDisplay = (date) => {
     try {
-      // Indonesian day names with "Ahad" instead of "Minggu"
-      const dayNames = {
-        0: 'Ahad',    // Sunday changed to Ahad
-        1: 'Senin',
-        2: 'Selasa',
-        3: 'Rabu',
-        4: 'Kamis',
-        5: 'Jumat',
-        6: 'Sabtu'
-      };
-      
-      const day = date.getDate();
-      const month = date.toLocaleDateString('id-ID', { month: 'long' });
-      const year = date.getFullYear();
-      const dayOfWeek = date.getDay(); // 0 for Sunday, 1 for Monday, etc.
-      
-      return `${dayNames[dayOfWeek]}, ${day} ${month} ${year}`;
+      return date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     } catch (error) {
       console.error('Error formatting date for display:', error);
       return String(date);
@@ -421,31 +343,6 @@ export default function MutabaahYaumiyahPage() {
     const lateDays = Math.abs(daysDiff);
     return `Terlambat ${lateDays} hari`;
   };
-  
-  // Get class for status badge based on selected date
-  const getStatusBadgeClass = () => {
-    // If menstruation status is active
-    if (formData.haid) {
-      return 'bg-red-600/40 border-red-300';
-    }
-    
-    // Check if it's today
-    if (isToday(selectedDate)) {
-      return 'bg-green-600/40 border-green-300'; // Today - matches header
-    }
-    
-    // Check if it's yesterday or older
-    if (calculateDaysDifference(selectedDate) < 0) {
-      if (headerBgColor === 'bg-orange-500') {
-        return 'bg-orange-500/40 border-orange-300';
-      } else if (headerBgColor === 'bg-amber-700') {
-        return 'bg-amber-700/40 border-amber-300';
-      }
-    }
-    
-    // Default or future
-    return 'bg-green-600/40 border-green-300';
-  };
 
   // Handle date selection change
   const handleDateChange = (e) => {
@@ -458,16 +355,9 @@ export default function MutabaahYaumiyahPage() {
       const selectedDate = new Date(newDate);
       if (!isNaN(selectedDate.getTime())) {
         setSelectedDateTime(selectedDate);
-        
-        // Update Hijri date immediately when date changes
-        const hijriResult = calculateHijriDate(selectedDate);
-        setHijriDate(hijriResult.formatted);
+        updateHijriDate(selectedDate);
       }
       
-      // Update header color based on new date
-      updateHeaderBgColor(newDate);
-      
-      // Check for existing data
       checkExistingData(newDate);
     } catch (error) {
       console.error('Error handling date change:', error);
@@ -644,13 +534,11 @@ export default function MutabaahYaumiyahPage() {
         const currentDate = new Date();
         const todayString = currentDate.toISOString().split('T')[0];
         
-        // Add today
         options.push({
           value: todayString,
           label: formatDateForDisplay(currentDate)
         });
         
-        // Add past 7 days only
         for (let i = 1; i <= 7; i++) {
           const pastDate = new Date();
           pastDate.setDate(currentDate.getDate() - i);
@@ -659,9 +547,6 @@ export default function MutabaahYaumiyahPage() {
             label: formatDateForDisplay(pastDate)
           });
         }
-        
-        // Sort by date descending (newest first)
-        options.sort((a, b) => new Date(b.value) - new Date(a.value));
         
         return options;
       } catch (error) {
@@ -678,8 +563,6 @@ export default function MutabaahYaumiyahPage() {
     setSelectedDate(todayString);
     setFormData(prev => ({ ...prev, date: todayString }));
     setSelectedDateTime(today);
-    
-    // Initialize Hijri date for today
     updateHijriDate(today);
   }, []);
 
@@ -694,23 +577,6 @@ export default function MutabaahYaumiyahPage() {
       try {
         const now = new Date();
         setCurrentDateTime(now);
-        
-        // Check if the date has changed since last update
-        const currentDay = now.getDate();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        
-        // Store previous date to detect day changes
-        const prevDate = currentDateTime;
-        const prevDay = prevDate ? prevDate.getDate() : -1;
-        const prevMonth = prevDate ? prevDate.getMonth() : -1;
-        const prevYear = prevDate ? prevDate.getFullYear() : -1;
-        
-        // If the day has changed, update the Hijri date
-        if (currentDay !== prevDay || currentMonth !== prevMonth || currentYear !== prevYear) {
-          console.log('Day changed, updating Hijri date');
-          updateHijriDate(now);
-        }
         
         // Get today's date in YYYY-MM-DD format
         const todayString = now.toISOString().split('T')[0];
@@ -734,7 +600,7 @@ export default function MutabaahYaumiyahPage() {
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [currentDateTime, selectedDate, formData.haid, formData.date]);
+  }, [selectedDate, formData.haid, formData.date]);
 
   // Effect to update selected date time and hijri date when form date changes
   useEffect(() => {
@@ -780,23 +646,24 @@ export default function MutabaahYaumiyahPage() {
           <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
           
-          {/* Hijri date and Gregorian date first */}
-          <div className="text-center mt-3">
-            <p className="text-md sm:text-lg font-medium text-white">{formatHijriDate(hijriDate) || '...'}</p>
-            <p className="text-md sm:text-lg text-white">{formatDate(selectedDateTime)}</p>
-            
-            {/* Time display below the date - smaller size */}
-            <p className="text-xl sm:text-2xl font-medium text-white mt-1">{formatTime(currentDateTime)}</p>
-            
-            {/* Status indicator with border */}
-            {getStatusText() && (
-              <div className="mt-3">
-                <p className={`text-white text-xs sm:text-sm font-medium ${getStatusBadgeClass()} px-4 py-1.5 rounded-full inline-block border-2`}>
+          {/* Hijri and Gregorian dates below the name */}
+          <div className="flex justify-center mt-1">
+            <div className="bg-white/20 rounded-full px-3 py-1 text-xs text-white">
+              <span className="font-medium">{formatHijriDate(hijriDate) || '...'}</span>
+            </div>
+          </div>
+          
+          {currentDateTime && (
+            <div className="text-center mt-2">
+              <p className="text-xs sm:text-sm">{formatDate(currentDateTime)}</p>
+              <p className="text-base sm:text-lg font-bold">{formatTime(currentDateTime)}</p>
+              {getStatusText() && (
+                <p className="text-white text-xs sm:text-sm font-medium mt-1 bg-white/20 px-2 py-1 rounded-full inline-block">
                   {getStatusText()}
                 </p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Main Form */}
