@@ -63,6 +63,7 @@ const MutabaahReport = ({ user, onClose }) => {
       });
       
       const result = await response.json();
+      console.log("my", result);
       
       if (response.ok && result.status === 'success') {
         // Process and normalize the data from the API
