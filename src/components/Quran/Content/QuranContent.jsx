@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
@@ -21,6 +21,13 @@ const QuranContent = ({
       </div>
     );
   }
+
+  const [bookmarkData, setBookmarkData] = useState({
+    surah: null,
+    ayah: null,
+    page: null,
+    juz: null
+  });
   
   if (loading) {
     return <ContentLoader />;

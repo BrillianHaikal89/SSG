@@ -82,6 +82,11 @@ const AyatItem = ({ ayat, selectedSurah }) => {
     }
   };
 
+  console.log('AyatItem:', ayat);
+  console.log('Selected Surah:', selectedSurah);
+  console.log('nama sura:', ayat.surah_name);
+  
+
   return (
     <div className="ayat-item">
       <div className="flex items-start">
@@ -100,6 +105,7 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           </div>
           {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
         </div>
+
       </div>
     </div>
   );
