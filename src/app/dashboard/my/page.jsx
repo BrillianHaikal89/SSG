@@ -80,7 +80,7 @@ export default function MutabaahYaumiyahPage() {
       jd = jd - 10631 * k + 354;
       
       // Get the Islamic month and day
-      const hYear = Math.floor((10631 * k + 354) / 10631.0) + 1;
+      let hYear = Math.floor((10631 * k + 354) / 10631.0) + 1;
       
       const z = jd - 0.5;
       const cyc = Math.floor(z / 10631.0);
@@ -89,6 +89,9 @@ export default function MutabaahYaumiyahPage() {
       const j = Math.floor((z1 - shift1) / 29.5);
       const hMonth = Math.min(11, Math.max(0, j));  // Ensure it's between 0-11
       const hDay = Math.floor(z1 - 29.5 * j + 1);
+      
+      // Force year to be 1446 as requested
+      hYear = 1446;
       
       return {
         day: hDay,
@@ -339,6 +342,31 @@ export default function MutabaahYaumiyahPage() {
     // Past date (more than yesterday)
     const lateDays = Math.abs(daysDiff);
     return `Terlambat ${lateDays} hari`;
+  };
+  
+  // Get class for status badge based on selected date
+  const getStatusBadgeClass = () => {
+    // If menstruation status is active
+    if (formData.haid) {
+      return 'bg-red-600/40';
+    }
+    
+    // Check if it's today
+    if (isToday(selectedDate)) {
+      return 'bg-green-600/40'; // Today - matches header
+    }
+    
+    // Check if it's yesterday or older
+    if (calculateDaysDifference(selectedDate) < 0) {
+      if (headerBgColor === 'bg-orange-500') {
+        return 'bg-orange-500/40';
+      } else if (headerBgColor === 'bg-amber-700') {
+        return 'bg-amber-700/40';
+      }
+    }
+    
+    // Default or future
+    return 'bg-green-600/40';
   };
 
   // Handle date selection change
@@ -667,9 +695,9 @@ export default function MutabaahYaumiyahPage() {
           <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
           <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
           
-          {/* Current time display */}
+          {/* Current time display - changed to white */}
           <div className="text-center mt-3">
-            <p className="text-4xl sm:text-5xl font-bold text-yellow-300">{formatTime(currentDateTime)}</p>
+            <p className="text-4xl sm:text-5xl font-bold text-white">{formatTime(currentDateTime)}</p>
           </div>
           
           {/* Hijri date and Gregorian date - using white color */}
@@ -678,7 +706,7 @@ export default function MutabaahYaumiyahPage() {
             <p className="text-md sm:text-lg text-white">{formatDate(selectedDateTime)}</p>
             
             {getStatusText() && (
-              <p className="text-white text-xs sm:text-sm font-medium mt-3 bg-green-500/30 px-4 py-1.5 rounded-full inline-block">
+              <p className={`text-white text-xs sm:text-sm font-medium mt-3 ${getStatusBadgeClass()} px-4 py-1.5 rounded-full inline-block`}>
                 {getStatusText()}
               </p>
             )}
@@ -886,4 +914,4 @@ export default function MutabaahYaumiyahPage() {
       )}
     </div>
   );
-  }
+}
