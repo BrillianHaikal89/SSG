@@ -1,48 +1,45 @@
 import React from 'react';
+import useAuthStore from '../../../stores/authStore';
 
 const AyatItem = ({ ayat, selectedSurah }) => {
-  // Function to apply Tajwid highlighting matching the screenshot categories
+  const [bookmark, setBookmark] = React.useState(null);
+  const { user } = useAuthStore();
+
   const renderArabicWithTajwid = (arabicText) => {
-    // Tajwid rules organized by categories with colors matching the screenshot
     const tajwidRules = [
       // Nun Sukun & Tanwin Rules
-      { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' }, // Izhar
-      { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' }, // Idgham
-      { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' }, // Iqlab
-      { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' }, // Ikhfa
+      { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
+      { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
+      { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
+      { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
       
       // Mim Sukun Rules
-      { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' }, // Idgham Syafawi
-      { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' }, // Ikhfa Syafawi
-      { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' }, // Izhar Syafawi
+      { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
+      { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
+      { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
       
-      // Mad (Elongation) Rules
-      { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' }, // Mad Thabii
-      { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' }, // Mad Lazim
-      { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' }, // Mad Arid
-      { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' }, // Mad Lin
+      // Mad Rules
+      { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
+      { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
+      { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
+      { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
       
       // Other Rules
-      { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' }, // Qalqalah
-      { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' }, // Lafadz Allah
-      { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' }, // Tashdid/Syaddah
-      { regex: /ـ۠/g, rule: 'ghunnah', color: '#F44336' }, // Ghunnah
-      { regex: /ْ/g, rule: 'sukun', color: '#9C27B0' }, // Sukun
-      { regex: /ً|ٍ|ٌ/g, rule: 'tanwin', color: '#2196F3' }, // Tanwin
-      { regex: /ۜ|ۛ|ۚ|ۖ|ۗ|ۙ|ۘ/g, rule: 'waqf', color: '#795548' }, // Waqf marks
+      { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
+      { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
+      { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
+      { regex: /ـ۠/g, rule: 'ghunnah', color: '#F44336' },
+      { regex: /ْ/g, rule: 'sukun', color: '#9C27B0' },
+      { regex: /ً|ٍ|ٌ/g, rule: 'tanwin', color: '#2196F3' },
+      { regex: /ۜ|ۛ|ۚ|ۖ|ۗ|ۙ|ۘ/g, rule: 'waqf', color: '#795548' },
     ];
 
-    // Map to store already processed parts of text to avoid duplicates
     const processedMap = new Map();
-    
-    // Clone the text for processing
     let decoratedText = arabicText;
     let hasMatches = false;
     
-    // Create spans for matches, starting from the most specific rules
     tajwidRules.forEach(({ regex, rule, color }) => {
       decoratedText = decoratedText.replace(regex, (match) => {
-        // Check if this exact match has already been processed
         if (processedMap.has(match + rule)) {
           return processedMap.get(match + rule);
         }
@@ -57,35 +54,69 @@ const AyatItem = ({ ayat, selectedSurah }) => {
     return decoratedText;
   };
 
-  // Get user-friendly rule name for tooltip
   const getTajwidRuleName = (rule) => {
-    switch(rule) {
-      case 'izhar': return 'Izhar';
-      case 'idgham': return 'Idgham';
-      case 'iqlab': return 'Iqlab';
-      case 'ikhfa': return 'Ikhfa';
-      case 'idgham-syafawi': return 'Idgham Syafawi';
-      case 'ikhfa-syafawi': return 'Ikhfa Syafawi';
-      case 'izhar-syafawi': return 'Izhar Syafawi';
-      case 'mad-thabii': return 'Mad Thabii';
-      case 'mad-lazim': return 'Mad Lazim';
-      case 'mad-arid': return 'Mad Arid';
-      case 'mad-lin': return 'Mad Lin';
-      case 'qalqalah': return 'Qalqalah';
-      case 'lafadz-allah': return 'Lafadz Allah';
-      case 'tashdid': return 'Tashdid';
-      case 'ghunnah': return 'Ghunnah';
-      case 'sukun': return 'Sukun';
-      case 'tanwin': return 'Tanwin';
-      case 'waqf': return 'Tanda Waqaf';
-      default: return rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
+    const ruleNames = {
+      'izhar': 'Izhar',
+      'idgham': 'Idgham',
+      'iqlab': 'Iqlab',
+      'ikhfa': 'Ikhfa',
+      'idgham-syafawi': 'Idgham Syafawi',
+      'ikhfa-syafawi': 'Ikhfa Syafawi',
+      'izhar-syafawi': 'Izhar Syafawi',
+      'mad-thabii': 'Mad Thabii',
+      'mad-lazim': 'Mad Lazim',
+      'mad-arid': 'Mad Arid',
+      'mad-lin': 'Mad Lin',
+      'qalqalah': 'Qalqalah',
+      'lafadz-allah': 'Lafadz Allah',
+      'tashdid': 'Tashdid',
+      'ghunnah': 'Ghunnah',
+      'sukun': 'Sukun',
+      'tanwin': 'Tanwin',
+      'waqf': 'Tanda Waqaf'
+    };
+    return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  console.log('AyatItem:', ayat);
-  console.log('Selected Surah:', selectedSurah);
-  console.log('nama sura:', ayat.surah_name);
-  
+  const saveBookmark = async () => {
+    if (!user) {
+      alert('Anda harus login terlebih dahulu');
+      return;
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    try {
+      const response = await fetch(`${API_URL}/quran/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user?.userId, // Use actual user ID from auth store
+          surah: selectedSurah || ayat.surah_name, // Use selectedSurah if available
+          ayah: ayat.no_ayat,
+          page: ayat.no_hal,
+          juz: ayat.no_juz
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      alert(data.message);
+      setBookmark({
+        surah: selectedSurah || ayat.surah_name,
+        ayah: ayat.no_ayat,
+        page: ayat.no_hal,
+        juz: ayat.no_juz
+      });
+    } catch (error) {
+      console.error('Error saving bookmark:', error);
+      alert('Gagal menyimpan bookmark: ' + error.message);
+    }
+  };
 
   return (
     <div className="ayat-item">
@@ -99,13 +130,19 @@ const AyatItem = ({ ayat, selectedSurah }) => {
               <span className="text-sm font-medium text-blue-800">{ayat.surah_name}</span>
             </div>
           )}
-          {/* Fixed: Replace <p> with <div> to avoid nesting <div> inside <p> */}
-          <div className="arab" dir="rtl" 
-               dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}>
-          </div>
+          <div 
+            className="arab" 
+            dir="rtl" 
+            dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
+          />
           {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
+          <button 
+            onClick={saveBookmark}
+            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            {bookmark ? 'Bookmark Tersimpan' : 'Simpan Bookmark'}
+          </button>
         </div>
-
       </div>
     </div>
   );
