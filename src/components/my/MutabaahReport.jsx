@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 /**
  * MutabaahReport Component
  * Displays and manages reporting functionality for Mutaba'ah Yaumiyah data
- * Updated to handle checkbox fields
+ * Updated to fetch data from API endpoint
  * 
  * @param {Object} props - Component properties
  * @param {Object} props.user - User object containing user data
@@ -16,53 +16,94 @@ const MutabaahReport = ({ user, onClose }) => {
   // State management
   const [allUserData, setAllUserData] = useState([]);
   const [loadingReport, setLoadingReport] = useState(true);
+  const [month, setMonth] = useState(new Date().getMonth() + 1); // Current month (1-12)
+  const [year, setYear] = useState(new Date().getFullYear()); // Current year
 
-  // Fetch user data when component mounts
+  // Available months for selection
+  const months = [
+    { value: 1, label: 'Januari' },
+    { value: 2, label: 'Februari' },
+    { value: 3, label: 'Maret' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'Mei' },
+    { value: 6, label: 'Juni' },
+    { value: 7, label: 'Juli' },
+    { value: 8, label: 'Agustus' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'Oktober' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'Desember' }
+  ];
+
+  // Generate years for dropdown (current year and 5 years back)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - 5 + i);
+
+  // Fetch user data when component mounts or when month/year changes
   useEffect(() => {
-    fetchAllUserData();
-  }, [user]);
+    if (user?.userId) {
+      fetchIbadahData();
+    }
+  }, [user, month, year]);
 
   /**
-   * Fetch all user data for reports from localStorage
+   * Fetch ibadah data from API endpoint
    */
-  const fetchAllUserData = async () => {
+  const fetchIbadahData = async () => {
     try {
       setLoadingReport(true);
       
-      // For demo purposes, we'll use localStorage data
-      const allData = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith(`mutabaah_${user?.userId}_`)) {
-          try {
-            const data = JSON.parse(localStorage.getItem(key));
-            
-            // Ensure checkbox fields are boolean values (for backward compatibility)
-            const normalizedData = {
-              ...data,
-              sholat_tahajud: typeof data.sholat_tahajud === 'boolean' ? data.sholat_tahajud : Boolean(data.sholat_tahajud),
-              tilawah_quran: typeof data.tilawah_quran === 'boolean' ? data.tilawah_quran : Boolean(data.tilawah_quran),
-              terjemah_quran: typeof data.terjemah_quran === 'boolean' ? data.terjemah_quran : Boolean(data.terjemah_quran),
-              shaum_sunnah: typeof data.shaum_sunnah === 'boolean' ? data.shaum_sunnah : Boolean(data.shaum_sunnah),
-              shodaqoh: typeof data.shodaqoh === 'boolean' ? data.shodaqoh : Boolean(data.shodaqoh),
-              dzikir_pagi_petang: typeof data.dzikir_pagi_petang === 'boolean' ? data.dzikir_pagi_petang : Boolean(data.dzikir_pagi_petang),
-              menyimak_mq_pagi: typeof data.menyimak_mq_pagi === 'boolean' ? data.menyimak_mq_pagi : Boolean(data.menyimak_mq_pagi)
-            };
-            
-            allData.push(normalizedData);
-          } catch (e) {
-            console.error('Error parsing data for key:', key);
-          }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ month, year }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.status === 'success') {
+        // Process and normalize the data from the API
+        const processedData = Array.isArray(result.data) ? result.data : [result.data];
+        
+        // Ensure boolean fields are properly formatted
+        const normalizedData = processedData.map(item => ({
+          ...item,
+          date: item.date || item.created_at, // Use appropriate date field
+          sholat_wajib: Number(item.sholat_wajib) || 0,
+          sholat_tahajud: Boolean(item.sholat_tahajud),
+          sholat_dhuha: Number(item.sholat_dhuha) || 0,
+          sholat_rawatib: Number(item.sholat_rawatib) || 0,
+          sholat_sunnah_lainnya: Number(item.sholat_sunnah_lainnya) || 0,
+          tilawah_quran: Boolean(item.tilawah_quran),
+          terjemah_quran: Boolean(item.terjemah_quran),
+          shaum_sunnah: Boolean(item.shaum_sunnah),
+          shodaqoh: Boolean(item.shodaqoh),
+          dzikir_pagi_petang: Boolean(item.dzikir_pagi_petang),
+          istighfar_1000x: Number(item.istighfar_1000x) || 0,
+          sholawat_100x: Number(item.sholawat_100x) || 0,
+          menyimak_mq_pagi: Boolean(item.menyimak_mq_pagi),
+          haid: Boolean(item.haid)
+        }));
+        
+        // Sort by date descending
+        normalizedData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setAllUserData(normalizedData);
+      } else {
+        // Handle empty data case
+        setAllUserData([]);
+        if (result.status === 'not_found') {
+          toast.info(result.message || 'Tidak ada data untuk periode yang dipilih');
+        } else {
+          toast.error(result.message || 'Gagal mengambil data laporan');
         }
       }
-      
-      // Sort by date descending
-      allData.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setAllUserData(allData);
-      
     } catch (error) {
       console.error('Error fetching user data:', error);
       toast.error(error.message || 'Gagal mengambil data laporan');
+      setAllUserData([]);
     } finally {
       setLoadingReport(false);
     }
@@ -76,6 +117,7 @@ const MutabaahReport = ({ user, onClose }) => {
       // Create CSV content
       let csvContent = "Laporan Lengkap Mutaba'ah Yaumiyah\n\n";
       csvContent += `Nama,${user?.name || '-'}\n`;
+      csvContent += `Periode,${months.find(m => m.value === month)?.label} ${year}\n`;
       csvContent += `Tanggal Laporan,${new Date().toLocaleDateString('id-ID')}\n`;
       csvContent += `Total Data,${allUserData.length}\n\n`;
 
@@ -86,7 +128,7 @@ const MutabaahReport = ({ user, onClose }) => {
 
       // Add data rows - with checkboxes shown as "Ya" or "Tidak"
       allUserData.forEach(data => {
-        csvContent += `${data.date},${data.sholat_wajib},${data.sholat_tahajud ? "Ya" : "Tidak"},${data.sholat_dhuha},`;
+        csvContent += `${new Date(data.date).toLocaleDateString('id-ID')},${data.sholat_wajib},${data.sholat_tahajud ? "Ya" : "Tidak"},${data.sholat_dhuha},`;
         csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran ? "Ya" : "Tidak"},`;
         csvContent += `${data.terjemah_quran ? "Ya" : "Tidak"},${data.shaum_sunnah ? "Ya" : "Tidak"},${data.shodaqoh ? "Ya" : "Tidak"},`;
         csvContent += `${data.dzikir_pagi_petang ? "Ya" : "Tidak"},${data.istighfar_1000x},${data.sholawat_100x},`;
@@ -98,7 +140,7 @@ const MutabaahReport = ({ user, onClose }) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `laporan_mutabaah_${user?.name || 'user'}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `laporan_mutabaah_${user?.name || 'user'}_${months.find(m => m.value === month)?.label}_${year}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -113,7 +155,7 @@ const MutabaahReport = ({ user, onClose }) => {
   const calculateStatistics = () => {
     const totalEntries = allUserData.length || 1;
     const avgSholatWajib = (
-      allUserData.reduce((sum, data) => sum + data.sholat_wajib, 0) / totalEntries
+      allUserData.reduce((sum, data) => sum + Number(data.sholat_wajib), 0) / totalEntries
     ).toFixed(1);
     
     // Count completed days for checkbox items
@@ -132,6 +174,16 @@ const MutabaahReport = ({ user, onClose }) => {
   };
 
   const stats = calculateStatistics();
+
+  // Handle month change
+  const handleMonthChange = (e) => {
+    setMonth(parseInt(e.target.value, 10));
+  };
+
+  // Handle year change
+  const handleYearChange = (e) => {
+    setYear(parseInt(e.target.value, 10));
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -155,6 +207,29 @@ const MutabaahReport = ({ user, onClose }) => {
             <div className="flex justify-between mb-2">
               <span className="font-medium">Nama:</span>
               <span>{user?.name || '-'}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">Periode:</span>
+              <div className="flex space-x-2">
+                <select 
+                  value={month}
+                  onChange={handleMonthChange}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  {months.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+                <select 
+                  value={year}
+                  onChange={handleYearChange}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  {years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="flex justify-between mb-2">
               <span className="font-medium">Total Data:</span>
@@ -254,7 +329,7 @@ const MutabaahReport = ({ user, onClose }) => {
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  Tidak ada data laporan yang tersedia
+                  Tidak ada data laporan yang tersedia untuk periode {months.find(m => m.value === month)?.label} {year}
                 </div>
               )}
             </>
