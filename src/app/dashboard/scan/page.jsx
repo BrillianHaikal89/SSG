@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { Camera, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, RefreshCw, Clock } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -13,11 +13,26 @@ export default function QrCodeScanner() {
   const [scannedCode, setScannedCode] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [currentTime, setCurrentTime] = useState('');
   const scannerRef = useRef(null);
 
   useEffect(() => {
-    // Clean up scanner on component unmount
+    // Initialize and update the clock
+    const updateClock = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}:${seconds}`);
+    };
+
+    // Update immediately and then every second
+    updateClock();
+    const clockInterval = setInterval(updateClock, 1000);
+
+    // Clean up scanner and clock interval on component unmount
     return () => {
+      clearInterval(clockInterval);
       if (scannerRef.current) {
         try {
           scannerRef.current.clear();
@@ -140,6 +155,14 @@ export default function QrCodeScanner() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-md">
       <Toaster position="top-center" />
+      
+      {/* Real-time Clock Display */}
+      <div className="mb-4 text-center bg-blue-600 text-white py-3 rounded-lg shadow-lg">
+        <div className="flex items-center justify-center">
+          <Clock className="mr-2" size={20} />
+          <span className="text-2xl font-mono font-bold">{currentTime}</span>
+        </div>
+      </div>
       
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-gray-800">Scan QR Code Presensi</h1>
