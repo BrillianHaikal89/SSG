@@ -322,6 +322,10 @@ const DashboardContent = ({
               <p className="text-xs text-gray-500">Halaman</p>
               <p className="font-medium">{quranProgress.page}</p>
             </div>
+            <div>
+              <p className="text-xs text-gray-500">ayat</p>
+              <p className="font-medium">{quranProgress.ayah}</p>
+            </div>
           </div>
         </div>
         
