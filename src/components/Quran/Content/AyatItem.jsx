@@ -1,10 +1,79 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import useAuthStore from '../../../stores/authStore';
-import toast from 'react-hot-toast';
 
 const AyatItem = ({ ayat, selectedSurah }) => {
   const [bookmark, setBookmark] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
   const { user } = useAuthStore();
+
+  // Fungsi untuk memeriksa bookmark
+  const checkBookmark = async () => {
+    if (!user?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/quran/bookmark?user_id=${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookmark');
+      }
+
+      const { data } = await response.json();
+      
+      // Cek apakah ayat saat ini sudah di-bookmark
+      if (data && data.surah === (selectedSurah || ayat.surah_name) && data.ayah === ayat.no_ayat) {
+        setBookmark(data);
+      } else {
+        setBookmark(null);
+      }
+    } catch (error) {
+      console.error('Error checking bookmark:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cek bookmark saat komponen mount atau user berubah
+  useEffect(() => {
+    checkBookmark();
+  }, [user]);
+
+  const saveBookmark = async () => {
+    if (!user) {
+      alert('Anda harus login terlebih dahulu');
+      return;
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    try {
+      const response = await fetch(`${API_URL}/quran/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          surah: selectedSurah || ayat.surah_name,
+          ayah: ayat.no_ayat,
+          page: ayat.no_hal,
+          juz: ayat.no_juz
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        checkBookmark(); // Refresh bookmark status setelah menyimpan
+        alert(data.message);
+      } else {
+        throw new Error(data.message || 'Failed to save bookmark');
+      }
+    } catch (error) {
+      console.error('Error saving bookmark:', error);
+      alert(error.message);
+    }
+  };
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
@@ -77,54 +146,7 @@ const AyatItem = ({ ayat, selectedSurah }) => {
       'waqf': 'Tanda Waqaf'
     };
     return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  const saveBookmark = async () => {
-    if (!user) {
-      alert('Anda harus login terlebih dahulu');
-      return;
-    }
-
-    
-
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    try {
-      const response = await fetch(`${API_URL}/quran/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user?.userId, // Use actual user ID from auth store
-          surah: selectedSurah || ayat.surah_name, // Use selectedSurah if available
-          ayah: ayat.no_ayat,
-          page: ayat.no_hal,
-          juz: ayat.no_juz
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      toast.success(data.message || 'Bookmark berhasil disimpan');
-      setBookmark({
-        surah: selectedSurah || ayat.surah_name,
-        ayah: ayat.no_ayat,
-        page: ayat.no_hal,
-        juz: ayat.no_juz
-      });
-    } catch (error) {
-      console.error('Error saving bookmark:', error);
-      alert('Gagal menyimpan bookmark: ' + error.message);
-    }
-  };
-
-  console.log(" ayat " , ayat);
-  console.log(" selectedSurah " , selectedSurah);
-  console.log(" surah " , ayat.surah_name);
-
+  };  
   return (
     <div className="ayat-item">
       <div className="flex items-start">
@@ -140,14 +162,28 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           <div 
             className="arab" 
             dir="rtl" 
-            dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
+            dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }} 
           />
           {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
+          
           <button 
             onClick={saveBookmark}
-            className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+            disabled={isLoading}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-sm ${
+              bookmark 
+                ? 'bg-green-500 text-white hover:bg-green-600'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
           >
-            {bookmark ? (
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Memproses...</span>
+              </>
+            ) : bookmark ? (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // Tambahkan useEffect
 import useAuthStore from '../stores/authStore';
 
 const DashboardContent = ({ 
@@ -13,32 +13,50 @@ const DashboardContent = ({
   navigateToScan
 }) => {
   const { role, user } = useAuthStore();
-  // const checkBookmark = async () => {
-  //   if (!user?.userId) return;
-    
-  //   setIsLoading(true);
-  //   try {
-  //     const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  //     const response = await fetch(`${API_URL}/quran/bookmark?user_id=${user?.userId}`);
-      
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch bookmark');
-  //     }
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookmarkData, setBookmarkData] = useState(null); // State untuk menyimpan data bookmark
 
-  //     const { data } = await response.json();
+  const checkBookmark = async () => {
+    if (!user?.userId) return;
+    
+    setIsLoading(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/quran/bookmark?user_id=${user?.userId}`);
       
-  //     // Cek apakah ayat saat ini sudah di-bookmark
-  //     if (data && data.surah === (selectedSurah || ayat.surah_name) && data.ayah === ayat.no_ayat) {
-  //       setBookmark(data);
-  //     } else {
-  //       setBookmark(null);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error checking bookmark:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookmark');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setBookmarkData(data.data); // Simpan data bookmark ke state
+      }
+    } catch (error) {
+      console.error('Error checking bookmark:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Panggil checkBookmark saat komponen dimount
+  useEffect(() => {
+    checkBookmark();
+  }, [user?.userId]);
+
+  const formatLastRead = (dateString) => {
+    if (!dateString) return '-';
+    const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
+  };
+
+  // Gunakan data bookmark jika ada, jika tidak gunakan data dari props
+  const quranProgress = bookmarkData ? {
+    juz: bookmarkData.juz,
+    surah: bookmarkData.surah,
+    page: bookmarkData.page,
+    lastRead: formatLastRead(bookmarkData.updated_at)
+  } : userData.quranProgress;
   
   // Format date for display - showing current date
   const formatDate = () => {
@@ -272,7 +290,6 @@ const DashboardContent = ({
         </div>
       </section>
 
-      {/* Progress Al-Quran */}
       <section className="bg-green-50 rounded-lg shadow-sm mb-6 p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
           <div className="flex items-center mb-3 sm:mb-0">
@@ -295,21 +312,21 @@ const DashboardContent = ({
           <div className="grid grid-cols-3 gap-4 w-full">
             <div>
               <p className="text-xs text-gray-500">Juz</p>
-              <p className="font-medium">{userData.quranProgress.juz}</p>
+              <p className="font-medium">{quranProgress.juz}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Surat</p>
-              <p className="font-medium">{userData.quranProgress.surah}</p>
+              <p className="font-medium">{quranProgress.surah}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Halaman</p>
-              <p className="font-medium">{userData.quranProgress.page}</p>
+              <p className="font-medium">{quranProgress.page}</p>
             </div>
           </div>
         </div>
         
         <p className="text-xs text-gray-500">
-          Terakhir Dibaca: {userData.quranProgress.lastRead}
+          Terakhir Dibaca: {quranProgress.lastRead}
         </p>
       </section>
 
