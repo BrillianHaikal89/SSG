@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { quranApi } from '../services/ApiQuran';
+import { useSearchParams } from 'next/navigation';
 
 const useQuran = () => {
+    // URL search parameters
+    const searchParams = useSearchParams();
+
     // State for Quran data
     const [surahList, setSurahList] = useState([]);
     const [selectedSurah, setSelectedSurah] = useState("");
@@ -9,18 +13,58 @@ const useQuran = () => {
     const [quranContent, setQuranContent] = useState([]);
     const [surahDetails, setSurahDetails] = useState(null);
 
-    // UI states - initially set as empty strings to show placeholder text
+    // UI states
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchText, setSearchText] = useState("");
     const [currentHal, setCurrentHal] = useState("");
     const [currentJuz, setCurrentJuz] = useState("");
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
     // Fetch list of surahs on hook initialization
     useEffect(() => {
         fetchSurahList();
     }, []);
+
+    // Parse URL parameters and load content when component mounts
+    useEffect(() => {
+        if (!initialLoadComplete && surahList.length > 0) {
+            const surahParam = searchParams.get('surah');
+            const ayatParam = searchParams.get('ayat');
+            const pageParam = searchParams.get('page');
+            const juzParam = searchParams.get('juz');
+            const isBookmark = searchParams.get('bookmark') === 'true';
+
+            // Check for bookmark parameters and load content accordingly
+            if (isBookmark) {
+                console.log('Loading from bookmark parameters');
+
+                if (surahParam) {
+                    setSelectedSurah(surahParam);
+                    // Fetch surah details
+                    fetchSurahDetails(surahParam);
+
+                    if (ayatParam) {
+                        setSelectedAyat(ayatParam);
+                        // Fetch the specific ayat
+                        fetchAyat(surahParam, ayatParam);
+                    } else {
+                        // Fetch the whole surah
+                        fetchAyat(surahParam);
+                    }
+                } else if (pageParam) {
+                    setCurrentHal(pageParam);
+                    fetchByPage(pageParam);
+                } else if (juzParam) {
+                    setCurrentJuz(juzParam);
+                    fetchJuz(juzParam);
+                }
+            }
+
+            setInitialLoadComplete(true);
+        }
+    }, [searchParams, surahList, initialLoadComplete]);
 
     // Fetch surah list from the API
     const fetchSurahList = async() => {
@@ -247,7 +291,7 @@ const useQuran = () => {
         const juzId = e.target.value;
         if (!juzId) return;
 
-        setCurrentJuz(juzId); // Store as string to maintain empty state
+        setCurrentJuz(juzId);
         fetchJuz(juzId);
     };
 
@@ -256,7 +300,7 @@ const useQuran = () => {
         const pageId = e.target.value;
         if (!pageId) return;
 
-        setCurrentHal(pageId); // Store as string to maintain empty state
+        setCurrentHal(pageId);
         fetchByPage(pageId);
     };
 
@@ -434,7 +478,7 @@ const useQuran = () => {
         scrollToTop,
         setShowScrollTop,
 
-        // New continue functionality
+        // Continue functionality
         isAtEndOfContent,
         getNextContent,
         handleContinueToNext
