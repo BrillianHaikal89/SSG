@@ -1,10 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
+import FontSizeSelector from './FontSizeSelector';
 
-const AyatItem = ({ ayat, selectedSurah }) => {
-  const [bookmark, setBookmark] = React.useState(null);
+const AyatItem = ({ 
+  ayat, 
+  selectedSurah, 
+  defaultArabicSize = 'medium',
+  defaultTranslationSize = 'medium',
+  defaultShowTranslation = true
+}) => {
+  const [bookmark, setBookmark] = useState(null);
+  const [arabicFontSize, setArabicFontSize] = useState(defaultArabicSize);
+  const [translationFontSize, setTranslationFontSize] = useState(defaultTranslationSize);
+  const [showTranslation, setShowTranslation] = useState(defaultShowTranslation);
   const { user } = useAuthStore();
+  
+  // Update when defaults change
+  useEffect(() => {
+    setArabicFontSize(defaultArabicSize);
+    setTranslationFontSize(defaultTranslationSize);
+    setShowTranslation(defaultShowTranslation);
+  }, [defaultArabicSize, defaultTranslationSize, defaultShowTranslation]);
+
+  const getFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-lg';
+      case 'medium':
+        return 'text-2xl';
+      case 'large':
+        return 'text-3xl';
+      default:
+        return 'text-2xl';
+    }
+  };
+
+  const getTranslationFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xs';
+      case 'medium':
+        return 'text-sm';
+      case 'large':
+        return 'text-base';
+      default:
+        return 'text-sm';
+    }
+  };
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
@@ -92,8 +135,8 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user?.userId, // Use actual user ID from auth store
-          surah: selectedSurah || ayat.surah_name, // Use selectedSurah if available
+          user_id: user?.userId,
+          surah: selectedSurah || ayat.surah_name,
           ayah: ayat.no_ayat,
           page: ayat.no_hal,
           juz: ayat.no_juz
@@ -118,10 +161,6 @@ const AyatItem = ({ ayat, selectedSurah }) => {
     }
   };
 
-  console.log(" ayat " , ayat);
-  console.log(" selectedSurah " , selectedSurah);
-  console.log(" surah " , ayat.surah_name);
-
   return (
     <div className="ayat-item">
       <div className="flex items-start">
@@ -134,15 +173,58 @@ const AyatItem = ({ ayat, selectedSurah }) => {
               <span className="text-sm font-medium text-blue-800">{ayat.surah_name}</span>
             </div>
           )}
+          
+          {/* Font Size Controls */}
+          <div className="mb-3 flex flex-wrap gap-4">
+            <FontSizeSelector 
+              title="Ukuran Arab" 
+              currentSize={arabicFontSize} 
+              onChange={setArabicFontSize} 
+            />
+            <FontSizeSelector 
+              title="Ukuran Terjemahan" 
+              currentSize={translationFontSize} 
+              onChange={setTranslationFontSize} 
+            />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Terjemahan:</span>
+              <div className="relative inline-block w-10 align-middle select-none">
+                <input 
+                  type="checkbox" 
+                  id={`toggle-${ayat.no_ayat}`} 
+                  checked={showTranslation} 
+                  onChange={() => setShowTranslation(!showTranslation)} 
+                  className="sr-only"
+                />
+                <label 
+                  htmlFor={`toggle-${ayat.no_ayat}`} 
+                  className={`block h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in 
+                    ${showTranslation ? 'bg-blue-600' : 'bg-gray-300'}`}
+                >
+                  <span 
+                    className={`block h-4 w-4 ml-1 mt-1 rounded-full transition-transform duration-200 ease-in transform 
+                    ${showTranslation ? 'translate-x-4 bg-white' : 'bg-white'}`} 
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+          
           <div 
-            className="arab" 
+            className={`arab ${getFontSizeClass(arabicFontSize)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
-          {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
+          
+          {ayat.tafsir && showTranslation && (
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(translationFontSize)}`}>
+              {ayat.tafsir}
+            </p>
+          )}
+          
           <button 
             onClick={saveBookmark}
-            className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+            className="flex items-center gap-1 px-2 py-1 mt-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
           >
             {bookmark ? (
               <>

@@ -4,6 +4,7 @@ import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
 import EmptyState from '../LoadingStates/EmptyState';
 import NextContentButton from './NextContentButton';
+import FontSizeSelector from './FontSizeSelector';
 
 const QuranContent = ({
   loading,
@@ -18,6 +19,10 @@ const QuranContent = ({
   getNextContent,
   handleContinueToNext
 }) => {
+  const [globalArabicFontSize, setGlobalArabicFontSize] = useState('medium');
+  const [globalTranslationFontSize, setGlobalTranslationFontSize] = useState('medium');
+  const [showTranslation, setShowTranslation] = useState(true);
+
   if (error) {
     return (
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
@@ -50,6 +55,48 @@ const QuranContent = ({
           </p>
         </div>
         
+        {/* Global settings */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-md">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
+          
+          <div className="flex flex-wrap gap-4 mb-3">
+            <FontSizeSelector 
+              title="Ukuran Arab" 
+              currentSize={globalArabicFontSize} 
+              onChange={setGlobalArabicFontSize} 
+            />
+            <FontSizeSelector 
+              title="Ukuran Terjemahan" 
+              currentSize={globalTranslationFontSize} 
+              onChange={setGlobalTranslationFontSize} 
+            />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Tampilkan Terjemahan:</span>
+              <div className="relative inline-block w-10 align-middle select-none">
+                <input 
+                  type="checkbox" 
+                  id="toggle-translation"
+                  checked={showTranslation} 
+                  onChange={() => setShowTranslation(!showTranslation)} 
+                  className="sr-only"
+                />
+                <label 
+                  htmlFor="toggle-translation"
+                  className={`block h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in 
+                    ${showTranslation ? 'bg-blue-600' : 'bg-gray-300'}`}
+                >
+                  <span 
+                    className={`block h-4 w-4 ml-1 mt-1 rounded-full transition-transform duration-200 ease-in transform 
+                    ${showTranslation ? 'translate-x-4 bg-white' : 'bg-white'}`} 
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">Pengaturan akan berlaku untuk semua ayat. Anda juga dapat mengatur font secara individual pada setiap ayat.</p>
+        </div>
+        
         {/* Tajwid guide */}
         <TajwidGuide />
         
@@ -60,6 +107,9 @@ const QuranContent = ({
               key={`${ayat.no_surat}-${ayat.no_ayat}`} 
               ayat={ayat}
               selectedSurah={selectedSurah}
+              defaultArabicSize={globalArabicFontSize}
+              defaultTranslationSize={globalTranslationFontSize}
+              defaultShowTranslation={showTranslation}
             />
           ))}
         </div>

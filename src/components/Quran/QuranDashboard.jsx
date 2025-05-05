@@ -9,13 +9,18 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
+import '../../../styles/quran-styles.css'; // Import the custom CSS
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [bookmark, setBookmark] = useState(null);
-  const { user } = useAuthStore(); 
-
+  const [fontSettings, setFontSettings] = useState({
+    arabicSize: 'medium',
+    translationSize: 'medium',
+    showTranslation: true
+  });
+  const { user } = useAuthStore();
   
   const {
     surahList,
@@ -42,7 +47,7 @@ const QuranDashboard = () => {
     scrollToTop,
     setShowScrollTop,
     
-    // New continue functionality
+    // Continue functionality
     isAtEndOfContent,
     getNextContent,
     handleContinueToNext
@@ -50,7 +55,8 @@ const QuranDashboard = () => {
   
   // Handle client-side rendering and responsive layout
   useEffect(() => {
-    setIsClient(true);    
+    setIsClient(true);
+    
     // Check if mobile view based on screen width
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -68,12 +74,37 @@ const QuranDashboard = () => {
     };
     window.addEventListener('scroll', handleScroll);
     
+    // Load font settings from localStorage if available
+    const savedFontSettings = localStorage.getItem('quranFontSettings');
+    if (savedFontSettings) {
+      try {
+        setFontSettings(JSON.parse(savedFontSettings));
+      } catch (e) {
+        console.error('Error loading font settings:', e);
+      }
+    }
+    
     // Clean up
     return () => {
       window.removeEventListener('resize', checkIsMobile);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [setShowScrollTop]);
+  
+  // Save font settings to localStorage when they change
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('quranFontSettings', JSON.stringify(fontSettings));
+    }
+  }, [fontSettings, isClient]);
+  
+  // Handle font setting changes
+  const handleFontSettingChange = (setting, value) => {
+    setFontSettings(prev => ({
+      ...prev,
+      [setting]: value
+    }));
+  };
   
   if (!isClient) {
     return (
@@ -87,7 +118,7 @@ const QuranDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-blue-100">
+    <div className="flex flex-col min-h-screen bg-blue-50">
       {/* Header */}
       <Header />
 
@@ -125,7 +156,7 @@ const QuranDashboard = () => {
         handleSearch={handleSearch}
       />
 
-      {/* Information Bar - Positioned after controls */}
+      {/* Information Bar */}
       <InfoBar />
 
       {/* Main Content */}
@@ -142,6 +173,8 @@ const QuranDashboard = () => {
           isAtEndOfContent={isAtEndOfContent}
           getNextContent={getNextContent}
           handleContinueToNext={handleContinueToNext}
+          fontSettings={fontSettings}
+          handleFontSettingChange={handleFontSettingChange}
         />
       </div>
 
@@ -149,7 +182,7 @@ const QuranDashboard = () => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-20 right-4 p-2 bg-blue-900 text-white rounded-full shadow-lg"
+          className="fixed bottom-20 right-4 p-2 bg-blue-900 text-white rounded-full shadow-lg hover:bg-blue-800 transition-colors z-10"
           aria-label="Scroll to top"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -157,6 +190,9 @@ const QuranDashboard = () => {
           </svg>
         </button>
       )}
+      
+      {/* Bottom Navigation (Mobile) */}
+      <BottomNavigation />
     </div>
   );
 };
