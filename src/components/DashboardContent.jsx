@@ -29,9 +29,8 @@ const DashboardContent = ({
       }
 
       const data = await response.json();
-      console.log('Bookmark data:', data);
       if (data.success) {
-        setBookmarkData(data.data); // Simpan data bookmark ke state
+        setBookmarkData(data.data);
       }
     } catch (error) {
       console.error('Error checking bookmark:', error);
@@ -40,24 +39,35 @@ const DashboardContent = ({
     }
   };
 
-  // Panggil checkBookmark saat komponen dimount
   useEffect(() => {
     checkBookmark();
   }, [user?.userId]);
 
+  // Format date untuk lastRead dari updated_at
   const formatLastRead = (dateString) => {
     if (!dateString) return '-';
-    const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const options = { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false
+    };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
-  // Gunakan data bookmark jika ada, jika tidak gunakan data dari props
-  const quranProgress = bookmarkData ? {
-    juz: bookmarkData.juz,
-    surah: bookmarkData.surah,
-    page: bookmarkData.page,
-    lastRead: formatLastRead(bookmarkData.updated_at)
-  } : userData.quranProgress;
+  // Gabungkan data bookmark dengan data default
+  const quranProgress = {
+    ...userData.quranProgress, // Data default dari props
+    ...(bookmarkData ? { // Override dengan data bookmark jika ada
+      juz: bookmarkData.juz,
+      surah: bookmarkData.surah,
+      page: bookmarkData.page,
+      ayah: bookmarkData.ayah,
+      lastRead: formatLastRead(bookmarkData.updated_at)
+    } : {})
+  };
   
   // Format date for display - showing current date
   const formatDate = () => {
@@ -310,31 +320,30 @@ const DashboardContent = ({
         </div>
         
         <div className="flex mb-2">
-          <div className="grid grid-cols-3 gap-4 w-full">
+          <div className="grid grid-cols-2 xs:grid-cols-4 gap-4 w-full">
             <div>
               <p className="text-xs text-gray-500">Juz</p>
-              <p className="font-medium">{quranProgress.juz}</p>
+              <p className="font-medium">{quranProgress.juz || '-'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Surat</p>
-              <p className="font-medium">{quranProgress.surah}</p>
+              <p className="font-medium">{quranProgress.surah || '-'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Halaman</p>
-              <p className="font-medium">{quranProgress.page}</p>
+              <p className="font-medium">{quranProgress.page || '-'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Ayat</p>
-              <p className="font-medium">{quranProgress.ayah}</p>
+              <p className="font-medium">{quranProgress.ayah || '-'}</p>
             </div>
           </div>
         </div>
         
         <p className="text-xs text-gray-500">
-          Terakhir Dibaca: {quranProgress.updated_at}
+          Terakhir Dibaca: {quranProgress.lastRead || '-'}
         </p>
       </section>
-
       {/* Bottom spacing for mobile navigation */}
       <div className="h-16 md:h-0"></div>
     </main>
