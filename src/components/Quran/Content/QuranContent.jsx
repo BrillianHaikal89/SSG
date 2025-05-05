@@ -4,7 +4,6 @@ import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
 import EmptyState from '../LoadingStates/EmptyState';
 import NextContentButton from './NextContentButton';
-import QuranBookmark from './QuranBookmark';
 
 const QuranContent = ({
   loading,
@@ -17,25 +16,8 @@ const QuranContent = ({
   currentHal,
   isAtEndOfContent,
   getNextContent,
-  handleContinueToNext,
-  onLoadBookmark
+  handleContinueToNext
 }) => {
-  // Current position for bookmark feature
-  const [currentPosition, setCurrentPosition] = useState(null);
-  
-  // Update current position whenever content changes
-  React.useEffect(() => {
-    if (quranContent && quranContent.length > 0) {
-      const firstAyat = quranContent[0];
-      setCurrentPosition({
-        surah: selectedSurah || firstAyat.no_surat,
-        ayah: firstAyat.no_ayat,
-        page: currentHal || firstAyat.no_hal,
-        juz: currentJuz || firstAyat.no_juz
-      });
-    }
-  }, [quranContent, selectedSurah, currentHal, currentJuz]);
-
   if (error) {
     return (
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
@@ -67,14 +49,6 @@ const QuranContent = ({
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
           </p>
         </div>
-        
-        {/* Bookmark Section */}
-        <QuranBookmark 
-          currentPosition={currentPosition}
-          surahDetails={surahDetails}
-          surahList={surahList}
-          onLoadBookmark={onLoadBookmark}
-        />
         
         {/* Tajwid guide */}
         <TajwidGuide />
