@@ -9,7 +9,7 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
-import '../../../styles/quran-styles.css'; // Import the custom CSS
+import '../../app/styles/quran-styles.css'; // Import the custom CSS
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
