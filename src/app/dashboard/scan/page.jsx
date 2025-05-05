@@ -8,13 +8,6 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Define Hijri month names
-const HIJRI_MONTHS = [
-  "Muharram", "Safar", "Rabi'ul Awal", "Rabi'ul Akhir",
-  "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban",
-  "Ramadhan", "Syawal", "Dzulka'dah", "Dzulhijjah"
-];
-
 export default function QrCodeScanner() {
   const [scanning, setScanning] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
@@ -24,132 +17,44 @@ export default function QrCodeScanner() {
   const [currentDate, setCurrentDate] = useState({
     gregorian: '',
     hijri: '',
-    hijriDay: 0,
-    hijriMonth: 0,
-    hijriYear: 0
+    hijriDay: '',
+    hijriMonth: '',
+    hijriYear: ''
   });
   const scannerRef = useRef(null);
 
-  // Calculate Hijri date from Gregorian date
-  const calculateHijriDate = (gregorianDate) => {
-    try {
-      const date = new Date(gregorianDate);
-      
-      const day = date.getDate();
-      const month = date.getMonth() + 1; // JavaScript months are 0-indexed
-      const year = date.getFullYear();
-      
-      let hDay = 1;
-      let hMonthIndex = 10; // Default to Dzulka'dah
-      const hYear = 1446; // Default to 1446 for 2025
-      
-      // Handle specific mappings for May 2025
-      if (year === 2025 && month === 5) {
-        const mayMapping = {
-          1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8, 7: 9, 8: 10,
-          9: 11, 10: 12, 11: 13, 12: 14, 13: 15, 14: 16,
-          15: 17, 16: 18, 17: 19, 18: 20, 19: 21, 20: 22,
-          21: 23, 22: 24, 23: 25, 24: 26, 25: 27, 26: 28,
-          27: 29, 28: 30, 29: 1, 30: 2, 31: 3
-        };
-        
-        hDay = mayMapping[day] || day;
-        
-        // Transition to Dzulhijjah at the end of May
-        if (day >= 29) {
-          hMonthIndex = 11; // Dzulhijjah
-        }
-      }
-      // Handle specific mappings for April 2025
-      else if (year === 2025 && month === 4) {
-        const aprilMapping = {
-          1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8, 7: 9, 8: 10,
-          9: 11, 10: 12, 11: 13, 12: 14, 13: 15, 14: 16,
-          15: 17, 16: 18, 17: 19, 18: 20, 19: 21, 20: 22,
-          21: 23, 22: 24, 23: 25, 24: 26, 25: 27, 26: 28,
-          27: 29, 28: 30, 29: 1, 30: 2
-        };
-        
-        hDay = aprilMapping[day] || day;
-        
-        if (day >= 29) {
-          hMonthIndex = 10; // Dzulka'dah
-        } else {
-          hMonthIndex = 9; // Syawal
-        }
-      }
-      // Handle June 2025
-      else if (year === 2025 && month === 6) {
-        const juneMapping = {
-          1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10,
-          8: 11, 9: 12, 10: 13, 11: 14, 12: 15, 13: 16,
-          14: 17, 15: 18, 16: 19, 17: 20, 18: 21, 19: 22,
-          20: 23, 21: 24, 22: 25, 23: 26, 24: 27, 25: 28,
-          26: 29, 27: 30, 28: 1, 29: 2, 30: 3
-        };
-        
-        hDay = juneMapping[day] || day;
-        
-        if (day >= 28) {
-          hMonthIndex = 0; // Muharram
-          hYear = 1447; // New Hijri year starts
-        } else {
-          hMonthIndex = 11; // Dzulhijjah
-        }
-      }
-      // For other months, use a simple approximation
-      else {
-        // Simple fallback - not as accurate but provides a reasonable estimate
-        const offset = day % 30;
-        hDay = offset + 1;
-      }
-      
-      return {
-        day: hDay,
-        month: hMonthIndex,
-        year: hYear,
-        formatted: `${hDay} ${HIJRI_MONTHS[hMonthIndex]} ${hYear} H`
-      };
-    } catch (error) {
-      console.error('Error calculating Hijri date:', error);
-      return { 
-        day: 7, 
-        month: 10, 
-        year: 1446, 
-        formatted: "7 Dzulka'dah 1446 H" 
-      };
-    }
-  };
-
-  // Format day name in Indonesian
-  const formatDayName = (date) => {
-    const dayNames = {
-      0: 'Ahad',
-      1: 'Senin', 
-      2: 'Selasa', 
-      3: 'Rabu', 
-      4: 'Kamis', 
-      5: 'Jumat', 
-      6: 'Sabtu'
-    };
+  // Convert to Hijri date
+  const gregorianToHijri = (date) => {
+    // Get Gregorian date components
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
     
-    return dayNames[date.getDay()];
-  };
-
-  // Format date in Indonesian
-  const formatDate = (date) => {
-    if (!date) return '';
-    try {
-      const dayName = formatDayName(date);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = date.toLocaleDateString('id-ID', { month: 'long' });
-      const year = date.getFullYear();
-      
-      return `${dayName}, ${day} ${month} ${year}`;
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return '';
-    }
+    // Formula to estimate Hijri date (approximate calculation)
+    // This is a simplified conversion - for precise conversion a full library would be better
+    const hijriYear = Math.floor((year - 622) * (33/32));
+    
+    // Define Hijri month names in Arabic
+    const hijriMonths = [
+      "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", 
+      "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", 
+      "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+    ];
+    
+    // Adjust this calculation for a more accurate estimate
+    // This is a very rough approximation
+    const dayOfYear = Math.floor((month * 30.5) + day);
+    const hijriDayOfYear = (dayOfYear + 10) % 354; // Approximate offset
+    const hijriMonth = Math.floor(hijriDayOfYear / 29.5);
+    const hijriDay = Math.floor(hijriDayOfYear % 29.5) + 1;
+    
+    // Return the estimated Hijri date components
+    return {
+      day: hijriDay,
+      month: hijriMonths[hijriMonth % 12],
+      year: hijriYear,
+      fullDate: `${hijriDay} ${hijriMonths[hijriMonth % 12]} ${hijriYear} H`
+    };
   };
 
   useEffect(() => {
@@ -164,14 +69,15 @@ export default function QrCodeScanner() {
       setCurrentTime(`${hours}:${minutes}:${seconds}`);
       
       // Update Gregorian date
-      const gregorianDate = formatDate(now);
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const gregorianDate = now.toLocaleDateString('id-ID', options);
       
       // Update Hijri date
-      const hijriDate = calculateHijriDate(now);
+      const hijriDate = gregorianToHijri(now);
       
       setCurrentDate({
         gregorian: gregorianDate,
-        hijri: hijriDate.formatted,
+        hijri: hijriDate.fullDate,
         hijriDay: hijriDate.day,
         hijriMonth: hijriDate.month,
         hijriYear: hijriDate.year
@@ -233,6 +139,11 @@ export default function QrCodeScanner() {
       const config = {
         fps: 10,
         qrbox: 250,
+        // Set to immediately open camera
+        rememberLastUsedCamera: true,
+        showTorchButtonIfSupported: true,
+        // Start with camera on
+        startScanningAutomatically: true
       };
 
       if (scannerRef.current) {
@@ -309,10 +220,10 @@ export default function QrCodeScanner() {
       <Toaster position="top-center" />
       
       {/* Date and Time Display */}
-      <div className="mb-4 text-center bg-blue-600 text-white py-4 rounded-lg shadow-lg">
+      <div className="mb-4 text-center bg-green-600 text-white py-4 rounded-lg shadow-lg">
         {/* Hijri Date */}
         <div className="mb-1">
-          <div className="text-xl font-bold">{currentDate.hijriDay} {HIJRI_MONTHS[currentDate.hijriMonth]} {currentDate.hijriYear} H</div>
+          <div className="text-xl font-bold">{currentDate.hijriDay} {currentDate.hijriMonth} {currentDate.hijriYear} H</div>
         </div>
         
         {/* Gregorian Date */}
