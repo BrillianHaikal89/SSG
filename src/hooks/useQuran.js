@@ -301,106 +301,6 @@ const useQuran = () => {
         });
     };
 
-    // Check if the current content is at the last item (surah, page or juz)
-    const isAtEndOfContent = () => {
-        if (!quranContent || quranContent.length === 0) return false;
-
-        // Get the last item in current content
-        const lastItem = quranContent[quranContent.length - 1];
-
-        if (selectedSurah && surahDetails) {
-            // For surah view, check if we're at the last ayat
-            return lastItem.no_ayat === surahDetails.jml_ayat;
-        } else if (currentHal) {
-            // For page view, check if this is the last ayat on the page
-            // This requires additional information about page boundaries from your API
-            // As a simplification, we'll check if another ayat from the same page exists
-            return quranContent.filter(item =>
-                item.no_hal === lastItem.no_hal &&
-                item.no_ayat > lastItem.no_ayat
-            ).length === 0;
-        } else if (currentJuz) {
-            // For juz view, check if this is the last ayat in the juz
-            // Similar to page view, requires information about juz boundaries
-            return quranContent.filter(item =>
-                item.no_juz === lastItem.no_juz &&
-                (item.no_surat > lastItem.no_surat ||
-                    (item.no_surat === lastItem.no_surat && item.no_ayat > lastItem.no_ayat))
-            ).length === 0;
-        }
-
-        return false;
-    };
-
-    // Determine the next content to navigate to
-    const getNextContent = () => {
-        if (selectedSurah) {
-            // For surah view, get the next surah
-            const currentSurahId = parseInt(selectedSurah);
-            const nextSurahId = currentSurahId + 1;
-
-            const nextSurah = surahList.find(s => s.no_surat === nextSurahId);
-            if (nextSurah) {
-                return {
-                    type: 'surah',
-                    item: {
-                        id: nextSurahId,
-                        name: nextSurah.nm_surat,
-                        number: nextSurahId
-                    }
-                };
-            }
-        } else if (currentHal) {
-            // For page view, get the next page
-            const pageNum = parseInt(currentHal);
-            if (pageNum < 604) { // 604 is the total number of pages in standard Quran
-                return {
-                    type: 'page',
-                    item: {
-                        number: pageNum + 1
-                    }
-                };
-            }
-        } else if (currentJuz) {
-            // For juz view, get the next juz
-            const juzNum = parseInt(currentJuz);
-            if (juzNum < 30) { // 30 is the total number of juz in Quran
-                return {
-                    type: 'juz',
-                    item: {
-                        number: juzNum + 1
-                    }
-                };
-            }
-        }
-
-        return null;
-    };
-
-    // Handle navigation to next content (surah, page, juz)
-    const handleContinueToNext = () => {
-        const nextContent = getNextContent();
-        if (!nextContent) return;
-
-        // Navigate based on content type
-        switch (nextContent.type) {
-            case 'surah':
-                setSelectedSurah(nextContent.item.id.toString());
-                setSelectedAyat("");
-                fetchSurahDetails(nextContent.item.id);
-                fetchAyat(nextContent.item.id);
-                break;
-            case 'page':
-                fetchByPage(nextContent.item.number);
-                break;
-            case 'juz':
-                fetchJuz(nextContent.item.number);
-                break;
-            default:
-                break;
-        }
-    };
-
     return {
         // State
         surahList,
@@ -432,12 +332,7 @@ const useQuran = () => {
         handleSearchChange,
         handleSearch,
         scrollToTop,
-        setShowScrollTop,
-
-        // New continue functionality
-        isAtEndOfContent,
-        getNextContent,
-        handleContinueToNext
+        setShowScrollTop
     };
 };
 
