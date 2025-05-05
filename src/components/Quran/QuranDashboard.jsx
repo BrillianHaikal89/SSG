@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Header from '../Layout/Header';
-import BottomNavigation from '../Layout/BottomNavigation';
 import InfoBar from '../Layout/InfoBar';
 import MobileControls from './Controls/MobileControls';
 import DesktopControls from './Controls/DesktopControls';
@@ -187,9 +186,6 @@ const QuranDashboard = () => {
           </svg>
         </button>
       )}
-      
-      {/* Bottom Navigation (Mobile) */}
-      <BottomNavigation />
     </div>
   );
 };
