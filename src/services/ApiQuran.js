@@ -101,6 +101,101 @@ export const quranApi = {
             console.error("Error searching Quran:", error);
             throw error;
         }
+    },
+
+    // Save bookmark
+    saveBookmark: async(bookmarkData) => {
+        try {
+            const response = await api.post('/quran/bookmark', bookmarkData);
+            return response.data;
+        } catch (error) {
+            console.error("Error saving bookmark:", error);
+
+            // For offline fallback, save to localStorage
+            try {
+                const key = `quran_bookmark_${bookmarkData.user_id}`;
+                const existingBookmarks = JSON.parse(localStorage.getItem(key) || '[]');
+
+                // Add timestamp
+                const bookmark = {
+                    ...bookmarkData,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Check if we already have this bookmark
+                const existingIndex = existingBookmarks.findIndex(b =>
+                    b.surah === bookmark.surah &&
+                    b.ayah === bookmark.ayah
+                );
+
+                if (existingIndex >= 0) {
+                    // Update existing
+                    existingBookmarks[existingIndex] = bookmark;
+                } else {
+                    // Add new
+                    existingBookmarks.push(bookmark);
+                }
+
+                // Sort by timestamp (newest first)
+                existingBookmarks.sort((a, b) =>
+                    new Date(b.timestamp) - new Date(a.timestamp)
+                );
+
+                localStorage.setItem(key, JSON.stringify(existingBookmarks));
+
+                return { success: true, message: 'Bookmark disimpan secara lokal' };
+            } catch (localError) {
+                console.error("Error saving bookmark to localStorage:", localError);
+                throw error; // Throw the original error
+            }
+        }
+    },
+
+    // Get all bookmarks for a user
+    getUserBookmarks: async(userId) => {
+        try {
+            const response = await api.get(`/quran/bookmark/user/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching bookmarks:", error);
+
+            // Fallback to localStorage
+            try {
+                const key = `quran_bookmark_${userId}`;
+                const bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
+                return bookmarks;
+            } catch (localError) {
+                console.error("Error fetching bookmarks from localStorage:", localError);
+                return [];
+            }
+        }
+    },
+
+    // Get latest bookmark for a user
+    getLatestBookmark: async(userId) => {
+        try {
+            const response = await api.get(`/quran/bookmark/latest/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching latest bookmark:", error);
+
+            // Fallback to localStorage
+            try {
+                const key = `quran_bookmark_${userId}`;
+                const bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
+
+                // Sort by timestamp (newest first)
+                bookmarks.sort((a, b) =>
+                    new Date(b.timestamp) - new Date(a.timestamp)
+                );
+
+                // Return the first one (most recent)
+                return bookmarks.length > 0 ? bookmarks[0] : null;
+            } catch (localError) {
+                console.error("Error fetching latest bookmark from localStorage:", localError);
+                return null;
+            }
+        }
     }
 };
 

@@ -7,7 +7,7 @@ import useAuthStore from '../../stores/authStore';
 import Dashboard from '../../components/Dashboard';
 
 export default function SSGDashboardPage() {
-const MySwal = withReactContent(Swal);
+  const MySwal = withReactContent(Swal);
   const router = useRouter();
   const { user, userId, logout, checkAuth, verify, role } = useAuthStore();
   const [userData, setUserData] = useState(null);
@@ -44,7 +44,12 @@ const MySwal = withReactContent(Swal);
     router.push('/dashboard/presensi');
   };
 
-  const navigateToAlQuran = () => {
+  // Modified to accept bookmark data
+  const navigateToAlQuran = (bookmark = null) => {
+    if (bookmark) {
+      // Store bookmark data in sessionStorage for pickup by the Quran page
+      sessionStorage.setItem('continue_quran_bookmark', JSON.stringify(bookmark));
+    }
     router.push('/dashboard/Quran');
   };
 
@@ -141,59 +146,60 @@ const MySwal = withReactContent(Swal);
       }, 3000);
     }
   };
+
   // Handle logout using Zustand store
-const handleLogout = () => {
-  MySwal.fire({
-    title: 'Yakin ingin logout?',
-    text: "Anda perlu login kembali untuk mengakses sistem",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Ya, Logout!',
-    cancelButtonText: 'Batal',
-    backdrop: `
-      rgba(0,0,123,0.4)
-      url("/images/nyan-cat.gif")
-      left top
-      no-repeat
-    `
-  }).then((result) => {
-    if (result.isConfirmed) {
-      try {
-        MySwal.fire({
-          title: 'Logging out...',
-          timer: 1500,
-          timerProgressBar: true,
-          didOpen: () => {
-            MySwal.showLoading();
-          }
-        }).then(() => {
-          // Call logout function from Zustand store
-          logout();
-          router.push('/login');
-          
-          // Optional: Show success toast after redirect
+  const handleLogout = () => {
+    MySwal.fire({
+      title: 'Yakin ingin logout?',
+      text: "Anda perlu login kembali untuk mengakses sistem",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Logout!',
+      cancelButtonText: 'Batal',
+      backdrop: `
+        rgba(0,0,123,0.4)
+        url("/images/nyan-cat.gif")
+        left top
+        no-repeat
+      `
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
           MySwal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Logout berhasil!',
-            showConfirmButton: false,
-            timer: 3000
+            title: 'Logging out...',
+            timer: 1500,
+            timerProgressBar: true,
+            didOpen: () => {
+              MySwal.showLoading();
+            }
+          }).then(() => {
+            // Call logout function from Zustand store
+            logout();
+            router.push('/login');
+            
+            // Optional: Show success toast after redirect
+            MySwal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Logout berhasil!',
+              showConfirmButton: false,
+              timer: 3000
+            });
           });
-        });
-      } catch (error) {
-        console.error("Error during logout process:", error);
-        MySwal.fire({
-          icon: 'error',
-          title: 'Gagal logout',
-          text: 'Silakan coba lagi',
-        });
+        } catch (error) {
+          console.error("Error during logout process:", error);
+          MySwal.fire({
+            icon: 'error',
+            title: 'Gagal logout',
+            text: 'Silakan coba lagi',
+          });
+        }
       }
-    }
-  });
-};
+    });
+  };
 
   // If we're server-side or still loading, show a loading spinner
   if (!isClient || loading) {
@@ -214,7 +220,7 @@ const handleLogout = () => {
     <Dashboard 
       userData={userData}
       loading={loading}
-      navigateToScan ={navigateToScan}
+      navigateToScan={navigateToScan}
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}
       navigateToPeserta={navigateToPeserta}
