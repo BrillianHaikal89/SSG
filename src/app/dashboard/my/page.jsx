@@ -452,7 +452,7 @@ export default function MutabaahYaumiyahPage() {
   };
 
   const handleRouteBack = () => {
-    router.push('/dashboard');
+    router.back(); // Menggunakan router.back() untuk kembali ke halaman sebelumnya
   };
 
   const handleSubmit = async (e) => {
