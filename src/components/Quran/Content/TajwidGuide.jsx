@@ -21,7 +21,7 @@ const TajwidGuide = () => {
       ]
     },
     {
-      name: "Mad (Elongation) Rules:",
+      name: "Mad Rules:",
       rules: [
         { name: "Mad Thabii", color: "#4CAF50" },
         { name: "Mad Lazim", color: "#009688" },
