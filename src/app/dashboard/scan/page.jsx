@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { Camera, CheckCircle, XCircle, RefreshCw, Clock, Calendar } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, RefreshCw, Clock } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -14,79 +14,21 @@ export default function QrCodeScanner() {
   const [submitting, setSubmitting] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [currentTime, setCurrentTime] = useState('');
-  const [currentDate, setCurrentDate] = useState({
-    gregorian: '',
-    hijri: '',
-    hijriDay: '',
-    hijriMonth: '',
-    hijriYear: ''
-  });
   const scannerRef = useRef(null);
 
-  // Convert to Hijri date
-  const gregorianToHijri = (date) => {
-    // Get Gregorian date components
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-    
-    // Formula to estimate Hijri date (approximate calculation)
-    // This is a simplified conversion - for precise conversion a full library would be better
-    const hijriYear = Math.floor((year - 622) * (33/32));
-    
-    // Define Hijri month names in Arabic
-    const hijriMonths = [
-      "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", 
-      "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban", 
-      "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
-    ];
-    
-    // Adjust this calculation for a more accurate estimate
-    // This is a very rough approximation
-    const dayOfYear = Math.floor((month * 30.5) + day);
-    const hijriDayOfYear = (dayOfYear + 10) % 354; // Approximate offset
-    const hijriMonth = Math.floor(hijriDayOfYear / 29.5);
-    const hijriDay = Math.floor(hijriDayOfYear % 29.5) + 1;
-    
-    // Return the estimated Hijri date components
-    return {
-      day: hijriDay,
-      month: hijriMonths[hijriMonth % 12],
-      year: hijriYear,
-      fullDate: `${hijriDay} ${hijriMonths[hijriMonth % 12]} ${hijriYear} H`
-    };
-  };
-
   useEffect(() => {
-    // Initialize and update the clock and date
-    const updateDateTime = () => {
+    // Initialize and update the clock
+    const updateClock = () => {
       const now = new Date();
-      
-      // Update time
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
       setCurrentTime(`${hours}:${minutes}:${seconds}`);
-      
-      // Update Gregorian date
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const gregorianDate = now.toLocaleDateString('id-ID', options);
-      
-      // Update Hijri date
-      const hijriDate = gregorianToHijri(now);
-      
-      setCurrentDate({
-        gregorian: gregorianDate,
-        hijri: hijriDate.fullDate,
-        hijriDay: hijriDate.day,
-        hijriMonth: hijriDate.month,
-        hijriYear: hijriDate.year
-      });
     };
 
     // Update immediately and then every second
-    updateDateTime();
-    const clockInterval = setInterval(updateDateTime, 1000);
+    updateClock();
+    const clockInterval = setInterval(updateClock, 1000);
 
     // Clean up scanner and clock interval on component unmount
     return () => {
@@ -214,19 +156,8 @@ export default function QrCodeScanner() {
     <div className="container mx-auto px-4 py-8 max-w-md">
       <Toaster position="top-center" />
       
-      {/* Date and Time Display */}
-      <div className="mb-4 text-center bg-green-600 text-white py-4 rounded-lg shadow-lg">
-        {/* Hijri Date */}
-        <div className="mb-1">
-          <div className="text-xl font-bold">{currentDate.hijriDay} {currentDate.hijriMonth} {currentDate.hijriYear} H</div>
-        </div>
-        
-        {/* Gregorian Date */}
-        <div className="mb-2">
-          <div className="text-lg">{currentDate.gregorian}</div>
-        </div>
-        
-        {/* Real-time Clock */}
+      {/* Real-time Clock Display */}
+      <div className="mb-4 text-center bg-blue-600 text-white py-3 rounded-lg shadow-lg">
         <div className="flex items-center justify-center">
           <Clock className="mr-2" size={20} />
           <span className="text-2xl font-mono font-bold">{currentTime}</span>
