@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Notification from './Notification';
-import QuranBookmarkCard from './Dashboard/Quran/QuranBookmarkCard';
+import QuranBookmarkCard from './dashboard/Quran/QuranBookmarkCard';
 
 const Dashboard = ({
   userData,
