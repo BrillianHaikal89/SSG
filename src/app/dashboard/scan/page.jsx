@@ -229,17 +229,10 @@ export default function QrCodeScanner() {
         toast.error("Gagal memulai scanner. Silakan coba lagi.");
         return;
       }
-      
-      // Clear any existing content in the QR reader element
-      qrReaderElement.innerHTML = '';
 
       const config = {
         fps: 10,
         qrbox: 250,
-        rememberLastUsedCamera: true,
-        // Force camera-only scanning
-        showTorchButtonIfSupported: true,
-        aspectRatio: 1.0
       };
 
       if (scannerRef.current) {
@@ -251,48 +244,10 @@ export default function QrCodeScanner() {
       }
 
       try {
-        // Use the Html5QrcodeScanner with more basic settings
-        scannerRef.current = new Html5QrcodeScanner(
-          "qr-reader", 
-          { 
-            fps: 10,
-            qrbox: 250,
-            formatsToSupport: [0], // 0 is for QR_CODE only
-            disableFlip: false,
-            showZoomSliderIfSupported: true,
-            defaultZoomValueIfSupported: 2
-          }, 
-          /* verbose= */ false
-        );
-        
-        // Render the scanner and set up the callbacks
+        scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
         scannerRef.current.render(onScanSuccess, (err) => {
           console.warn("QR scan error:", err);
         });
-        
-        // Modify UI elements to force camera-only mode
-        setTimeout(() => {
-          // Try to hide file selection elements
-          const fileSelectionElements = document.querySelectorAll('[id*="file"], [class*="file"], input[type="file"]');
-          fileSelectionElements.forEach(element => {
-            if (element) {
-              element.style.display = "none";
-            }
-          });
-          
-          // Auto-click the camera permission button if it exists
-          const cameraButton = document.getElementById("qr-reader__camera_permission_button");
-          if (cameraButton) {
-            cameraButton.click();
-          }
-          
-          // Focus on camera scanning interface
-          const scanRegion = document.getElementById("qr-reader__scan_region");
-          if (scanRegion) {
-            scanRegion.style.display = "block";
-          }
-        }, 500);
-        
       } catch (error) {
         console.error("Error initializing QR scanner:", error);
         setScanning(false);
@@ -391,7 +346,7 @@ export default function QrCodeScanner() {
           </div>
         )}
 
-        {/* QR reader container that becomes visible when scanning */}
+        {/* Always include the QR reader div in the DOM */}
         <div id="qr-reader-container" className={scanning ? "block p-4" : "hidden"}>
           <div className="mb-4 text-center text-sm text-gray-500">
             Posisikan QR code di dalam kotak
@@ -456,8 +411,6 @@ export default function QrCodeScanner() {
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="font-medium text-blue-800 mb-2">Petunjuk:</h3>
         <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
-          <li>Klik tombol "Bismillah Scan QR Code"</li>
-          <li>Izinkan aplikasi mengakses kamera</li>
           <li>Arahkan kamera ke QR code</li>
           <li>Tunggu hingga QR code terdeteksi</li>
           <li>Presensi akan dicatat secara otomatis</li>
