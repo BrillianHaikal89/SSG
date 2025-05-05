@@ -764,8 +764,8 @@ export default function MutabaahYaumiyahPage() {
     { label: "Shaum Sunnah (3x/bulan)", field: "shaum_sunnah", type: "checkbox" },
     { label: "Shodaqoh Maal", field: "shodaqoh", type: "checkbox" },
     { label: "Dzikir Pagi/Petang", field: "dzikir_pagi_petang", type: "checkbox" },
-    { label: "Istighfar (x100)", field: "istighfar_1000x", max: 15, type: "number" },
-    { label: "Sholawat (x100)", field: "sholawat_100x", max: 15, type: "number" },
+    { label: "Istighfar (x1000)", field: "istighfar_1000x", max: 1000, type: "number" },
+    { label: "Sholawat (x100)", field: "sholawat_100x", max: 100, type: "number" },
   ];
 
   return (
