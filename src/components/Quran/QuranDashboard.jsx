@@ -9,6 +9,7 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
+import { quranApi } from '../../services/ApiQuran';
 import toast from 'react-hot-toast';
 
 const QuranDashboard = () => {
@@ -76,7 +77,7 @@ const QuranDashboard = () => {
         navigateToBookmark(bookmark);
       } else {
         // If no sessionStorage bookmark, check if user is logged in
-        // and fetch their latest bookmark from localStorage
+        // and fetch their latest bookmark from API
         fetchLatestBookmark();
       }
     } catch (error) {
@@ -84,22 +85,13 @@ const QuranDashboard = () => {
     }
   };
 
-  // Fetch the latest bookmark from localStorage
-  const fetchLatestBookmark = () => {
+  // Fetch the latest bookmark from API
+  const fetchLatestBookmark = async () => {
     if (!user || !user.userId) return;
 
     try {
-      // Get the latest bookmark from localStorage
-      const bookmarkKey = `quran_bookmark_${user.userId}`;
-      const storedBookmarks = JSON.parse(localStorage.getItem(bookmarkKey) || '[]');
-      
-      // Sort by timestamp (newest first)
-      storedBookmarks.sort((a, b) => 
-        new Date(b.timestamp) - new Date(a.timestamp)
-      );
-      
-      // Get the first one (most recent)
-      const latestBookmark = storedBookmarks.length > 0 ? storedBookmarks[0] : null;
+      // Get the latest bookmark
+      const latestBookmark = await quranApi.getLatestBookmark(user.userId);
       
       if (latestBookmark) {
         setBookmark(latestBookmark);
