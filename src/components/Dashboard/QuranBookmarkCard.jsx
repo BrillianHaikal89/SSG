@@ -1,48 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { quranApi } from '../../services/ApiQuran';
+import useAuthStore from '../../stores/authStore';
 
-// Simple function to get the latest bookmark from localStorage
-// This avoids import errors since we don't have direct access to the API service
-const getLatestBookmark = (userId) => {
-  try {
-    if (!userId) return null;
-    
-    // Get from localStorage
-    const key = `quran_bookmark_${userId}`;
-    const bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
-    
-    // Sort by timestamp (newest first)
-    bookmarks.sort((a, b) => 
-      new Date(b.timestamp) - new Date(a.timestamp)
-    );
-    
-    // Return the first one (most recent)
-    return bookmarks.length > 0 ? bookmarks[0] : null;
-  } catch (error) {
-    console.error("Error getting latest bookmark:", error);
-    return null;
-  }
-};
-
-const QuranBookmarkCard = ({ onContinueReading, userId }) => {
+const QuranBookmarkCard = ({ onContinueReading }) => {
   const [bookmark, setBookmark] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     fetchLatestBookmark();
-  }, [userId]);
+  }, [user?.userId]);
 
   const fetchLatestBookmark = async () => {
-    if (!userId) {
+    if (!user || !user.userId) {
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      
-      // Get the bookmark from localStorage
-      const latestBookmark = getLatestBookmark(userId);
+      const latestBookmark = await quranApi.getLatestBookmark(user.userId);
       
       if (latestBookmark) {
         setBookmark(latestBookmark);
@@ -90,16 +67,6 @@ const QuranBookmarkCard = ({ onContinueReading, userId }) => {
     
     if (typeof onContinueReading === 'function') {
       onContinueReading(bookmark);
-    } else {
-      // Fallback if no callback provided
-      try {
-        // Store bookmark data in sessionStorage for pickup by the Quran page
-        sessionStorage.setItem('continue_quran_bookmark', JSON.stringify(bookmark));
-        // Toast notification
-        toast.success('Melanjutkan dari terakhir dibaca');
-      } catch (error) {
-        console.error('Failed to save bookmark to session:', error);
-      }
     }
   };
 

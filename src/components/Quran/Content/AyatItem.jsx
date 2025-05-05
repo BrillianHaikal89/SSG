@@ -1,10 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
 const AyatItem = ({ ayat, selectedSurah }) => {
-  const [bookmark, setBookmark] = React.useState(null);
+  const [bookmark, setBookmark] = useState(null);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const { user } = useAuthStore();
+
+  // Check if this ayat is bookmarked when component mounts
+  useEffect(() => {
+    if (user?.userId && ayat) {
+      checkIfBookmarked();
+    }
+  }, [ayat, user?.userId]);
+
+  const checkIfBookmarked = () => {
+    // Using localStorage to track bookmarks
+    if (user?.userId && ayat) {
+      try {
+        const bookmarkKey = `quran_bookmark_${user.userId}`;
+        const storedBookmarks = JSON.parse(localStorage.getItem(bookmarkKey) || '[]');
+        
+        // Check if this ayat is bookmarked
+        const found = storedBookmarks.find(b => 
+          b.surah === (selectedSurah || ayat.surah_name) && 
+          b.ayah === ayat.no_ayat
+        );
+        
+        if (found) {
+          setIsBookmarked(true);
+          setBookmark(found);
+        } else {
+          setIsBookmarked(false);
+          setBookmark(null);
+        }
+      } catch (error) {
+        console.error('Error checking bookmark status:', error);
+      }
+    }
+  };
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
@@ -79,48 +113,56 @@ const AyatItem = ({ ayat, selectedSurah }) => {
     return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const saveBookmark = async () => {
+  const handleSaveBookmark = async () => {
     if (!user) {
-      alert('Anda harus login terlebih dahulu');
+      toast.error('Anda harus login terlebih dahulu');
       return;
     }
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
     try {
-      const response = await fetch(`${API_URL}/quran/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user?.userId, // Use actual user ID from auth store
-          surah: selectedSurah || ayat.surah_name, // Use selectedSurah if available
-          ayah: ayat.no_ayat,
-          page: ayat.no_hal,
-          juz: ayat.no_juz
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      toast.success(data.message || 'Bookmark berhasil disimpan');
-      setBookmark({
+      // Create bookmark data
+      const bookmarkData = {
+        user_id: user.userId,
         surah: selectedSurah || ayat.surah_name,
         ayah: ayat.no_ayat,
         page: ayat.no_hal,
-        juz: ayat.no_juz
-      });
+        juz: ayat.no_juz,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Save to local storage (since we're not using the API in this version)
+      const bookmarkKey = `quran_bookmark_${user.userId}`;
+      const storedBookmarks = JSON.parse(localStorage.getItem(bookmarkKey) || '[]');
+      
+      // Check if bookmark already exists
+      const existingIndex = storedBookmarks.findIndex(b => 
+        b.surah === bookmarkData.surah && 
+        b.ayah === bookmarkData.ayah
+      );
+      
+      if (existingIndex > -1) {
+        // Update existing bookmark
+        storedBookmarks[existingIndex] = bookmarkData;
+      } else {
+        // Add new bookmark
+        storedBookmarks.push(bookmarkData);
+      }
+      
+      // Sort by timestamp (newest first)
+      storedBookmarks.sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      
+      localStorage.setItem(bookmarkKey, JSON.stringify(storedBookmarks));
+
+      setIsBookmarked(true);
+      setBookmark(bookmarkData);
+      toast.success('Bookmark berhasil disimpan');
     } catch (error) {
       console.error('Error saving bookmark:', error);
-      alert('Gagal menyimpan bookmark: ' + error.message);
+      toast.error('Gagal menyimpan bookmark: ' + error.message);
     }
   };
-
-  console.log(" ayat " , ayat);
-  console.log(" selectedSurah " , selectedSurah);
-  console.log(" surah " , ayat.surah_name);
 
   return (
     <div className="ayat-item">
@@ -141,10 +183,10 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           />
           {ayat.tafsir && <p className="translation">{ayat.tafsir}</p>}
           <button 
-            onClick={saveBookmark}
-            className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+            onClick={handleSaveBookmark}
+            className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm mt-2"
           >
-            {bookmark ? (
+            {isBookmarked ? (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
