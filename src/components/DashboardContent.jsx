@@ -29,6 +29,7 @@ const DashboardContent = ({
       }
 
       const data = await response.json();
+      console.log('Bookmark data:', data);
       if (data.success) {
         setBookmarkData(data.data); // Simpan data bookmark ke state
       }
@@ -323,14 +324,14 @@ const DashboardContent = ({
               <p className="font-medium">{quranProgress.page}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">ayat</p>
+              <p className="text-xs text-gray-500">Ayat</p>
               <p className="font-medium">{quranProgress.ayah}</p>
             </div>
           </div>
         </div>
         
         <p className="text-xs text-gray-500">
-          Terakhir Dibaca: {quranProgress.lastRead}
+          Terakhir Dibaca: {quranProgress.updated_at}
         </p>
       </section>
 
