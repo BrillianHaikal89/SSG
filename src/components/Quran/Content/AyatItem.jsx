@@ -1,32 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
-import FontSizeSelector from './FontSizeSelector';
 
 const AyatItem = ({ 
   ayat, 
   selectedSurah, 
-  defaultArabicSize = 'medium',
-  defaultTranslationSize = 'medium',
-  defaultShowTranslation = true
+  fontSizeClass = 'medium',
+  showTranslation = true 
 }) => {
   const [bookmark, setBookmark] = useState(null);
-  const [arabicFontSize, setArabicFontSize] = useState(defaultArabicSize);
-  const [translationFontSize, setTranslationFontSize] = useState(defaultTranslationSize);
-  const [showTranslation, setShowTranslation] = useState(defaultShowTranslation);
   const { user } = useAuthStore();
-  
-  // Update when defaults change
-  useEffect(() => {
-    setArabicFontSize(defaultArabicSize);
-    setTranslationFontSize(defaultTranslationSize);
-    setShowTranslation(defaultShowTranslation);
-  }, [defaultArabicSize, defaultTranslationSize, defaultShowTranslation]);
 
-  const getFontSizeClass = (size) => {
+  // Get appropriate CSS classes based on font size
+  const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
-        return 'text-lg';
+        return 'text-xl';
       case 'medium':
         return 'text-2xl';
       case 'large':
@@ -124,7 +113,7 @@ const AyatItem = ({
 
   const saveBookmark = async () => {
     if (!user) {
-      alert('Anda harus login terlebih dahulu');
+      toast.error('Anda harus login terlebih dahulu');
       return;
     }
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -157,7 +146,7 @@ const AyatItem = ({
       });
     } catch (error) {
       console.error('Error saving bookmark:', error);
-      alert('Gagal menyimpan bookmark: ' + error.message);
+      toast.error('Gagal menyimpan bookmark: ' + error.message);
     }
   };
 
@@ -174,74 +163,60 @@ const AyatItem = ({
             </div>
           )}
           
-          {/* Font Size Controls */}
-          <div className="mb-3 flex flex-wrap gap-4">
-            <FontSizeSelector 
-              title="Ukuran Arab" 
-              currentSize={arabicFontSize} 
-              onChange={setArabicFontSize} 
-            />
-            <FontSizeSelector 
-              title="Ukuran Terjemahan" 
-              currentSize={translationFontSize} 
-              onChange={setTranslationFontSize} 
-            />
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Terjemahan:</span>
-              <div className="relative inline-block w-10 align-middle select-none">
-                <input 
-                  type="checkbox" 
-                  id={`toggle-${ayat.no_ayat}`} 
-                  checked={showTranslation} 
-                  onChange={() => setShowTranslation(!showTranslation)} 
-                  className="sr-only"
-                />
-                <label 
-                  htmlFor={`toggle-${ayat.no_ayat}`} 
-                  className={`block h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in 
-                    ${showTranslation ? 'bg-blue-600' : 'bg-gray-300'}`}
-                >
-                  <span 
-                    className={`block h-4 w-4 ml-1 mt-1 rounded-full transition-transform duration-200 ease-in transform 
-                    ${showTranslation ? 'translate-x-4 bg-white' : 'bg-white'}`} 
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-          
           <div 
-            className={`arab ${getFontSizeClass(arabicFontSize)}`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
           {ayat.tafsir && showTranslation && (
-            <p className={`translation mt-2 ${getTranslationFontSizeClass(translationFontSize)}`}>
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
               {ayat.tafsir}
             </p>
           )}
           
-          <button 
-            onClick={saveBookmark}
-            className="flex items-center gap-1 px-2 py-1 mt-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-          >
-            {bookmark ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                  <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
-                </svg>
-                <span>Tersimpan</span>
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                </svg>
-                <span>Simpan</span>
-              </>
-            )}
-          </button>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button 
+              onClick={saveBookmark}
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+            >
+              {bookmark ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
+                  </svg>
+                  <span>Tersimpan</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </svg>
+                  <span>Simpan</span>
+                </>
+              )}
+            </button>
+            
+            <button
+              className="flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+              onClick={() => window.navigator.clipboard.writeText(`${ayat.arab}\n\n${ayat.tafsir || ''}`)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+              </svg>
+              <span>Salin</span>
+            </button>
+            
+            <button
+              className="flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+              onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${ayat.surah_name || selectedSurah} ${ayat.no_ayat}\n\n${ayat.tafsir || ''}`)}`, '_blank')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="w-4 h-4" viewBox="0 0 16 16">
+                <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"/>
+              </svg>
+              <span>Bagikan</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

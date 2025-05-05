@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
 import EmptyState from '../LoadingStates/EmptyState';
 import NextContentButton from './NextContentButton';
-import FontSizeSelector from './FontSizeSelector';
 
 const QuranContent = ({
   loading,
@@ -17,12 +16,12 @@ const QuranContent = ({
   currentHal,
   isAtEndOfContent,
   getNextContent,
-  handleContinueToNext
+  handleContinueToNext,
+  fontSizeClass,
+  handleFontSizeChange,
+  showTranslation,
+  setShowTranslation
 }) => {
-  const [globalArabicFontSize, setGlobalArabicFontSize] = useState('medium');
-  const [globalTranslationFontSize, setGlobalTranslationFontSize] = useState('medium');
-  const [showTranslation, setShowTranslation] = useState(true);
-
   if (error) {
     return (
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
@@ -55,21 +54,43 @@ const QuranContent = ({
           </p>
         </div>
         
-        {/* Global settings */}
+        {/* Font size controls - simplified */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
           <div className="flex flex-wrap gap-4 mb-3">
-            <FontSizeSelector 
-              title="Ukuran Arab" 
-              currentSize={globalArabicFontSize} 
-              onChange={setGlobalArabicFontSize} 
-            />
-            <FontSizeSelector 
-              title="Ukuran Terjemahan" 
-              currentSize={globalTranslationFontSize} 
-              onChange={setGlobalTranslationFontSize} 
-            />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Ukuran Teks:</span>
+              <div className="flex bg-gray-100 rounded-md shadow-sm">
+                <button
+                  onClick={() => handleFontSizeChange('small')}
+                  className={`px-3 py-1 text-xs rounded-l-md ${
+                    fontSizeClass === 'small' ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'
+                  } transition-colors duration-200`}
+                  aria-label="Ukuran kecil"
+                >
+                  Kecil
+                </button>
+                <button
+                  onClick={() => handleFontSizeChange('medium')}
+                  className={`px-3 py-1 text-xs ${
+                    fontSizeClass === 'medium' ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'
+                  } transition-colors duration-200`}
+                  aria-label="Ukuran sedang"
+                >
+                  Sedang
+                </button>
+                <button
+                  onClick={() => handleFontSizeChange('large')}
+                  className={`px-3 py-1 text-xs rounded-r-md ${
+                    fontSizeClass === 'large' ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'
+                  } transition-colors duration-200`}
+                  aria-label="Ukuran besar"
+                >
+                  Besar
+                </button>
+              </div>
+            </div>
             
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Tampilkan Terjemahan:</span>
@@ -94,7 +115,7 @@ const QuranContent = ({
               </div>
             </div>
           </div>
-          <p className="text-xs text-gray-500">Pengaturan akan berlaku untuk semua ayat. Anda juga dapat mengatur font secara individual pada setiap ayat.</p>
+          <p className="text-xs text-gray-500">Pengaturan ini akan berlaku untuk semua ayat. Perubahan akan disimpan untuk kunjungan berikutnya.</p>
         </div>
         
         {/* Tajwid guide */}
@@ -107,9 +128,8 @@ const QuranContent = ({
               key={`${ayat.no_surat}-${ayat.no_ayat}`} 
               ayat={ayat}
               selectedSurah={selectedSurah}
-              defaultArabicSize={globalArabicFontSize}
-              defaultTranslationSize={globalTranslationFontSize}
-              defaultShowTranslation={showTranslation}
+              fontSizeClass={fontSizeClass}
+              showTranslation={showTranslation}
             />
           ))}
         </div>

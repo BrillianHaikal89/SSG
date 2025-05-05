@@ -14,12 +14,8 @@ import '../../app/styles/quran-styles.css'; // Import the custom CSS
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [bookmark, setBookmark] = useState(null);
-  const [fontSettings, setFontSettings] = useState({
-    arabicSize: 'medium',
-    translationSize: 'medium',
-    showTranslation: true
-  });
+  const [fontSizeClass, setFontSizeClass] = useState('medium'); // One size control for all text
+  const [showTranslation, setShowTranslation] = useState(true);
   const { user } = useAuthStore();
   
   const {
@@ -75,13 +71,14 @@ const QuranDashboard = () => {
     window.addEventListener('scroll', handleScroll);
     
     // Load font settings from localStorage if available
-    const savedFontSettings = localStorage.getItem('quranFontSettings');
-    if (savedFontSettings) {
-      try {
-        setFontSettings(JSON.parse(savedFontSettings));
-      } catch (e) {
-        console.error('Error loading font settings:', e);
-      }
+    const savedFontSize = localStorage.getItem('quranFontSize');
+    if (savedFontSize) {
+      setFontSizeClass(savedFontSize);
+    }
+    
+    const savedShowTranslation = localStorage.getItem('quranShowTranslation');
+    if (savedShowTranslation !== null) {
+      setShowTranslation(savedShowTranslation === 'true');
     }
     
     // Clean up
@@ -94,16 +91,14 @@ const QuranDashboard = () => {
   // Save font settings to localStorage when they change
   useEffect(() => {
     if (isClient) {
-      localStorage.setItem('quranFontSettings', JSON.stringify(fontSettings));
+      localStorage.setItem('quranFontSize', fontSizeClass);
+      localStorage.setItem('quranShowTranslation', showTranslation.toString());
     }
-  }, [fontSettings, isClient]);
+  }, [fontSizeClass, showTranslation, isClient]);
   
-  // Handle font setting changes
-  const handleFontSettingChange = (setting, value) => {
-    setFontSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }));
+  // Handle font size change
+  const handleFontSizeChange = (size) => {
+    setFontSizeClass(size);
   };
   
   if (!isClient) {
@@ -173,8 +168,10 @@ const QuranDashboard = () => {
           isAtEndOfContent={isAtEndOfContent}
           getNextContent={getNextContent}
           handleContinueToNext={handleContinueToNext}
-          fontSettings={fontSettings}
-          handleFontSettingChange={handleFontSettingChange}
+          fontSizeClass={fontSizeClass}
+          handleFontSizeChange={handleFontSizeChange}
+          showTranslation={showTranslation}
+          setShowTranslation={setShowTranslation}
         />
       </div>
 
