@@ -92,9 +92,9 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user?.userId, // Use actual user ID from auth store
-          surah: selectedSurah || ayat.surah_name, // Use selectedSurah if available
-          surah_id: ayat.no_surat, // Store the numeric ID
+          user_id: user?.userId,
+          surah: selectedSurah || ayat.surah_name,
+          surah_id: ayat.no_surat,
           ayah: ayat.no_ayat,
           page: ayat.no_hal,
           juz: ayat.no_juz
@@ -163,3 +163,5 @@ const AyatItem = ({ ayat, selectedSurah }) => {
     </div>
   );
 };
+
+export default AyatItem; 
