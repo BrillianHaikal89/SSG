@@ -3,6 +3,7 @@ import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
 import EmptyState from '../LoadingStates/EmptyState';
+import NextContentButton from './NextContentButton';
 
 const QuranContent = ({
   loading,
@@ -12,7 +13,10 @@ const QuranContent = ({
   surahList,
   selectedSurah,
   currentJuz,
-  currentHal
+  currentHal,
+  isAtEndOfContent,
+  getNextContent,
+  handleContinueToNext
 }) => {
   if (error) {
     return (
@@ -27,6 +31,10 @@ const QuranContent = ({
   }
   
   if (quranContent && quranContent.length > 0) {
+    // Check if we're at the end of content and get the next content item
+    const showNextButton = isAtEndOfContent();
+    const nextContent = showNextButton ? getNextContent() : null;
+    
     return (
       <div className="bg-white rounded-lg shadow-md p-4">
         {/* Surah header */}
@@ -42,7 +50,7 @@ const QuranContent = ({
           </p>
         </div>
         
-        {/* Tajwid guide - exactly as in the screenshot */}
+        {/* Tajwid guide */}
         <TajwidGuide />
         
         {/* Ayat list with Tajwid highlighting */}
@@ -55,6 +63,15 @@ const QuranContent = ({
             />
           ))}
         </div>
+        
+        {/* Next Content Button */}
+        {showNextButton && nextContent && (
+          <NextContentButton
+            currentType={nextContent.type}
+            nextItem={nextContent.item}
+            onContinue={handleContinueToNext}
+          />
+        )}
       </div>
     );
   }
