@@ -240,17 +240,14 @@ export default function MutabaahYaumiyahPage() {
     }
   };
 
-  // Format time for display in UI
+  // Format time for display in UI - modified to use ":" instead of "."
   const formatTime = (date) => {
     if (!date) return '';
     try {
-      // Format: "10:27:12"
-      return date.toLocaleTimeString('id-ID', {
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        hour12: false
-      });
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
     } catch (error) {
       console.error('Error formatting time:', error);
       return '';
