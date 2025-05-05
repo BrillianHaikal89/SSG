@@ -24,10 +24,9 @@ const NextContentButton = ({ currentType, nextItem, onContinue }) => {
         onClick={onContinue}
         className="px-6 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors duration-200 shadow-md flex items-center justify-center mx-auto"
       >
-        <span>{buttonText}</span>
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          className="h-5 w-5 ml-2" 
+          className="h-5 w-5 mr-2" 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"
@@ -36,9 +35,10 @@ const NextContentButton = ({ currentType, nextItem, onContinue }) => {
             strokeLinecap="round" 
             strokeLinejoin="round" 
             strokeWidth={2} 
-            d="M9 5l7 7-7 7" 
+            d="M15 19l-7-7 7-7" 
           />
         </svg>
+        <span>{buttonText}</span>
       </button>
     </div>
   );

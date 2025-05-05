@@ -9,14 +9,13 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
+import toast, { Toaster } from 'react-hot-toast';
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore(); 
 
-  
   const {
     surahList,
     selectedSurah,
@@ -47,6 +46,28 @@ const QuranDashboard = () => {
     getNextContent,
     handleContinueToNext
   } = useQuran();
+  
+  // Handle bookmark navigation
+  const handleLoadBookmark = (surah, ayah, page, juz) => {
+    // If surah is provided, navigate to that surah and ayat
+    if (surah) {
+      handleSurahChange({ target: { value: surah } });
+      if (ayah) {
+        handleAyatChange({ target: { value: ayah } });
+      }
+    }
+    // If page is provided, navigate to that page
+    else if (page) {
+      handlePageChange({ target: { value: page } });
+    }
+    // If juz is provided, navigate to that juz
+    else if (juz) {
+      handleJuzChange({ target: { value: juz } });
+    }
+    
+    toast.success('Berhasil memuat posisi bookmark');
+    scrollToTop();
+  };
   
   // Handle client-side rendering and responsive layout
   useEffect(() => {
@@ -88,6 +109,9 @@ const QuranDashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-blue-100">
+      {/* Toaster for notifications */}
+      <Toaster position="top-center" />
+      
       {/* Header */}
       <Header />
 
@@ -142,6 +166,7 @@ const QuranDashboard = () => {
           isAtEndOfContent={isAtEndOfContent}
           getNextContent={getNextContent}
           handleContinueToNext={handleContinueToNext}
+          onLoadBookmark={handleLoadBookmark}
         />
       </div>
 
@@ -157,6 +182,9 @@ const QuranDashboard = () => {
           </svg>
         </button>
       )}
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };
