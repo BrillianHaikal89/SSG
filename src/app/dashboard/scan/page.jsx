@@ -233,6 +233,10 @@ export default function QrCodeScanner() {
       const config = {
         fps: 10,
         qrbox: 250,
+        // Force camera to be used instead of allowing file selection
+        supportedScanTypes: [
+          { format: "qr_code", type: "scan" }
+        ]
       };
 
       if (scannerRef.current) {
@@ -244,10 +248,28 @@ export default function QrCodeScanner() {
       }
 
       try {
-        scannerRef.current = new Html5QrcodeScanner("qr-reader", config, false);
+        // Directly request camera access using Html5QrcodeScanner
+        scannerRef.current = new Html5QrcodeScanner("qr-reader", config, /* verbose= */ false);
+        
+        // Render the scanner and set up the callbacks
         scannerRef.current.render(onScanSuccess, (err) => {
           console.warn("QR scan error:", err);
         });
+        
+        // Remove any file selection UI if present
+        setTimeout(() => {
+          const fileSelectionDiv = document.getElementById("qr-reader__filescan");
+          if (fileSelectionDiv) {
+            fileSelectionDiv.style.display = "none";
+          }
+          
+          // Auto-click the camera button if it exists
+          const cameraButton = document.getElementById("qr-reader__camera_permission_button");
+          if (cameraButton) {
+            cameraButton.click();
+          }
+        }, 500);
+        
       } catch (error) {
         console.error("Error initializing QR scanner:", error);
         setScanning(false);
@@ -346,7 +368,7 @@ export default function QrCodeScanner() {
           </div>
         )}
 
-        {/* Always include the QR reader div in the DOM */}
+        {/* QR reader container that becomes visible when scanning */}
         <div id="qr-reader-container" className={scanning ? "block p-4" : "hidden"}>
           <div className="mb-4 text-center text-sm text-gray-500">
             Posisikan QR code di dalam kotak
@@ -411,6 +433,8 @@ export default function QrCodeScanner() {
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="font-medium text-blue-800 mb-2">Petunjuk:</h3>
         <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
+          <li>Klik tombol "Bismillah Scan QR Code"</li>
+          <li>Izinkan aplikasi mengakses kamera</li>
           <li>Arahkan kamera ke QR code</li>
           <li>Tunggu hingga QR code terdeteksi</li>
           <li>Presensi akan dicatat secara otomatis</li>
