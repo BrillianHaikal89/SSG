@@ -660,7 +660,7 @@ export default function MutabaahYaumiyahPage() {
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         <div className={`p-4 sm:p-6 ${headerBgColor} text-white`}>
           <h1 className="text-xl sm:text-2xl font-bold text-center">Mutaba'ah Yaumiyah</h1>
-          <p className="text-center text-sm sm:text-base mt-1">At-Taqwa dan As-Sunnah</p>
+          <p className="text-center text-sm sm:text-base mt-1">Ahlan wa Sahlan</p>
           <p className="text-center font-medium text-sm sm:text-base mt-1 truncate px-2">{user?.name || 'Pengguna'}</p>
           
           <div className="text-center mt-3">
