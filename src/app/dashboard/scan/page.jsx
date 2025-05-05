@@ -229,14 +229,17 @@ export default function QrCodeScanner() {
         toast.error("Gagal memulai scanner. Silakan coba lagi.");
         return;
       }
+      
+      // Clear any existing content in the QR reader element
+      qrReaderElement.innerHTML = '';
 
       const config = {
         fps: 10,
         qrbox: 250,
-        // Force camera to be used instead of allowing file selection
-        supportedScanTypes: [
-          { format: "qr_code", type: "scan" }
-        ]
+        rememberLastUsedCamera: true,
+        // Force camera-only scanning
+        showTorchButtonIfSupported: true,
+        aspectRatio: 1.0
       };
 
       if (scannerRef.current) {
@@ -248,25 +251,45 @@ export default function QrCodeScanner() {
       }
 
       try {
-        // Directly request camera access using Html5QrcodeScanner
-        scannerRef.current = new Html5QrcodeScanner("qr-reader", config, /* verbose= */ false);
+        // Use the Html5QrcodeScanner with more basic settings
+        scannerRef.current = new Html5QrcodeScanner(
+          "qr-reader", 
+          { 
+            fps: 10,
+            qrbox: 250,
+            formatsToSupport: [0], // 0 is for QR_CODE only
+            disableFlip: false,
+            showZoomSliderIfSupported: true,
+            defaultZoomValueIfSupported: 2
+          }, 
+          /* verbose= */ false
+        );
         
         // Render the scanner and set up the callbacks
         scannerRef.current.render(onScanSuccess, (err) => {
           console.warn("QR scan error:", err);
         });
         
-        // Remove any file selection UI if present
+        // Modify UI elements to force camera-only mode
         setTimeout(() => {
-          const fileSelectionDiv = document.getElementById("qr-reader__filescan");
-          if (fileSelectionDiv) {
-            fileSelectionDiv.style.display = "none";
-          }
+          // Try to hide file selection elements
+          const fileSelectionElements = document.querySelectorAll('[id*="file"], [class*="file"], input[type="file"]');
+          fileSelectionElements.forEach(element => {
+            if (element) {
+              element.style.display = "none";
+            }
+          });
           
-          // Auto-click the camera button if it exists
+          // Auto-click the camera permission button if it exists
           const cameraButton = document.getElementById("qr-reader__camera_permission_button");
           if (cameraButton) {
             cameraButton.click();
+          }
+          
+          // Focus on camera scanning interface
+          const scanRegion = document.getElementById("qr-reader__scan_region");
+          if (scanRegion) {
+            scanRegion.style.display = "block";
           }
         }, 500);
         
