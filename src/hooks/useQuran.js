@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { quranApi } from '../services/ApiQuran';
-import { useSearchParams } from 'next/navigation';
 
 const useQuran = () => {
-    // URL search parameters
-    const searchParams = useSearchParams();
-
     // State for Quran data
     const [surahList, setSurahList] = useState([]);
     const [selectedSurah, setSelectedSurah] = useState("");
@@ -13,52 +9,18 @@ const useQuran = () => {
     const [quranContent, setQuranContent] = useState([]);
     const [surahDetails, setSurahDetails] = useState(null);
 
-    // UI states
+    // UI states - initially set as empty strings to show placeholder text
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchText, setSearchText] = useState("");
     const [currentHal, setCurrentHal] = useState("");
     const [currentJuz, setCurrentJuz] = useState("");
     const [showScrollTop, setShowScrollTop] = useState(false);
-    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
     // Fetch list of surahs on hook initialization
     useEffect(() => {
         fetchSurahList();
     }, []);
-
-    // Parse URL parameters and load content when component mounts
-    useEffect(() => {
-        if (!initialLoadComplete && surahList.length > 0) {
-            const surahParam = searchParams.get('surah');
-            const ayatParam = searchParams.get('ayat');
-            const pageParam = searchParams.get('page');
-            const juzParam = searchParams.get('juz');
-            const isBookmark = searchParams.get('bookmark') === 'true';
-
-            if (isBookmark) {
-                if (surahParam) {
-                    setSelectedSurah(surahParam);
-                    fetchSurahDetails(surahParam);
-
-                    if (ayatParam) {
-                        setSelectedAyat(ayatParam);
-                        fetchAyat(surahParam, ayatParam);
-                    } else {
-                        fetchAyat(surahParam);
-                    }
-                } else if (pageParam) {
-                    setCurrentHal(pageParam);
-                    fetchByPage(pageParam);
-                } else if (juzParam) {
-                    setCurrentJuz(juzParam);
-                    fetchJuz(juzParam);
-                }
-            }
-
-            setInitialLoadComplete(true);
-        }
-    }, [searchParams, surahList, initialLoadComplete]);
 
     // Fetch surah list from the API
     const fetchSurahList = async() => {
@@ -85,6 +47,7 @@ const useQuran = () => {
             const data = await quranApi.getSurahDetails(surahId);
             setSurahDetails(data);
 
+            // Update juz and page information
             if (data.ayahs && data.ayahs.length > 0) {
                 setCurrentJuz(data.ayahs[0].no_juz ? data.ayahs[0].no_juz.toString() : "");
                 setCurrentHal(data.ayahs[0].no_hal ? data.ayahs[0].no_hal.toString() : "");
@@ -104,13 +67,17 @@ const useQuran = () => {
 
         try {
             const data = await quranApi.getAyat(surahId, ayatId);
+
+            // Format the data for display
             setQuranContent(data);
 
+            // Update juz and page if data is available
             if (data && data.length > 0) {
                 setCurrentJuz(data[0].no_juz ? data[0].no_juz.toString() : "");
                 setCurrentHal(data[0].no_hal ? data[0].no_hal.toString() : "");
             }
 
+            // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
@@ -128,14 +95,20 @@ const useQuran = () => {
         try {
             const data = await quranApi.getPageVerses(pageId);
             setQuranContent(data);
+
+            // Clear surah and ayat selections as we're now viewing by page
             setSelectedSurah("");
             setSelectedAyat("");
+
+            // Update current page
             setCurrentHal(pageId.toString());
 
+            // Update juz if first ayah has juz information
             if (data && data.length > 0) {
                 setCurrentJuz(data[0].no_juz ? data[0].no_juz.toString() : "");
             }
 
+            // Update page title to show first surah on this page
             if (data && data.length > 0 && data[0].surah_name) {
                 setSurahDetails({
                     nm_surat: data[0].surah_name,
@@ -148,6 +121,7 @@ const useQuran = () => {
                 });
             }
 
+            // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
@@ -165,20 +139,27 @@ const useQuran = () => {
         try {
             const data = await quranApi.getJuzVerses(juzId);
             setQuranContent(data);
+
+            // Update the current juz
             setCurrentJuz(juzId.toString());
+
+            // Clear surah and ayat selections as we're now viewing by juz
             setSelectedSurah("");
             setSelectedAyat("");
 
+            // Update the first page from returned data
             if (data && data.length > 0) {
                 setCurrentHal(data[0].no_hal ? data[0].no_hal.toString() : "");
             }
 
+            // Update page title to show juz number
             setSurahDetails({
                 nm_surat: `Juz ${juzId}`,
                 arti_surat: data && data.length > 0 ?
                     `Dimulai dari ${data[0].surah_name || ''}` : ""
             });
 
+            // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
@@ -199,11 +180,13 @@ const useQuran = () => {
             const data = await quranApi.searchQuran(searchQuery);
             setQuranContent(data);
 
+            // Update page title to show search results
             setSurahDetails({
                 nm_surat: `Hasil Pencarian`,
                 arti_surat: `"${searchQuery}" (${data.length} hasil)`
             });
 
+            // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
@@ -234,9 +217,12 @@ const useQuran = () => {
         setSelectedAyat("");
 
         if (surahId) {
+            // Fetch surah details
             fetchSurahDetails(surahId);
+            // Fetch all ayahs of the surah
             fetchAyat(surahId);
         } else {
+            // Clear content if no surah is selected
             setQuranContent([]);
             setSurahDetails(null);
         }
@@ -248,8 +234,10 @@ const useQuran = () => {
         setSelectedAyat(ayatId);
 
         if (selectedSurah && ayatId) {
+            // Fetch specific ayat
             fetchAyat(selectedSurah, ayatId);
         } else if (selectedSurah) {
+            // If no specific ayat is selected, fetch all ayahs of the surah
             fetchAyat(selectedSurah);
         }
     };
@@ -259,7 +247,7 @@ const useQuran = () => {
         const juzId = e.target.value;
         if (!juzId) return;
 
-        setCurrentJuz(juzId);
+        setCurrentJuz(juzId); // Store as string to maintain empty state
         fetchJuz(juzId);
     };
 
@@ -268,7 +256,7 @@ const useQuran = () => {
         const pageId = e.target.value;
         if (!pageId) return;
 
-        setCurrentHal(pageId);
+        setCurrentHal(pageId); // Store as string to maintain empty state
         fetchByPage(pageId);
     };
 
@@ -317,16 +305,23 @@ const useQuran = () => {
     const isAtEndOfContent = () => {
         if (!quranContent || quranContent.length === 0) return false;
 
+        // Get the last item in current content
         const lastItem = quranContent[quranContent.length - 1];
 
         if (selectedSurah && surahDetails) {
+            // For surah view, check if we're at the last ayat
             return lastItem.no_ayat === surahDetails.jml_ayat;
         } else if (currentHal) {
+            // For page view, check if this is the last ayat on the page
+            // This requires additional information about page boundaries from your API
+            // As a simplification, we'll check if another ayat from the same page exists
             return quranContent.filter(item =>
                 item.no_hal === lastItem.no_hal &&
                 item.no_ayat > lastItem.no_ayat
             ).length === 0;
         } else if (currentJuz) {
+            // For juz view, check if this is the last ayat in the juz
+            // Similar to page view, requires information about juz boundaries
             return quranContent.filter(item =>
                 item.no_juz === lastItem.no_juz &&
                 (item.no_surat > lastItem.no_surat ||
@@ -340,6 +335,7 @@ const useQuran = () => {
     // Determine the next content to navigate to
     const getNextContent = () => {
         if (selectedSurah) {
+            // For surah view, get the next surah
             const currentSurahId = parseInt(selectedSurah);
             const nextSurahId = currentSurahId + 1;
 
@@ -355,8 +351,9 @@ const useQuran = () => {
                 };
             }
         } else if (currentHal) {
+            // For page view, get the next page
             const pageNum = parseInt(currentHal);
-            if (pageNum < 604) {
+            if (pageNum < 604) { // 604 is the total number of pages in standard Quran
                 return {
                     type: 'page',
                     item: {
@@ -365,8 +362,9 @@ const useQuran = () => {
                 };
             }
         } else if (currentJuz) {
+            // For juz view, get the next juz
             const juzNum = parseInt(currentJuz);
-            if (juzNum < 30) {
+            if (juzNum < 30) { // 30 is the total number of juz in Quran
                 return {
                     type: 'juz',
                     item: {
@@ -384,6 +382,7 @@ const useQuran = () => {
         const nextContent = getNextContent();
         if (!nextContent) return;
 
+        // Navigate based on content type
         switch (nextContent.type) {
             case 'surah':
                 setSelectedSurah(nextContent.item.id.toString());
@@ -435,7 +434,7 @@ const useQuran = () => {
         scrollToTop,
         setShowScrollTop,
 
-        // Continue functionality
+        // New continue functionality
         isAtEndOfContent,
         getNextContent,
         handleContinueToNext

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Tambahkan useEffect
 import useAuthStore from '../stores/authStore';
 
 const DashboardContent = ({ 
@@ -14,7 +14,7 @@ const DashboardContent = ({
 }) => {
   const { role, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [bookmarkData, setBookmarkData] = useState(null);
+  const [bookmarkData, setBookmarkData] = useState(null); // State untuk menyimpan data bookmark
 
   const checkBookmark = async () => {
     if (!user?.userId) return;
@@ -313,22 +313,7 @@ const DashboardContent = ({
           </div>
           <button 
             className="bg-green-500 text-white px-4 py-1 rounded-lg text-sm font-medium w-full sm:w-auto hover:bg-green-600 transition-colors duration-300"
-            onClick={() => {
-              if (bookmarkData) {
-                // Navigate with bookmark parameters if available
-                const queryParams = new URLSearchParams({
-                  surah: bookmarkData.surah_id || '',
-                  ayat: bookmarkData.ayah || '',
-                  page: bookmarkData.page || '',
-                  juz: bookmarkData.juz || '',
-                  bookmark: 'true'
-                }).toString();
-                window.location.href = `/dashboard/Quran?${queryParams}`;
-              } else {
-                // Default navigation if no bookmark
-                navigateToAlQuran();
-              }
-            }}
+            onClick={navigateToAlQuran}
           >
             Lanjutkan Membaca
           </button>

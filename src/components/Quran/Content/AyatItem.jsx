@@ -81,7 +81,7 @@ const AyatItem = ({ ayat, selectedSurah }) => {
 
   const saveBookmark = async () => {
     if (!user) {
-      toast.error('Anda harus login terlebih dahulu');
+      alert('Anda harus login terlebih dahulu');
       return;
     }
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -92,9 +92,8 @@ const AyatItem = ({ ayat, selectedSurah }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user?.userId,
-          surah: selectedSurah || ayat.surah_name,
-          surah_id: ayat.no_surat,
+          user_id: user?.userId, // Use actual user ID from auth store
+          surah: selectedSurah || ayat.surah_name, // Use selectedSurah if available
           ayah: ayat.no_ayat,
           page: ayat.no_hal,
           juz: ayat.no_juz
@@ -109,16 +108,19 @@ const AyatItem = ({ ayat, selectedSurah }) => {
       toast.success(data.message || 'Bookmark berhasil disimpan');
       setBookmark({
         surah: selectedSurah || ayat.surah_name,
-        surah_id: ayat.no_surat,
         ayah: ayat.no_ayat,
         page: ayat.no_hal,
         juz: ayat.no_juz
       });
     } catch (error) {
       console.error('Error saving bookmark:', error);
-      toast.error('Gagal menyimpan bookmark: ' + error.message);
+      alert('Gagal menyimpan bookmark: ' + error.message);
     }
   };
+
+  console.log(" ayat " , ayat);
+  console.log(" selectedSurah " , selectedSurah);
+  console.log(" surah " , ayat.surah_name);
 
   return (
     <div className="ayat-item">
@@ -164,4 +166,4 @@ const AyatItem = ({ ayat, selectedSurah }) => {
   );
 };
 
-export default AyatItem; 
+export default AyatItem;
