@@ -165,7 +165,7 @@ export default function QrCodeScanner() {
       </div>
       
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-gray-800">Scan QR Code Presensi</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Scan QR Code</h1>
         <p className="text-gray-600">Pindai QR code untuk mencatat kehadiran</p>
       </div>
 
@@ -178,7 +178,7 @@ export default function QrCodeScanner() {
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center mx-auto"
             >
               <Camera size={20} className="mr-2" />
-              Mulai Scan QR Code
+              Bismillah Scan QR Code
             </button>
           </div>
         )}
