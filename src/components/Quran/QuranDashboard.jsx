@@ -30,6 +30,7 @@ const QuranDashboard = () => {
     currentJuz,
     showScrollTop,
     
+    // Methods
     fetchAyat,
     generateAyatOptions,
     handleSurahChange,
@@ -39,7 +40,12 @@ const QuranDashboard = () => {
     handleSearchChange,
     handleSearch,
     scrollToTop,
-    setShowScrollTop
+    setShowScrollTop,
+    
+    // New continue functionality
+    isAtEndOfContent,
+    getNextContent,
+    handleContinueToNext
   } = useQuran();
   
   // Handle client-side rendering and responsive layout
@@ -119,7 +125,7 @@ const QuranDashboard = () => {
         handleSearch={handleSearch}
       />
 
-      {/* Information Bar - Now positioned after controls */}
+      {/* Information Bar - Positioned after controls */}
       <InfoBar />
 
       {/* Main Content */}
@@ -133,6 +139,9 @@ const QuranDashboard = () => {
           selectedSurah={selectedSurah}
           currentJuz={currentJuz}
           currentHal={currentHal}
+          isAtEndOfContent={isAtEndOfContent}
+          getNextContent={getNextContent}
+          handleContinueToNext={handleContinueToNext}
         />
       </div>
 
