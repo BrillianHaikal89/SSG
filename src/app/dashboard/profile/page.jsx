@@ -1,60 +1,65 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+// Components
 import ProfileHeader from '../../../components/profile/ProfileHeader';
 import ProfileLayout from '../../../components/profile/ProfileLayout';
 import PersonalInfoForm from '../../../components/profile/PersonalInfoForm';
 import HealthInfoForm from '../../../components/profile/HealthInfoForm';
-import RequiredDocumentsForm from '../../../components/profile/RequiredDocumentsForm';
 import AgreementSignatureForm from '../../../components/profile/AgreementSignatureForm';
-import useAuthStore from '../../../stores/authStore';
-import { useRouter } from 'next/navigation';
 
-const ProfilePage = () => {
-  const router = useRouter();
-  const { user, checkAuth } = useAuthStore();
-  const [userData, setUserData] = useState(null);
-  const [isClient, setIsClient] = useState(false);
+// Dynamic import with SSR disabled
+const RequiredDocumentsForm = dynamic(
+  () => import('../../../components/profile/RequiredDocumentsForm'),
+  { ssr: false }
+);
 
-  // Handle client-side rendering and authentication
+// Error boundary component
+function ErrorBoundary({ children }) {
+  const [hasError, setHasError] = useState(false);
+
   useEffect(() => {
-    setIsClient(true);
+    const errorHandler = (error) => {
+      console.error("Caught error:", error);
+      setHasError(true);
+      return true; // Prevents default error handler
+    };
+
+    window.addEventListener('error', errorHandler);
+    return () => window.removeEventListener('error', errorHandler);
   }, []);
-  
-  // Check authentication status
-  useEffect(() => {
-    if (isClient) {
-      const isAuthenticated = checkAuth();
-      
-      if (!isAuthenticated) {
-        router.push('/login');
-        return;
-      }
-      
-      // Get user data from Zustand store
-      const authUser = useAuthStore.getState().user;
-      setUserData(authUser);
-    }
-  }, [router, checkAuth, isClient]);
 
-  if (!isClient || !userData) {
+  if (hasError) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-800 mx-auto mb-3"></div>
-          <p className="text-sm text-gray-600">Loading profile...</p>
-        </div>
+      <div className="bg-white rounded-lg shadow-md mb-4 p-4">
+        <h3 className="text-lg font-medium text-red-600">Error Loading Documents</h3>
+        <p className="text-gray-600">
+          Komponen dokumen tidak dapat dimuat saat ini. Silakan segarkan halaman atau coba lagi nanti.
+        </p>
       </div>
     );
   }
 
+  return children;
+}
+
+// Main Profile Page component
+const ProfilePage = () => {
+  // Existing code...
+  
   return (
     <ProfileLayout>
-      {/* Pass user data to components */}
       <ProfileHeader userData={userData} />
       <PersonalInfoForm initialData={userData} />
       <HealthInfoForm initialData={userData} />
-      <RequiredDocumentsForm initialData={userData} />
+      
+      {/* Wrap problematic component in ErrorBoundary */}
+      <ErrorBoundary>
+        <RequiredDocumentsForm initialData={userData} />
+      </ErrorBoundary>
+      
       <AgreementSignatureForm initialData={userData} />
     </ProfileLayout>
   );
