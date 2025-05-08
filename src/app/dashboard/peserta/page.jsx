@@ -58,7 +58,7 @@ export default function UsersManagement() {
       }
       
       const data = await response.json();
-      console.log("datanya : " , data);
+      console.log("Full API response data:", data);
       
       // Process and combine user data with flag status
       const processedData = data.data.map((user, index) => {
@@ -72,17 +72,42 @@ export default function UsersManagement() {
         };
       });
       
+      console.log("Processed user data:", processedData);
       setUsers(processedData);
       
-      // Fetch files data separately or mock it for now
-      if (data.file) {
-        setFiles(data.file);
+      // Check and set files data with proper error handling
+      if (data.file && Array.isArray(data.file)) {
+        console.log("Files data from API:", data.file);
+        
+        // Verify files structure
+        const validFiles = data.file.every(file => 
+          file.user_id !== undefined && 
+          file.file_type !== undefined
+        );
+        
+        if (!validFiles) {
+          console.warn("Some files may have invalid structure:", data.file);
+        }
+        
+        // Convert user_id to numbers to ensure consistent comparison
+        const processedFiles = data.file.map(file => ({
+          ...file,
+          user_id: parseInt(file.user_id)
+        }));
+        
+        console.log("Processed files data:", processedFiles);
+        setFiles(processedFiles);
+      } else {
+        console.warn("No files found in API response or invalid format");
+        setFiles([]);
       }
       
       setError(null);
     } catch (err) {
+      console.error("Error fetching data:", err);
       setError(`Failed to fetch users: ${err.message}`);
       setUsers([]);
+      setFiles([]);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -107,15 +132,35 @@ export default function UsersManagement() {
     return null;
   };
 
-  // Get user files
+  // Get user files with improved error handling and logging
   const getUserFiles = (userId) => {
-    return files.filter(file => file.user_id === userId);
+    if (!Array.isArray(files)) {
+      console.warn("Files is not an array:", files);
+      return [];
+    }
+    
+    const numericUserId = parseInt(userId);
+    console.log(`Looking for files with user_id=${numericUserId}`);
+    
+    const userFiles = files.filter(file => parseInt(file.user_id) === numericUserId);
+    console.log(`Found ${userFiles.length} files for user ${numericUserId}:`, userFiles);
+    
+    return userFiles;
   };
 
   // Check if user has submitted all required documents
   const hasAllDocuments = (userId) => {
     const userFiles = getUserFiles(userId);
     const requiredTypes = ['ktp', 'pas_foto', 'surat_izin', 'surat_kesehatan', 'bukti_pembayaran'];
+    
+    const missingTypes = requiredTypes.filter(type => 
+      !userFiles.some(file => file.file_type === type)
+    );
+    
+    if (missingTypes.length > 0) {
+      console.log(`User ${userId} is missing document types:`, missingTypes);
+    }
+    
     return requiredTypes.every(type => userFiles.some(file => file.file_type === type));
   };
 
@@ -181,13 +226,14 @@ export default function UsersManagement() {
 
   // View file function (link to Google Drive)
   const viewFile = (fileId) => {
-    console.log("file id :" , fileId)
+    console.log("Opening file with ID:", fileId);
     if (!fileId) return;
     window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank');
   };
 
   // Open user detail modal
   const openDetailModal = (user) => {
+    console.log("Opening detail modal for user:", user.id);
     setSelectedUser(user);
     setShowDetailModal(true);
   };
