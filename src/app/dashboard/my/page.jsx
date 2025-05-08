@@ -749,28 +749,7 @@ export default function MutabaahYaumiyahPage() {
   </h2>
   
   <div className="space-y-3 sm:space-y-4">
-    {/* Sholat Wajib - changed to select dropdown */}
-    <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-      <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">Sholat Wajib 5 waktu</span>
-      <select
-        value={formData.sholat_wajib}
-        onChange={(e) => handleInputChange('sholat_wajib', e.target.value)}
-        className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
-          formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
-        }`}
-        disabled={formData.haid}
-      >
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-      </select>
-    </div>
-
-    {/* Rest of the sholat section remains the same */}
-    {sholatSection.slice(1).map((item, index) => (
+    {sholatSection.map((item, index) => (
       <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
         <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
         
@@ -787,17 +766,18 @@ export default function MutabaahYaumiyahPage() {
             />
           </div>
         ) : (
-          <input
-            type="number"
-            min="0"
-            max={item.max}
+          <select
             value={formData[item.field]}
             onChange={(e) => handleInputChange(item.field, e.target.value)}
             className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
               formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
             }`}
             disabled={formData.haid}
-          />
+          >
+            {[...Array(item.max + 1).keys()].map(num => (
+              <option key={num} value={num}>{num}</option>
+            ))}
+          </select>
         )}
       </div>
     ))}
