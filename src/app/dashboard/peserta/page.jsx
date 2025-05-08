@@ -6,14 +6,6 @@ import { Search, RefreshCw, Filter, Download, ChevronLeft, ChevronRight, Eye, Ch
 import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Fungsi helper untuk menampilkan label jenis kelamin
-const getGenderLabel = (genderValue) => {
-  if (genderValue === "1") return "Laki-laki";
-  if (genderValue === "0") return "Perempuan";
-  return genderValue || 'N/A';
-};
-
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
   const [files, setFiles] = useState([]);
@@ -75,6 +67,7 @@ export default function UsersManagement() {
       setUsers(processedData);
       
       // Fetch files data separately or mock it for now
+      // For example purposes, I'll use the "file" key from your provided response
       if (data.file) {
         setFiles(data.file);
       }
@@ -130,9 +123,10 @@ export default function UsersManagement() {
         }
       });
   
-      const resData = await response.json();
+      const resData = await response.json(); // parse dulu responsenya
   
       if (!response.ok) {
+        // Kalau gagal, tampilkan message dari response JSON
         throw new Error(resData.message || 'Activation failed');
       }
   
@@ -153,11 +147,12 @@ export default function UsersManagement() {
       fetchUsers();
     } catch (err) {
       console.error(`Failed to activate user: ${err.message}`);
-      toast.error(err.message);
+      toast.error(err.message); // gunakan message dari error yang dilempar
     } finally {
       setActivatingUser(null);
     }
   };
+  
 
   // Handle sorting
   const requestSort = (key) => {
@@ -271,8 +266,8 @@ export default function UsersManagement() {
           user.nik || '',
           user.tempat_lahir || '',
           user.tanggal_lahir ? new Date(user.tanggal_lahir).toISOString().split('T')[0] : '',
-          getGenderLabel(user.jenis_kelamin) || '',
-          `"${user.alamat || ''}"`,
+          user.jenis_kelamin || '',
+          `"${user.alamat || ''}"`, // Quotes to handle commas in address
           user.rt || '',
           user.rw || '',
           user.kode_pos || '',
@@ -334,16 +329,16 @@ export default function UsersManagement() {
       <div className="mb-6">
         <div className="flex items-center mb-2">
           <button 
-            onClick={handleGoBack}
-            className="mr-3 p-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center"
+          onClick={handleGoBack}
+          className="mr-3 p-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center"
           >
-            <ChevronLeft size={18} />
-            <span className="ml-1">Kembali</span>
+          <ChevronLeft size={18} />
+          <span className="ml-1">Kembali</span>
           </button>
-        </div>
+          </div>
         <h1 className="text-2xl font-bold text-gray-800">Data Pengguna</h1>
-        <p className="text-gray-600">Lihat data pengguna dalam sistem</p>
-      </div>
+      <p className="text-gray-600">Lihat data pengguna dalam sistem</p>
+    </div>
 
       {/* Action bar */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -432,20 +427,6 @@ export default function UsersManagement() {
                       <div className="flex items-center">
                         NIK
                         {sortConfig.key === 'nik' && (
-                          <span className="ml-1">
-                            {sortConfig.direction === 'ascending' ? '↑' : '↓'}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => requestSort('jenis_kelamin')}
-                    >
-                      <div className="flex items-center">
-                        Jenis Kelamin
-                        {sortConfig.key === 'jenis_kelamin' && (
                           <span className="ml-1">
                             {sortConfig.direction === 'ascending' ? '↑' : '↓'}
                           </span>
@@ -544,9 +525,6 @@ export default function UsersManagement() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {user.nik || 'N/A'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {getGenderLabel(user.jenis_kelamin)}
-                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">
                             {user.alamat ? (
                               <span className="text-sm text-gray-500">
@@ -626,7 +604,7 @@ export default function UsersManagement() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="9" className="px-6 py-10 text-center text-gray-500">
+                      <td colSpan="8" className="px-6 py-10 text-center text-gray-500">
                         {searchTerm ? 'Tidak ada pengguna yang sesuai dengan pencarian' : 'Tidak ada data pengguna'}
                       </td>
                     </tr>
@@ -711,7 +689,7 @@ export default function UsersManagement() {
       {showDetailModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-900">Detail Pengguna</h3>
               <button 
                 onClick={closeDetailModal}
@@ -748,7 +726,7 @@ export default function UsersManagement() {
                     </div>
                     <div className="flex">
                       <span className="text-gray-500 w-32">Jenis Kelamin</span>
-                      <span className="text-gray-900">{getGenderLabel(selectedUser.jenis_kelamin)}</span>
+                      <span className="text-gray-900">{selectedUser.jenis_kelamin || 'N/A'}</span>
                     </div>
                     <div className="flex">
                       <span className="text-gray-500 w-32">Golongan Darah</span>
@@ -855,7 +833,8 @@ export default function UsersManagement() {
                               {getFileIcon(file.file_name)} {file.file_name || 'file'}
                             </span>
                             <button
-                              onClick={() => viewFile(file.google_drive_file_id)}
+                              onClick={() => viewFile(file.google_drive_file_id
+                              )}
                               className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
                             >
                               <Eye size={16} className="mr-1" />
