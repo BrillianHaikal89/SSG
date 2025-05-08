@@ -31,6 +31,8 @@ const DEFAULT_FORM_DATA = {
   sholawat_100x: 0,
   sholawat_completed: false,
   menyimak_mq_pagi: false,
+  kajian_al_hikam: false,  // New field for Thursday
+  kajian_marifatullah: false,  // New field for Thursday
   haid: false
 };
 
@@ -44,6 +46,8 @@ export default function MutabaahYaumiyahPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [headerBgColor, setHeaderBgColor] = useState('bg-green-600');
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isThursday, setIsThursday] = useState(false);
+  const [isUserFemale, setIsUserFemale] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(today);
@@ -338,6 +342,9 @@ export default function MutabaahYaumiyahPage() {
         setSelectedDateTime(selectedDate);
         const hijriResult = calculateHijriDate(selectedDate);
         setHijriDate(hijriResult.formatted);
+        
+        // Check if selected date is Thursday (day 4)
+        setIsThursday(selectedDate.getDay() === 4);
       }
       
       updateHeaderBgColor(newDate);
@@ -390,7 +397,8 @@ export default function MutabaahYaumiyahPage() {
         }));
       }
       else if (['sholat_tahajud', 'tilawah_quran', 'terjemah_quran', 'shaum_sunnah', 
-                'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi'].includes(field)) {
+                'shodaqoh', 'dzikir_pagi_petang', 'menyimak_mq_pagi', 
+                'kajian_al_hikam', 'kajian_marifatullah'].includes(field)) {
         setFormData(prev => ({
           ...prev,
           [field]: value
@@ -425,6 +433,8 @@ export default function MutabaahYaumiyahPage() {
             shodaqoh: parsedData.shodaqoh ? true : parsedData.shodaqoh === 0 ? false : Boolean(parsedData.shodaqoh),
             dzikir_pagi_petang: parsedData.dzikir_pagi_petang ? true : parsedData.dzikir_pagi_petang === 0 ? false : Boolean(parsedData.dzikir_pagi_petang), 
             menyimak_mq_pagi: parsedData.menyimak_mq_pagi ? true : parsedData.menyimak_mq_pagi === 0 ? false : Boolean(parsedData.menyimak_mq_pagi),
+            kajian_al_hikam: parsedData.kajian_al_hikam ? true : parsedData.kajian_al_hikam === 0 ? false : Boolean(parsedData.kajian_al_hikam),
+            kajian_marifatullah: parsedData.kajian_marifatullah ? true : parsedData.kajian_marifatullah === 0 ? false : Boolean(parsedData.kajian_marifatullah),
             istighfar_completed: parsedData.istighfar_completed || false,
             sholawat_completed: parsedData.sholawat_completed || false
           };
@@ -561,8 +571,16 @@ export default function MutabaahYaumiyahPage() {
     setFormData(prev => ({ ...prev, date: todayString }));
     setSelectedDateTime(today);
     
+    // Check if today is Thursday
+    setIsThursday(today.getDay() === 4);
+    
+    // Check if user is female (gender = 0)
+    if (user && user.gender === "0") {
+      setIsUserFemale(true);
+    }
+    
     updateHijriDate(today);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     updateHeaderBgColor(formData.date);
@@ -616,6 +634,9 @@ export default function MutabaahYaumiyahPage() {
       if (!isNaN(newSelectedDate.getTime())) {
         setSelectedDateTime(newSelectedDate);
         updateHijriDate(newSelectedDate);
+        
+        // Check if selected date is Thursday (day 4)
+        setIsThursday(newSelectedDate.getDay() === 4);
       }
     } catch (error) {
       console.error('Error updating selected date:', error);
@@ -653,6 +674,12 @@ export default function MutabaahYaumiyahPage() {
       max: 100, 
       type: "dual" 
     },
+  ];
+
+  // Thursday special activities
+  const thursdaySection = [
+    { label: "Menyimak Kajian Al-Hikam", field: "kajian_al_hikam", type: "checkbox" },
+    { label: "Menyimak Kajian Ma'rifatullah", field: "kajian_marifatullah", type: "checkbox" },
   ];
 
   return (
@@ -699,19 +726,22 @@ export default function MutabaahYaumiyahPage() {
             </p>
           </div>
 
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
-            <label className="flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={formData.haid}
-                onChange={(e) => handleInputChange('haid', e.target.checked)}
-                className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
-              />
-              <span className="ml-2 text-xs sm:text-sm text-gray-700">
-                Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
-              </span>
-            </label>
-          </div>
+          {/* Haid checkbox - only show for female users (gender = 0) */}
+          {isUserFemale && (
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+              <label className="flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={formData.haid}
+                  onChange={(e) => handleInputChange('haid', e.target.checked)}
+                  className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
+                />
+                <span className="ml-2 text-xs sm:text-sm text-gray-700">
+                  Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
@@ -848,6 +878,32 @@ export default function MutabaahYaumiyahPage() {
             </div>
           </div>
 
+          {/* Thursday Special Activities - Only show on Thursday */}
+          {isThursday && (
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+                2.2 Aktivitas Khusus Hari Kamis
+              </h2>
+              
+              <div className="space-y-3 sm:space-y-4">
+                {thursdaySection.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                    <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                    
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={formData[item.field]}
+                        onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                        className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex justify-between gap-3 mt-6">
             <button
@@ -892,4 +948,4 @@ export default function MutabaahYaumiyahPage() {
       )}
     </div>
   );
-}
+};
