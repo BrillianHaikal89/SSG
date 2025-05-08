@@ -774,10 +774,18 @@ export default function MutabaahYaumiyahPage() {
             }`}
             disabled={formData.haid}
           >
-            {[...Array(Math.floor(item.max / 2) + 1).keys()].map(i => {
-              const num = i * 2;
-              return <option key={num} value={num}>{num}</option>;
-            })}
+            {/* Special case for Sholat Wajib 5 waktu */}
+            {item.field === 'sholat_wajib' ? (
+              [...Array(6).keys()].map(num => (
+                <option key={num} value={num}>{num}</option>
+              ))
+            ) : (
+              /* Even numbers for other sholat */
+              [...Array(Math.floor(item.max / 2) + 1).keys()].map(i => {
+                const num = i * 2;
+                return <option key={num} value={num}>{num}</option>;
+              })
+            )}
           </select>
         )}
       </div>
