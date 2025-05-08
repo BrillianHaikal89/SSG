@@ -5,136 +5,133 @@ import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  // Add digital signature to document types order
-  const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran', 'digitalSignature'];
-  const currentDocType = docTypesOrder[currentStep];
-  const { user , role} = useAuthStore();
-  const [documents, setDocuments] = useState({
-    ktp: null,
-    pasFoto: null,
-    suratIzin: null,
-    suratSehat: null,
-    buktiPembayaran: null,
-    digitalSignature: null
-  });
-  const [previews, setPreviews] = useState({
-    ktp: null,
-    pasFoto: null,
-    suratIzin: null,
-    suratSehat: null,
-    buktiPembayaran: null,
-    digitalSignature: null
-  });
-  const [uploadingStatus, setUploadingStatus] = useState({
-    ktp: false,
-    pasFoto: false,
-    suratIzin: false,
-    suratSehat: false,
-    buktiPembayaran: false,
-    digitalSignature: false
-  });
+  const { user, role } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRefs = {
-    ktp: useRef(null),
-    pasFoto: useRef(null),
-    suratIzin: useRef(null),
-    suratSehat: useRef(null),
-    buktiPembayaran: useRef(null),
-    digitalSignature: useRef(null)
-  };
   
-  // Signature pad reference
-  const signaturePadRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [signatureExists, setSignatureExists] = useState(false);
-
-  // Document type labels and descriptions
-  const documentTypes = {
+  // Document type configuration
+  const DOCUMENT_TYPES = {
     ktp: {
+      id: 'ktp',
       label: "KTP",
       description: "Unggah foto KTP/Kartu Pelajar",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "ktp"
+      backendType: "ktp",
+      accept: "image/jpeg,image/png,application/pdf"
     },
     pasFoto: {
+      id: 'pasFoto',
       label: "Pas Foto",
       description: "Unggah pas foto terbaru (3x4, latar belakang merah/biru)",
       formats: "JPG atau PNG",
       maxSize: "1MB",
-      backendType: "pas_foto"
+      backendType: "pas_foto",
+      accept: "image/jpeg,image/png"
     },
     suratIzin: {
+      id: 'suratIzin',
       label: "Surat Izin Orang Tua/Wali",
       description: "Unggah surat izin yang telah ditandatangani",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "surat_izin"
+      backendType: "surat_izin",
+      accept: "image/jpeg,image/png,application/pdf"
     },
     suratSehat: {
+      id: 'suratSehat',
       label: "Surat Keterangan Sehat",
       description: "Unggah surat keterangan sehat dari dokter",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "surat_kesehatan"
+      backendType: "surat_kesehatan",
+      accept: "image/jpeg,image/png,application/pdf"
     },
     buktiPembayaran: {
+      id: 'buktiPembayaran',
       label: "Bukti Pembayaran",
       description: "Unggah bukti transfer atau pembayaran",
       formats: "JPG, PNG, atau PDF",
       maxSize: "2MB",
-      backendType: "bukti_pembayaran"
+      backendType: "bukti_pembayaran",
+      accept: "image/jpeg,image/png,application/pdf"
     },
     digitalSignature: {
+      id: 'digitalSignature',
       label: "Tanda Tangan Digital",
       description: "Buat tanda tangan digital atau unggah file tanda tangan Anda",
       formats: "JPG atau PNG",
       maxSize: "1MB",
-      backendType: "digital_signature"
+      backendType: "digital_signature",
+      accept: "image/jpeg,image/png"
     }
   };
 
-  // Initialize signature canvas when it's the current step
+  // Document processing order
+  const DOCUMENT_ORDER = [
+    'ktp',
+    'pasFoto',
+    'suratIzin',
+    'suratSehat',
+    'buktiPembayaran',
+    'digitalSignature'
+  ];
+
+  const currentDocType = DOCUMENT_ORDER[currentStep];
+  
+  // State initialization
+  const initialState = DOCUMENT_ORDER.reduce((acc, docType) => {
+    acc[docType] = null;
+    return acc;
+  }, {});
+
+  const [documents, setDocuments] = useState(initialState);
+  const [previews, setPreviews] = useState(initialState);
+  const [uploadingStatus, setUploadingStatus] = useState(initialState);
+  
+  const fileInputRefs = useRef(
+    DOCUMENT_ORDER.reduce((acc, docType) => {
+      acc[docType] = React.createRef();
+      return acc;
+    }, {})
+  );
+
+  // Signature pad references and state
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [signatureExists, setSignatureExists] = useState(false);
+
+  // Initialize signature canvas
   useEffect(() => {
     if (currentDocType === 'digitalSignature' && canvasRef.current && !documents.digitalSignature) {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
       
-      // Set canvas size
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       
-      // Set initial canvas style
       context.lineWidth = 2;
       context.lineCap = 'round';
       context.strokeStyle = '#000000';
-      
-      // Clear canvas with white background
       context.fillStyle = '#ffffff';
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
   }, [currentDocType, documents.digitalSignature]);
 
-  // Signature pad event handlers
+  // Signature drawing functions
   const startDrawing = (e) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
     
-    // Get mouse/touch position
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
     
     context.beginPath();
-    context.moveTo(
-      clientX - rect.left,
-      clientY - rect.top
-    );
-    
+    context.moveTo(clientX - rect.left, clientY - rect.top);
     setIsDrawing(true);
     setSignatureExists(true);
   };
@@ -147,14 +144,10 @@ const RequiredDocumentsForm = () => {
     const context = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
     
-    // Get mouse/touch position
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
     
-    context.lineTo(
-      clientX - rect.left,
-      clientY - rect.top
-    );
+    context.lineTo(clientX - rect.left, clientY - rect.top);
     context.stroke();
   };
   
@@ -170,23 +163,12 @@ const RequiredDocumentsForm = () => {
   const clearSignature = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-    
-    // Clear canvas with white background
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    
     setSignatureExists(false);
     
-    // Also clear any saved signature
-    setDocuments(prev => ({
-      ...prev,
-      digitalSignature: null
-    }));
-    
-    setPreviews(prev => ({
-      ...prev,
-      digitalSignature: null
-    }));
+    setDocuments(prev => ({ ...prev, digitalSignature: null }));
+    setPreviews(prev => ({ ...prev, digitalSignature: null }));
   };
   
   const saveSignature = () => {
@@ -196,44 +178,28 @@ const RequiredDocumentsForm = () => {
     }
     
     const canvas = canvasRef.current;
-    
-    // Convert canvas to blob
     canvas.toBlob((blob) => {
-      // Create a File object from the blob
       const signatureFile = new File([blob], "signature.png", { type: "image/png" });
       
-      // Store the signature file in the documents state
-      setDocuments(prev => ({
-        ...prev,
-        digitalSignature: signatureFile
-      }));
+      setDocuments(prev => ({ ...prev, digitalSignature: signatureFile }));
       
-      // Store the signature preview
       const dataUrl = canvas.toDataURL("image/png");
-      setPreviews(prev => ({
-        ...prev,
-        digitalSignature: dataUrl
-      }));
+      setPreviews(prev => ({ ...prev, digitalSignature: dataUrl }));
       
-      // Save metadata
       safelyStoreDocumentMetadata('digitalSignature', signatureFile, dataUrl);
-      
       toast.success("Tanda tangan berhasil disimpan");
     });
   };
 
-  // Separate function to safely store document metadata
+  // Helper functions
   const safelyStoreDocumentMetadata = (documentType, file, dataUrl) => {
     try {
       const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
-      
-      // Store only essential metadata, not the full data URL
       const metadata = {
         name: file.name,
         type: file.type,
         size: file.size,
         uploadDate: new Date().toISOString(),
-        // Store a truncated preview or hash instead of full data URL
         preview: dataUrl ? dataUrl.substring(0, 100) : null
       };
 
@@ -241,43 +207,66 @@ const RequiredDocumentsForm = () => {
       localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
     } catch (error) {
       console.error('Error storing document metadata:', error);
-      // Optional: Show a toast or handle the error
       toast.error('Tidak dapat menyimpan metadata dokumen');
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  };
+
+  // Document handling functions
+  const handleFileChange = (e, documentType) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+  
+      setDocuments(prev => ({ ...prev, [documentType]: file }));
+      setPreviews(prev => ({ ...prev, [documentType]: dataUrl }));
+      safelyStoreDocumentMetadata(documentType, file, dataUrl);
+    };
+  
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteDocument = (documentType) => {
+    setDocuments(prev => ({ ...prev, [documentType]: null }));
+    setPreviews(prev => ({ ...prev, [documentType]: null }));
+    
+    const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
+    delete currentDocs[documentType];
+    localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
+    
+    if (fileInputRefs.current[documentType]) {
+      fileInputRefs.current[documentType].value = '';
+    }
+  };
+
+  // Form submission
   const handleSubmit = async () => {
-    // Validasi final
-    const missingDocs = docTypesOrder.filter(docType => !documents[docType]);
+    const missingDocs = DOCUMENT_ORDER.filter(docType => !documents[docType]);
   
     if (missingDocs.length > 0) {
-      toast.error(`Masih ada dokumen yang belum diupload: ${missingDocs.map(d => documentTypes[d].label).join(', ')}`);
-      setCurrentStep(docTypesOrder.indexOf(missingDocs[0]));
+      toast.error(`Masih ada dokumen yang belum diupload: ${missingDocs.map(d => DOCUMENT_TYPES[d].label).join(', ')}`);
+      setCurrentStep(DOCUMENT_ORDER.indexOf(missingDocs[0]));
       return;
     }
   
     const formData = new FormData();
-    // formData.append('id', user.userId);
-  
-    // Add all files to formData with the same field name "files"
-    // The order matches the expected order in the backend
-    docTypesOrder.forEach(docType => {
+    DOCUMENT_ORDER.forEach(docType => {
       if (documents[docType]) {
-        // Append all files with the same field name 'files'
         formData.append('files', documents[docType]);
       }
     });
   
-    // Debug: Lihat isi FormData
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value instanceof File ? 
-        `${value.name} (${value.size} bytes)` : 
-        value);
-    }
-  
     try {
       setIsSubmitting(true);
-
       const response = await fetch(`${API_URL}/users/upload-files?id=${user.userId}`, {
         method: "POST",
         body: formData
@@ -289,24 +278,9 @@ const RequiredDocumentsForm = () => {
         const result = await response.json();
         toast.success(result.message || "Semua dokumen berhasil dikirim!");
         
-        // Clear localStorage and state after successful submission
         localStorage.removeItem('requiredDocumentsMetadata');
-        setDocuments({
-          ktp: null,
-          pasFoto: null,
-          suratIzin: null,
-          suratSehat: null,
-          buktiPembayaran: null,
-          digitalSignature: null
-        });
-        setPreviews({
-          ktp: null,
-          pasFoto: null,
-          suratIzin: null,
-          suratSehat: null,
-          buktiPembayaran: null,
-          digitalSignature: null
-        });
+        setDocuments(initialState);
+        setPreviews(initialState);
         setCurrentStep(0);
       } else {
         const errorData = await response.json();
@@ -318,9 +292,8 @@ const RequiredDocumentsForm = () => {
     }
   };
 
-  // Load documents from localStorage on component mount
+  // Load documents on mount
   useEffect(() => {
-    // Attempt to load metadata from localStorage
     const storedMetadata = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
     
     const fetchUserDocuments = async () => {
@@ -329,14 +302,11 @@ const RequiredDocumentsForm = () => {
         if (!res.ok) throw new Error("Gagal mengambil data dokumen");
 
         const data = await res.json();
-        const initialPreviews = { ...previews };
-        const initialDocuments = { ...documents };
+        const initialPreviews = { ...initialState };
+        const initialDocuments = { ...initialState };
 
-        // Periksa apakah respons memiliki array 'files'
         if (data.files && Array.isArray(data.files)) {
-          // Loop melalui files yang diterima dari API
           data.files.forEach(file => {
-            // Mapping dari backend file_type ke docType di frontend
             const backendToFrontendMap = {
               'ktp': 'ktp',
               'pas_foto': 'pasFoto',
@@ -370,77 +340,16 @@ const RequiredDocumentsForm = () => {
       }
     };
 
-    // Panggil fetchUserDocuments jika user sudah login
     if (user?.userId) {
       fetchUserDocuments();
     }
   }, [user]);
-    
-  const handleFileChange = (e, documentType) => {
-    const file = e.target.files[0];
-    if (!file) return;
-  
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-  
-      // Store the actual File object in documents state
-      setDocuments(prev => ({ 
-        ...prev, 
-        [documentType]: file
-      }));
-      
-      setPreviews(prev => ({ ...prev, [documentType]: dataUrl }));
-  
-      // Use the new safe metadata storage method
-      safelyStoreDocumentMetadata(documentType, file, dataUrl);
-    };
-  
-    reader.readAsDataURL(file);
-  };
-
-  // Handle document deletion for a specific type
-  const handleDeleteDocument = (documentType) => {
-    // Update states
-    setDocuments(prev => ({
-      ...prev,
-      [documentType]: null
-    }));
-    
-    setPreviews(prev => ({
-      ...prev,
-      [documentType]: null
-    }));
-    
-    // Update localStorage metadata
-    const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
-    delete currentDocs[documentType];
-    
-    try {
-      localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
-    } catch (error) {
-      console.error('Error updating localStorage:', error);
-    }
-    
-    // Clear file input
-    if (fileInputRefs[documentType].current) {
-      fileInputRefs[documentType].current.value = '';
-    }
-  };
-
-  // Format file size to human-readable format
-  const formatFileSize = (bytes) => {
-    if (!bytes) return '0 B';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / 1048576).toFixed(1) + ' MB';
-  };
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      {/* Stepper Indicator - Responsive */}
+      {/* Stepper Indicator */}
       <div className="flex justify-between mb-6 overflow-x-auto pb-2">
-        {docTypesOrder.map((docType, index) => (
+        {DOCUMENT_ORDER.map((docType, index) => (
           <div key={docType} className="flex flex-col items-center min-w-[50px]">
             <div 
               className={`w-8 h-8 rounded-full flex items-center justify-center 
@@ -450,7 +359,7 @@ const RequiredDocumentsForm = () => {
               {index + 1}
             </div>
             <span className="text-xs mt-1 text-center whitespace-nowrap">
-              {documentTypes[docType].label}
+              {DOCUMENT_TYPES[docType].label}
             </span>
           </div>
         ))}
@@ -460,9 +369,9 @@ const RequiredDocumentsForm = () => {
       <div className="border rounded-lg p-4 mb-6 bg-white shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="flex-1">
-            <h3 className="text-md font-medium">{documentTypes[currentDocType].label}</h3>
-            <p className="text-xs text-gray-500 mt-1">{documentTypes[currentDocType].description}</p>
-            <p className="text-xs text-gray-400">Format: {documentTypes[currentDocType].formats} (Maks: {documentTypes[currentDocType].maxSize})</p>
+            <h3 className="text-md font-medium">{DOCUMENT_TYPES[currentDocType].label}</h3>
+            <p className="text-xs text-gray-500 mt-1">{DOCUMENT_TYPES[currentDocType].description}</p>
+            <p className="text-xs text-gray-400">Format: {DOCUMENT_TYPES[currentDocType].formats} (Maks: {DOCUMENT_TYPES[currentDocType].maxSize})</p>
           </div>
           
           {!documents[currentDocType] && currentDocType !== 'digitalSignature' && (
@@ -475,14 +384,13 @@ const RequiredDocumentsForm = () => {
                 type="file" 
                 className="hidden" 
                 onChange={(e) => handleFileChange(e, currentDocType)} 
-                accept={currentDocType === 'pasFoto' ? "image/jpeg,image/png" : "image/jpeg,image/png,application/pdf"}
-                ref={fileInputRefs[currentDocType]}
+                accept={DOCUMENT_TYPES[currentDocType].accept}
+                ref={fileInputRefs.current[currentDocType]}
                 disabled={uploadingStatus[currentDocType]}
               />
             </label>
           )}
 
-          {/* For digital signature, show upload option as an alternative */}
           {!documents[currentDocType] && currentDocType === 'digitalSignature' && (
             <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer bg-gray-500 hover:bg-gray-600 text-white whitespace-nowrap`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -494,13 +402,12 @@ const RequiredDocumentsForm = () => {
                 className="hidden" 
                 onChange={(e) => handleFileChange(e, 'digitalSignature')} 
                 accept="image/jpeg,image/png"
-                ref={fileInputRefs.digitalSignature}
+                ref={fileInputRefs.current.digitalSignature}
               />
             </label>
           )}
         </div>
         
-        {/* Uploading indicator */}
         {uploadingStatus[currentDocType] && (
           <div className="mt-3">
             <p className="text-xs text-gray-500 mb-1">Mengunggah...</p>
@@ -510,7 +417,7 @@ const RequiredDocumentsForm = () => {
           </div>
         )}
         
-        {/* Digital Signature Canvas - Only show if current step is digitalSignature and no signature is uploaded yet */}
+        {/* Digital Signature Canvas */}
         {currentDocType === 'digitalSignature' && !documents.digitalSignature && (
           <div className="mt-6">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
@@ -547,13 +454,12 @@ const RequiredDocumentsForm = () => {
           </div>
         )}
         
-        {/* Document preview/info */}
+        {/* Document preview */}
         {documents[currentDocType] && (
           <div className="mt-3">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
                 <div className="flex items-center space-x-3">
-                  {/* Icon sesuai dengan tipe file */}
                   <div className="p-2 bg-blue-100 rounded-md text-blue-600">
                     {documents[currentDocType].type.startsWith('image/') ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -588,22 +494,19 @@ const RequiredDocumentsForm = () => {
                 )}
               </div>
               
-              {/* Preview section */}
               {previews[currentDocType] && (
                 <div className="mt-2">
-                  {/* Preview for images */}
                   {documents[currentDocType].type.startsWith('image/') && (
                     <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
                       <img 
                         src={previews[currentDocType]} 
                         className="w-full h-auto max-h-64 object-contain mx-auto" 
-                        alt={documentTypes[currentDocType].label}
+                        alt={DOCUMENT_TYPES[currentDocType].label}
                         loading="lazy"
                       />
                     </div>
                   )}
                   
-                  {/* Preview for PDF and other files */}
                   {!documents[currentDocType].type.startsWith('image/') && (
                     <div className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -612,7 +515,6 @@ const RequiredDocumentsForm = () => {
                     </div>
                   )}
                   
-                  {/* View Document Button */}
                   <div className="mt-3 flex justify-center">
                     <a 
                       href={typeof previews[currentDocType] === 'string' ? previews[currentDocType] : '#'} 
@@ -643,13 +545,13 @@ const RequiredDocumentsForm = () => {
         >
           Kembali
         </button>
-        {currentStep < docTypesOrder.length - 1 ? (
+        {currentStep < DOCUMENT_ORDER.length - 1 ? (
           <button
             onClick={() => {
               if (documents[currentDocType]) {
                 setCurrentStep(prev => prev + 1);
               } else {
-                toast.error(`Harap upload ${documentTypes[currentDocType].label} terlebih dahulu`);
+                toast.error(`Harap upload ${DOCUMENT_TYPES[currentDocType].label} terlebih dahulu`);
               }
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded-md order-1 sm:order-2"
