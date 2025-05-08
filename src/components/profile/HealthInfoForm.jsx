@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const HealthInfoForm = ({ initialData }) => {
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const HealthInfoForm = () => {
   const [userData, setUserData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -23,11 +23,7 @@ const HealthInfoForm = ({ initialData }) => {
   useEffect(() => {
     const fetchHealthData = async () => {
       try {
-        if (!user?.userId) return;
-        
         const response = await fetch(`${API_URL}/users/get-health?user_id=${user?.userId}`);
-        if (!response.ok) throw new Error("Failed to fetch health data");
-        
         const result = await response.json();
         
         if (result?.data) {
@@ -92,7 +88,7 @@ const HealthInfoForm = ({ initialData }) => {
       });
 
       const result = await response.json();
-      
+      console.log('Response:', result);
       if (response.ok) {
         toast.success('Data kesehatan berhasil disimpan');
         setIsEditing(false);
@@ -113,208 +109,194 @@ const HealthInfoForm = ({ initialData }) => {
       [name]: value
     }));
   };
-  
-  // Safety check
-  if (!user) {
-    return (
-      <div className="bg-white rounded-lg shadow-md mb-4 p-4">
-        <p className="text-center">Memuat data kesehatan...</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="bg-white rounded-lg shadow-md mb-4">
-      <div className="p-3 md:p-4 border-b">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-          <div className="mb-2 md:mb-0">
-            <h2 className="text-base md:text-lg font-medium">Data Kesehatan dan Darurat</h2>
-            <p className="text-xs text-gray-500">Informasi kesehatan dan kontak darurat</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button 
-              type="button"
-              onClick={() => setIsFormVisible(!isFormVisible)}
-              className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs md:text-sm flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 md:h-4 md:w-4 mr-1 transition-transform duration-200 ${isFormVisible ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {isFormVisible ? 'Tutup' : 'Lihat Data'}
-            </button>
-            
-            {isFormVisible && !isEditing && (
-              <>
-                <button 
-                  type="button"
-                  onClick={handleEdit}
-                  className={`${!hasAnyData() ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white px-3 py-1 rounded-md text-xs md:text-sm flex items-center`}
-                  disabled={!hasAnyData()}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                  Edit
-                </button>
-                
-                <button 
-                  type="button"
-                  onClick={handleAddNew}
-                  className={`${hasAnyData() ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} text-white px-3 py-1 rounded-md text-xs md:text-sm flex items-center`}
-                  disabled={hasAnyData()}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Tambah
-                </button>
-              </>
-            )}
-            
-            {isEditing && (
+    <div className="bg-white rounded-lg shadow-md mb-6">
+      <div className="p-4 border-b flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-medium">Data Kesehatan dan Darurat</h2>
+          <p className="text-xs text-gray-500">Informasi kesehatan dan kontak darurat</p>
+        </div>
+        <div className="flex space-x-2">
+          <button 
+            type="button"
+            onClick={() => setIsFormVisible(!isFormVisible)}
+            className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 transition-transform duration-200 ${isFormVisible ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            {isFormVisible ? 'Tutup' : 'Lihat Data'}
+          </button>
+          
+          {isFormVisible && !isEditing && (
+            <>
               <button 
                 type="button"
-                onClick={saveData}
-                className="bg-green-500 text-white px-3 py-1 rounded-md text-xs md:text-sm flex items-center"
+                onClick={handleEdit}
+                className={`${!hasAnyData() ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white px-3 py-1 rounded-md text-sm flex items-center`}
+                disabled={!hasAnyData()}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                Selesai
+                Edit
               </button>
-            )}
-          </div>
+              
+              <button 
+                type="button"
+                onClick={handleAddNew}
+                className={`${hasAnyData() ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} text-white px-3 py-1 rounded-md text-sm flex items-center`}
+                disabled={hasAnyData()}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Tambah
+              </button>
+            </>
+          )}
+          
+          {isEditing && (
+            <button 
+              type="button"
+              onClick={saveData}
+              className="bg-green-500 text-white px-3 py-1 rounded-md text-sm flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Selesai
+            </button>
+          )}
         </div>
       </div>
       
       {/* Collapsible Form Content */}
       <div className={`transition-all duration-300 overflow-hidden ${isFormVisible || isEditing ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="p-3 md:p-4">
-          {isEditing ? (
-            // Editable Form
-            <>
-              {/* Riwayat Penyakit */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Riwayat Penyakit
-                </label>
-                <input
-                  type="text"
-                  name="riwayat_penyakit"
-                  value={healthData.riwayat_penyakit}
-                  onChange={handleChange}
-                  placeholder="Masukkan riwayat penyakit jika ada"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Jika ada penyakit kronis/alergi</p>
-              </div>
-              
-              {/* Disabilitas */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apakah memiliki disabilitas?
-                </label>
-                <select
-                  name="memiliki_disabilitas"
-                  value={healthData.memiliki_disabilitas}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">-- Pilih --</option>
-                  <option value="Ya">Ya</option>
-                  <option value="Tidak">Tidak</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Untuk persiapan fasilitas khusus</p>
-              </div>
-              
-              {/* Kontak Darurat */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Kontak Darurat
-                </label>
-                <input
-                  type="text"
-                  name="kontak_darurat_nama"
-                  value={healthData.kontak_darurat_nama}
-                  onChange={handleChange}
-                  placeholder="Nama kontak darurat"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Nama orang yang bisa dihubungi jika darurat</p>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kontak Darurat No. HP
-                </label>
-                <input
-                  type="text"
-                  name="kontak_darurat_nomor"
-                  value={healthData.kontak_darurat_nomor}
-                  onChange={handleChange}
-                  placeholder="Nomor HP kontak darurat"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Orang yang bisa dihubungi jika darurat</p>
-              </div>
-              
-              {/* Hubungan dengan Kontak Darurat */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Hubungan dengan Kontak Darurat
-                </label>
-                <select
-                  name="hubungan_darurat"
-                  value={healthData.hubungan_darurat}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">-- Pilih Hubungan --</option>
-                  <option value="Orang tua">Orang Tua</option>
-                  <option value="Saudara">Saudara</option>
-                  <option value="Pasangan">Pasangan</option>
-                  <option value="Anak">Anak</option>
-                  <option value="Kerabat">Kerabat</option>
-                  <option value="Teman">Teman</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Untuk verifikasi hubungan</p>
-              </div>
-            </>
-          ) : (
-            // Data Display (Read-only)
-            <div className="overflow-x-auto -mx-3 md:mx-0">
-              <table className="w-full border-collapse text-sm">
-                <tbody>
-                  <tr className="border-b">
-                    <td className="py-2 px-3 font-medium text-xs md:text-sm text-gray-700 w-1/3">Riwayat Penyakit</td>
-                    <td className="py-2 px-3 text-xs md:text-sm">{userData?.riwayat_penyakit || '-'}</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 px-3 font-medium text-xs md:text-sm text-gray-700">Memiliki Disabilitas</td>
-                    <td className="py-2 px-3 text-xs md:text-sm">{userData?.memiliki_disabilitas || '-'}</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 px-3 font-medium text-xs md:text-sm text-gray-700">Nama Kontak Darurat</td>
-                    <td className="py-2 px-3 text-xs md:text-sm">{userData?.kontak_darurat_nama || '-'}</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 px-3 font-medium text-xs md:text-sm text-gray-700">Kontak Darurat</td>
-                    <td className="py-2 px-3 text-xs md:text-sm">{userData?.kontak_darurat_nomor || '-'}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 px-3 font-medium text-xs md:text-sm text-gray-700">Hubungan dengan Kontak Darurat</td>
-                    <td className="py-2 px-3 text-xs md:text-sm">{userData?.hubungan_darurat || '-'}</td>
-                  </tr>
-                </tbody>
-              </table>
+        {isEditing ? (
+          // Editable Form
+          <div className="p-4">
+            {/* Riwayat Penyakit */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Riwayat Penyakit
+              </label>
+              <input
+                type="text"
+                name="riwayat_penyakit"
+                value={healthData.riwayat_penyakit}
+                onChange={handleChange}
+                placeholder="Masukkan riwayat penyakit jika ada"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Jika ada penyakit kronis/alergi</p>
             </div>
-          )}
-        </div>
+            
+            {/* Disabilitas */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Apakah memiliki disabilitas?
+              </label>
+              <select
+                name="memiliki_disabilitas"
+                value={healthData.memiliki_disabilitas}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Pilih --</option>
+                <option value="Ya">Ya</option>
+                <option value="Tidak">Tidak</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Untuk persiapan fasilitas khusus</p>
+            </div>
+            
+            {/* Kontak Darurat */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nama Kontak Darurat
+              </label>
+              <input
+                type="text"
+                name="kontak_darurat_nama"
+                value={healthData.kontak_darurat_nama}
+                onChange={handleChange}
+                placeholder="Nama kontak darurat"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Nama orang yang bisa dihubungi jika darurat</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kontak Darurat no hp
+              </label>
+              <input
+                type="text"
+                name="kontak_darurat_nomor"
+                value={healthData.kontak_darurat_nomor}
+                onChange={handleChange}
+                placeholder="Nama kontak darurat"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Orang yang bisa dihubungi jika darurat</p>
+            </div>
+            
+            {/* Hubungan dengan Kontak Darurat */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hubungan dengan Kontak Darurat
+              </label>
+              <select
+                name="hubungan_darurat"
+                value={healthData.hubungan_darurat}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Pilih Hubungan --</option>
+                <option value="Orang tua">Orang Tua</option>
+                <option value="Saudara">Saudara</option>
+                <option value="Pasangan">Pasangan</option>
+                <option value="Anak">Anak</option>
+                <option value="Kerabat">Kerabat</option>
+                <option value="Teman">Teman</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Untuk verifikasi hubungan</p>
+            </div>
+          </div>
+        ) : (
+          // Data Display (Read-only)
+          <div className="p-4">
+            <table className="w-full border-collapse">
+              <tbody>
+                <tr className="border-b">
+                  <td className="py-3 px-2 font-medium text-sm text-gray-700 w-1/3">Riwayat Penyakit</td>
+                  <td className="py-3 px-2 text-sm">{userData?.riwayat_penyakit || '-'}</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-2 font-medium text-sm text-gray-700">Memiliki Disabilitas</td>
+                  <td className="py-3 px-2 text-sm">{userData?.memiliki_disabilitas || '-'}</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-2 font-medium text-sm text-gray-700">Nama Kontak Darurat</td>
+                  <td className="py-3 px-2 text-sm">{userData?.kontak_darurat_nama || '-'}</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-2 font-medium text-sm text-gray-700">Kontak Darurat</td>
+                  <td className="py-3 px-2 text-sm">{userData?.kontak_darurat_nomor || '-'}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-2 font-medium text-sm text-gray-700">Hubungan dengan Kontak Darurat</td>
+                  <td className="py-3 px-2 text-sm">{userData?.hubungan_darurat || '-'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Pastikan menggunakan export default
 export default HealthInfoForm;

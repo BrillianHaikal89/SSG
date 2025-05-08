@@ -77,34 +77,32 @@ const AgreementForm = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md mb-4">
-      <div className="p-3 md:p-4 border-b">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-          <div className="mb-2 md:mb-0">
-            <h2 className="text-base md:text-lg font-medium">Persetujuan</h2>
-            <p className="text-xs text-gray-500">Konfirmasi persetujuan Anda</p>
-          </div>
-          <div>
-            <button 
-              type="button"
-              onClick={() => setIsFormVisible(!isFormVisible)}
-              className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs md:text-sm flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 md:h-4 md:w-4 mr-1 transition-transform duration-200 ${isFormVisible ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {isFormVisible ? 'Tutup' : 'Lihat'}
-            </button>
-          </div>
+    <div className="bg-white rounded-lg shadow-md mb-6">
+      <div className="p-4 border-b flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-medium">Persetujuan</h2>
+          <p className="text-xs text-gray-500">Konfirmasi persetujuan Anda</p>
+        </div>
+        <div className="flex space-x-2">
+          <button 
+            type="button"
+            onClick={() => setIsFormVisible(!isFormVisible)}
+            className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 transition-transform duration-200 ${isFormVisible ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            {isFormVisible ? 'Tutup' : 'Lihat'}
+          </button>
         </div>
       </div>
       
       {/* Collapsible Form Content */}
       <div className={`transition-all duration-300 overflow-hidden ${isFormVisible ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="p-3 md:p-4">
-          <div className="space-y-4">
+        <div className="p-4">
+          <div className="space-y-6">
             {/* Agreement Checkbox */}
-            <div className="border rounded-lg p-3 md:p-4 bg-blue-50">
+            <div className="border rounded-lg p-4 bg-blue-50">
               <div className="flex items-start">
                 <div className="flex items-center h-5 mt-0.5">
                   <input
@@ -117,13 +115,13 @@ const AgreementForm = () => {
                   />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label htmlFor="agreement-checkbox" className="font-medium text-gray-700 text-xs md:text-sm">
+                  <label htmlFor="agreement-checkbox" className="font-medium text-gray-700">
                     Saya bersedia mengikuti aturan Diklat SSG
                   </label>
-                  <p className="text-gray-500 text-2xs md:text-xs">
+                  <p className="text-gray-500 text-xs">
                     Dengan mencentang kotak ini, saya menyatakan bahwa saya telah membaca, memahami, dan setuju untuk mengikuti semua aturan dan ketentuan yang berlaku selama Diklat Santri Siap Guna.
                   </p>
-                  <p className="text-red-500 text-2xs md:text-xs mt-1">
+                  <p className="text-red-500 text-xs mt-1">
                     *Wajib dicentang sebelum submit
                   </p>
                 </div>
@@ -136,7 +134,7 @@ const AgreementForm = () => {
                 type="button"
                 disabled={!agreed || isSubmitting}
                 onClick={handleSubmit}
-                className={`px-4 py-2 rounded-lg text-white text-xs md:text-sm font-medium ${
+                className={`px-6 py-2 rounded-lg text-white font-medium ${
                   agreed && !isSubmitting
                     ? 'bg-green-600 hover:bg-green-700' 
                     : 'bg-gray-400 cursor-not-allowed'
@@ -148,7 +146,7 @@ const AgreementForm = () => {
             
             {/* Status message */}
             {submitStatus && (
-              <div className={`mt-2 text-xs md:text-sm text-center ${
+              <div className={`mt-3 text-sm text-center ${
                 submitStatus.type === 'success' ? 'text-green-600' : 'text-red-600'
               }`}>
                 {submitStatus.message}
@@ -157,7 +155,7 @@ const AgreementForm = () => {
             
             {/* Help text */}
             {!agreed && (
-              <p className="text-2xs md:text-xs text-center text-gray-500">
+              <p className="text-xs text-center text-gray-500">
                 Anda harus mencentang persetujuan untuk melanjutkan
               </p>
             )}
