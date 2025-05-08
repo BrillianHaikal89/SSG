@@ -66,7 +66,7 @@ const AddressContactForm = ({
     }
     
     // Batasi panjang maksimal (12 digit)
-    displayValue = displayValue.slice(0, 12); // Max 12 digit karena 62 + 10 digit nomor lokal
+    displayValue = displayValue.slice(0, 15); // Max 15 digit karena 62 + 10 digit nomor lokal
     
     // Simpan nilai ke state (untuk database akan dikonversi saat submit)
     setNomorHp(displayValue);
