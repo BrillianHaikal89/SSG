@@ -774,9 +774,10 @@ export default function MutabaahYaumiyahPage() {
             }`}
             disabled={formData.haid}
           >
-            {[...Array(item.max + 1).keys()].map(num => (
-              <option key={num} value={num}>{num}</option>
-            ))}
+            {[...Array(Math.floor(item.max / 2) + 1).keys()].map(i => {
+              const num = i * 2;
+              return <option key={num} value={num}>{num}</option>;
+            })}
           </select>
         )}
       </div>
