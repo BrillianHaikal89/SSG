@@ -30,14 +30,25 @@ const PersonalDataForm = ({
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Handler untuk mengubah nama menjadi uppercase
+  // Handler untuk mengubah nama menjadi uppercase dan mengganti tanda petik dengan backtick
   const handleNameChange = (e) => {
-    setName(e.target.value.toUpperCase());
+    const processedValue = e.target.value.toUpperCase().replace(/'/g, '`');
+    setName(processedValue);
   };
 
   // Handler untuk mengubah alamat menjadi uppercase
   const handleAddressChange = (e) => {
     setAddress(e.target.value.toUpperCase());
+  };
+  
+  // Handler untuk mengubah tempat lahir menjadi uppercase
+  const handleBirthPlaceChange = (e) => {
+    setBirthPlace(e.target.value.toUpperCase());
+  };
+  
+  // Handler untuk mengubah email menjadi lowercase
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value.toLowerCase());
   };
   
   // Membuka modal pencarian
@@ -194,7 +205,7 @@ const PersonalDataForm = ({
             <FormField
               id="nik"
               label="NIK"
-              type="text"
+              type="tel"
               value={nik}
               onChange={(e) => setNik(e.target.value.replace(/\D/g, '').slice(0, 16))}
               placeholder="Nomor NIK"
@@ -209,7 +220,7 @@ const PersonalDataForm = ({
                 label="TEMPAT LAHIR"
                 type="text"
                 value={birthPlace}
-                onChange={(e) => setBirthPlace(e.target.value)}
+                onChange={handleBirthPlaceChange}
                 placeholder="Tempat Lahir"
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
@@ -257,7 +268,7 @@ const PersonalDataForm = ({
                   { value: "B", label: "B" },
                   { value: "AB", label: "AB" },
                   { value: "O", label: "O" },
-                  { value: "unknown", label: "Tidak Tahu" }
+                  { value: "X", label: "Tidak Tahu" }
                 ]}
               />
             </div>
@@ -277,37 +288,40 @@ const PersonalDataForm = ({
               <FormField
                 id="rt"
                 label="RT"
-                type="text"
+                type="tel"
                 value={rt}
                 onChange={(e) => setRt(e.target.value.replace(/\D/g, '').slice(0, 3))}
                 placeholder="RT"
                 maxLength={3}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
+                inputMode="numeric"
               />
               
               <FormField
                 id="rw"
                 label="RW"
-                type="text"
+                type="tel"
                 value={rw}
                 onChange={(e) => setRw(e.target.value.replace(/\D/g, '').slice(0, 3))}
                 placeholder="RW"
                 maxLength={3}
                 formSubmitted={formSubmitted}
                 formErrors={formErrors}
+                inputMode="numeric"
               />
             </div>
             
             {/* Improved Kode Pos field with search icon properly aligned */}
             <div className="relative">
-              <label htmlFor="kodePos" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="kodePos" className="block text-xs font-medium text-gray-500 uppercase mb-1">
                 KODE POS{formErrors.kodePos && formSubmitted && <span className="text-red-500 ml-1">*</span>}
               </label>
               <div className="flex items-center relative">
                 <input
                   id="kodePos"
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
                   placeholder="Kode Pos KTP"
                   value={kodePos}
                   onChange={handleKodePosChange}
@@ -473,7 +487,8 @@ const PersonalDataForm = ({
                     <p className="text-gray-600 text-sm mb-2">Atau cari menggunakan kode pos:</p>
                     <div className="flex">
                       <input
-                        type="text"
+                        type="tel"
+                        inputMode="numeric"
                         className="flex-grow border rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Masukkan kode pos (5 digit)"
                         maxLength={5}
@@ -541,4 +556,4 @@ const PersonalDataForm = ({
   );
 };
 
-export default PersonalDataForm;  
+export default PersonalDataForm;

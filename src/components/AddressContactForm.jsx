@@ -34,6 +34,16 @@ const AddressContactForm = ({
     showConfirmPassword, setShowConfirmPassword 
   } = passwordVisibility;
 
+  // Handle alamat domisili uppercase
+  const handleAlamatDomisiliChange = (e) => {
+    setAlamatDomisili(e.target.value.toUpperCase());
+  };
+  
+  // Handle email lowercase
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value.toLowerCase());
+  };
+
   // Format nomor HP untuk mengizinkan input dengan awalan 08
   // namun menyimpan dengan format 62
   const handlePhoneNumberChange = (e) => {
@@ -55,7 +65,7 @@ const AddressContactForm = ({
       }
     }
     
-    // Batasi panjang maksimal (15 digit)
+    // Batasi panjang maksimal (12 digit)
     displayValue = displayValue.slice(0, 12); // Max 12 digit karena 62 + 10 digit nomor lokal
     
     // Simpan nilai ke state (untuk database akan dikonversi saat submit)
@@ -130,7 +140,7 @@ const AddressContactForm = ({
               type="textarea"
               placeholder="Alamat Sesuai Domisili"
               value={alamatDomisili}
-              onChange={(e) => setAlamatDomisili(e.target.value.toUpperCase())}
+              onChange={handleAlamatDomisiliChange}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
               readOnly={isSameAddress}
@@ -141,7 +151,8 @@ const AddressContactForm = ({
               <FormField
                 id="rtDomisili"
                 label="RT"
-                type="text"
+                type="tel"
+                inputMode="numeric"
                 placeholder="RT Domisili"
                 value={rtDomisili}
                 onChange={(e) => setRtDomisili(e.target.value.replace(/\D/g, '').slice(0, 3))}
@@ -155,7 +166,8 @@ const AddressContactForm = ({
               <FormField
                 id="rwDomisili"
                 label="RW"
-                type="text"
+                type="tel"
+                inputMode="numeric"
                 placeholder="RW Domisili"
                 value={rwDomisili}
                 onChange={(e) => setRwDomisili(e.target.value.replace(/\D/g, '').slice(0, 3))}
@@ -175,7 +187,8 @@ const AddressContactForm = ({
               <div className="flex items-center relative">
                 <input
                   id="kodePosStep2"
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
                   placeholder="Kode Pos Sesuai Domisili"
                   value={kodePosStep2}
                   onChange={handleKodePosChange}
@@ -197,7 +210,7 @@ const AddressContactForm = ({
                 )}
               </div>
               {formErrors.kodePosStep2 && formSubmitted && (
-                <p className="mt-1 text-sm text-red-500">{formErrors.kodePosStep2}</p>
+                <p className="mt-1 text-xs text-red-500">{formErrors.kodePosStep2}</p>
               )}
             </div>
             
@@ -277,7 +290,7 @@ const AddressContactForm = ({
               type="email"
               placeholder="Email Aktif"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
             />
@@ -292,6 +305,7 @@ const AddressContactForm = ({
                   id="nomorHp"
                   name="nomorHp"
                   type="tel"
+                  inputMode="numeric"
                   value={nomorHp}
                   onChange={handlePhoneNumberChange}
                   placeholder="Contoh: 0812345678"
