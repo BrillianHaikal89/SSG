@@ -46,11 +46,6 @@ const PersonalDataForm = ({
     setBirthPlace(e.target.value.toUpperCase());
   };
   
-  // Handler untuk mengubah email menjadi lowercase
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value.toLowerCase());
-  };
-  
   // Membuka modal pencarian
   const openSearchModal = () => {
     setSearchTerm('');
@@ -212,6 +207,7 @@ const PersonalDataForm = ({
               maxLength={16}
               formSubmitted={formSubmitted}
               formErrors={formErrors}
+              inputMode="numeric"
             />
             
             <div className="grid grid-cols-2 gap-4">
@@ -249,8 +245,8 @@ const PersonalDataForm = ({
                 formErrors={formErrors}
                 options={[
                   { value: "", label: "Pilih Jenis Kelamin" },
-                  { value: "L", label: "Laki-laki" },
-                  { value: "P", label: "Perempuan" }
+                  { value: "1", label: "Laki-laki" },
+                  { value: "0", label: "Perempuan" }
                 ]}
               />
               
