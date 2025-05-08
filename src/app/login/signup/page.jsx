@@ -238,7 +238,7 @@ const SignupPage = () => {
           nik: nik,
           tempat_lahir: birthPlace,
           tanggal_lahir: birthDate,
-          jenis_kelamin: gender === 'Laki-laki' ? 'L' : 'P',
+          jenis_kelamin: gender === '1' ? '1' : '0',
           golongan_darah: bloodType,
           alamat: address,
           rt: rt,
