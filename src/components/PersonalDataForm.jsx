@@ -245,8 +245,8 @@ const PersonalDataForm = ({
                 formErrors={formErrors}
                 options={[
                   { value: "", label: "Pilih Jenis Kelamin" },
-                  { value: "1", label: "Laki-laki" },
-                  { value: "0", label: "Perempuan" }
+                  { value: 1, label: "Laki-laki" },
+                  { value: 0, label: "Perempuan" }
                 ]}
               />
               
