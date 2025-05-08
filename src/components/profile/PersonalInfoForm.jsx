@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
-import FormComponentBase from './FormComponentBase';
+import FormComponentBase from './FormComponentsBase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const PersonalInfoForm = () => {
