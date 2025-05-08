@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
 import ProfileHeader from '../../../components/profile/ProfileHeader';
 import ProfileLayout from '../../../components/profile/ProfileLayout';
 import PersonalInfoForm from '../../../components/profile/PersonalInfoForm';
@@ -11,19 +10,15 @@ import AgreementSignatureForm from '../../../components/profile/AgreementSignatu
 import useAuthStore from '../../../stores/authStore';
 import { useRouter } from 'next/navigation';
 
-// Use dynamic import with no SSR to prevent hydration issues
 const ProfilePage = () => {
   const router = useRouter();
-  const { user, checkAuth, role } = useAuthStore();
+  const { user, checkAuth } = useAuthStore();
   const [userData, setUserData] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
   // Handle client-side rendering and authentication
   useEffect(() => {
     setIsClient(true);
-    
-    // Debug auth state
-    console.log("Profile page mounted, auth store state:", useAuthStore.getState());
   }, []);
   
   // Check authentication status
@@ -32,7 +27,6 @@ const ProfilePage = () => {
       const isAuthenticated = checkAuth();
       
       if (!isAuthenticated) {
-        console.log("Not authenticated, redirecting to login");
         router.push('/login');
         return;
       }
@@ -47,8 +41,8 @@ const ProfilePage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-          <p>Loading profile...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-800 mx-auto mb-3"></div>
+          <p className="text-sm text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
@@ -61,9 +55,7 @@ const ProfilePage = () => {
       <PersonalInfoForm initialData={userData} />
       <HealthInfoForm initialData={userData} />
       <RequiredDocumentsForm initialData={userData} />
-  
-        <AgreementSignatureForm initialData={userData} />
-      
+      <AgreementSignatureForm initialData={userData} />
     </ProfileLayout>
   );
 };

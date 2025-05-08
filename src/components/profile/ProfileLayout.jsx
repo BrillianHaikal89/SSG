@@ -21,11 +21,9 @@ const ProfileLayout = ({ children }) => {
     if (isClient) {
       // Check if user is logged in using Zustand store
       const isAuthenticated = checkAuth();
-      console.log("Profile layout auth check result:", isAuthenticated);
       
       if (!isAuthenticated) {
         // Redirect to login page if not authenticated
-        console.log("Not authenticated, redirecting to login from profile");
         router.push('/login');
         return;
       }
@@ -43,11 +41,8 @@ const ProfileLayout = ({ children }) => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
-          <svg className="animate-spin h-10 w-10 mx-auto text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p className="mt-4 text-gray-600">Memuat profile...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-800 mx-auto"></div>
+          <p className="mt-3 text-sm text-gray-600">Memuat profile...</p>
         </div>
       </div>
     );
@@ -56,25 +51,26 @@ const ProfileLayout = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-blue-900 text-white">
-        <div className="container mx-auto px-4 py-3">
+      <header className="bg-blue-900 text-white sticky top-0 z-10">
+        <div className="container mx-auto px-3 py-2 md:px-4 md:py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Image 
                 src="/img/logossg_white.png" 
                 alt="Logo Santri Siap Guna" 
-                width={36} 
-                height={36} 
-                className="mr-2"
+                width={30} 
+                height={30} 
+                className="mr-2 md:w-36 md:h-36"
               />
-              <h1 className="text-xl font-bold">SANTRI SIAP GUNA</h1>
+              <h1 className="text-base md:text-xl font-bold">SANTRI SIAP GUNA</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <button 
                 onClick={handleBack}
-                className="text-white"
+                className="text-white p-1"
+                aria-label="Kembali ke Dashboard"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </button>
@@ -88,7 +84,7 @@ const ProfileLayout = ({ children }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="flex-grow container mx-auto px-4 py-6 pb-20"
+        className="flex-grow container mx-auto px-3 py-3 pb-16 md:px-4 md:py-6 md:pb-20"
       >
         {children}
       </motion.main>
