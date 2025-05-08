@@ -727,7 +727,7 @@ export default function MutabaahYaumiyahPage() {
           </div>
 
           {/* Haid checkbox - only show for female users (gender = 0) */}
-          {user?.gender === "0" && (
+          {user?.fullData.jenis_kelamin === "0" && (
   <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
     <label className="flex items-center cursor-pointer">
       <input 
