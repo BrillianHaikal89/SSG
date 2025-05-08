@@ -648,6 +648,17 @@ const RequiredDocumentsForm = ({ initialData }) => {
                   {/* Preview section */}
                   {previews[currentDocType] && (
                     <div className="mt-2">
+                      {/* Preview for images */}
+                      {documents[currentDocType].type?.startsWith('image/') && (
+                        <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
+                          <img 
+                            src={previews[currentDocType]} 
+                            className="w-full h-auto max-h-48 md:max-h-64 object-contain mx-auto" 
+                            alt={documentTypes[currentDocType].label}
+                          />
+                        </div>
+                      )}
+                      
                       {/* Preview for PDF and other files */}
                       {!documents[currentDocType].type?.startsWith('image/') && (
                         <div className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-center">
