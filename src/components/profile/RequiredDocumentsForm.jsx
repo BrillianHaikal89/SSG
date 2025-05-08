@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const RequiredDocumentsForm = ({ initialData }) => {
+const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran', 'digitalSignature'];
@@ -28,14 +28,7 @@ const RequiredDocumentsForm = ({ initialData }) => {
     buktiPembayaran: null,
     digitalSignature: null
   });
-  const [uploadingStatus, setUploadingStatus] = useState({
-    ktp: false,
-    pasFoto: false,
-    suratIzin: false,
-    suratSehat: false,
-    buktiPembayaran: false,
-    digitalSignature: false
-  });
+  const [uploadingStatus, setUploadingStatus] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRefs = {
     ktp: useRef(null),
@@ -100,201 +93,170 @@ const RequiredDocumentsForm = ({ initialData }) => {
   // Initialize signature canvas when it's the current step
   useEffect(() => {
     if (currentDocType === 'digitalSignature' && canvasRef.current && !documents.digitalSignature) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      
-      // Set canvas size based on container size
-      const resizeCanvas = () => {
-        const container = canvas.parentElement;
-        canvas.width = container.clientWidth;
-        canvas.height = Math.min(300, window.innerHeight * 0.3);
+      try {
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
         
-        // Reset canvas after resize with white background
+        canvas.width = canvas.offsetWidth;
+        canvas.height = 200;
+        
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Set initial canvas style
         context.lineWidth = 2;
         context.lineCap = 'round';
         context.strokeStyle = '#000000';
-      };
-      
-      // Initial sizing
-      resizeCanvas();
-      
-      // Handle window resize
-      window.addEventListener('resize', resizeCanvas);
-      
-      // Cleanup listener
-      return () => window.removeEventListener('resize', resizeCanvas);
+      } catch (err) {
+        console.error("Canvas error:", err);
+      }
     }
   }, [currentDocType, documents.digitalSignature]);
 
-  // Signature pad event handlers
+  // Simplified signature pad event handlers
   const startDrawing = (e) => {
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    
-    // Get mouse/touch position
-    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    
-    context.beginPath();
-    context.moveTo(
-      clientX - rect.left,
-      clientY - rect.top
-    );
-    
-    setIsDrawing(true);
-    setSignatureExists(true);
+    try {
+      if (!canvasRef.current) return;
+      if (e.preventDefault) e.preventDefault();
+      
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      
+      const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+      
+      context.beginPath();
+      context.moveTo(
+        clientX - rect.left,
+        clientY - rect.top
+      );
+      
+      setIsDrawing(true);
+      setSignatureExists(true);
+    } catch (err) {
+      console.error("Drawing error:", err);
+    }
   };
   
   const draw = (e) => {
-    if (!isDrawing) return;
-    
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    
-    // Get mouse/touch position
-    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    
-    context.lineTo(
-      clientX - rect.left,
-      clientY - rect.top
-    );
-    context.stroke();
+    try {
+      if (!isDrawing || !canvasRef.current) return;
+      if (e.preventDefault) e.preventDefault();
+      
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      
+      const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+      
+      context.lineTo(
+        clientX - rect.left,
+        clientY - rect.top
+      );
+      context.stroke();
+    } catch (err) {
+      console.error("Drawing error:", err);
+    }
   };
   
   const stopDrawing = () => {
-    if (isDrawing) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      context.closePath();
-      setIsDrawing(false);
-    }
+    setIsDrawing(false);
   };
   
   const clearSignature = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    
-    // Clear canvas with white background
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    
-    setSignatureExists(false);
-    
-    // Also clear any saved signature
-    setDocuments(prev => ({
-      ...prev,
-      digitalSignature: null
-    }));
-    
-    setPreviews(prev => ({
-      ...prev,
-      digitalSignature: null
-    }));
+    try {
+      if (!canvasRef.current) return;
+      
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      setSignatureExists(false);
+      setDocuments(prev => ({
+        ...prev,
+        digitalSignature: null
+      }));
+      setPreviews(prev => ({
+        ...prev,
+        digitalSignature: null
+      }));
+    } catch (err) {
+      console.error("Clear signature error:", err);
+    }
   };
   
   const saveSignature = () => {
-    if (!signatureExists) {
-      toast.error("Harap buat tanda tangan terlebih dahulu");
-      return;
-    }
-    
-    const canvas = canvasRef.current;
-    
-    // Convert canvas to blob
-    canvas.toBlob((blob) => {
-      // Create a File object from the blob
-      const signatureFile = new File([blob], "signature.png", { type: "image/png" });
-      
-      // Store the signature file in the documents state
-      setDocuments(prev => ({
-        ...prev,
-        digitalSignature: signatureFile
-      }));
-      
-      // Store the signature preview
-      const dataUrl = canvas.toDataURL("image/png");
-      setPreviews(prev => ({
-        ...prev,
-        digitalSignature: dataUrl
-      }));
-      
-      // Save metadata
-      safelyStoreDocumentMetadata('digitalSignature', signatureFile, dataUrl);
-      
-      toast.success("Tanda tangan berhasil disimpan");
-    });
-  };
-
-  // Separate function to safely store document metadata
-  const safelyStoreDocumentMetadata = (documentType, file, dataUrl) => {
     try {
-      const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
+      if (!signatureExists || !canvasRef.current) {
+        toast.error("Harap buat tanda tangan terlebih dahulu");
+        return;
+      }
       
-      // Store only essential metadata, not the full data URL
-      const metadata = {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        uploadDate: new Date().toISOString(),
-        // Store a truncated preview or hash instead of full data URL
-        preview: dataUrl ? dataUrl.substring(0, 100) : null
-      };
-
-      currentDocs[documentType] = metadata;
-      localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
-    } catch (error) {
-      console.error('Error storing document metadata:', error);
-      // Optional: Show a toast or handle the error
-      toast.error('Tidak dapat menyimpan metadata dokumen');
+      const canvas = canvasRef.current;
+      
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          toast.error("Gagal menyimpan tanda tangan");
+          return;
+        }
+        
+        const signatureFile = new File([blob], "signature.png", { type: "image/png" });
+        setDocuments(prev => ({
+          ...prev,
+          digitalSignature: signatureFile
+        }));
+        
+        const dataUrl = canvas.toDataURL("image/png");
+        setPreviews(prev => ({
+          ...prev,
+          digitalSignature: dataUrl
+        }));
+        
+        toast.success("Tanda tangan berhasil disimpan");
+      });
+    } catch (err) {
+      console.error("Save signature error:", err);
+      toast.error("Gagal menyimpan tanda tangan");
     }
   };
 
   const handleSubmit = async () => {
-    // Validasi final
-    const missingDocs = docTypesOrder.filter(docType => !documents[docType]);
-  
-    if (missingDocs.length > 0) {
-      toast.error(`Masih ada dokumen yang belum diupload: ${missingDocs.map(d => documentTypes[d].label).join(', ')}`);
-      setCurrentStep(docTypesOrder.indexOf(missingDocs[0]));
-      return;
-    }
-  
-    const formData = new FormData();
-  
-    // Add all files to formData with the same field name "files"
-    // The order matches the expected order in the backend
-    docTypesOrder.forEach(docType => {
-      if (documents[docType]) {
-        // Append all files with the same field name 'files'
-        formData.append('files', documents[docType]);
-      }
-    });
-  
     try {
+      // Validasi final
+      const missingDocs = docTypesOrder.filter(docType => !documents[docType]);
+    
+      if (missingDocs.length > 0) {
+        toast.error(`Masih ada dokumen yang belum diupload: ${missingDocs.map(d => documentTypes[d].label).join(', ')}`);
+        setCurrentStep(docTypesOrder.indexOf(missingDocs[0]));
+        return;
+      }
+    
+      const formData = new FormData();
+    
+      // Add all files to formData with the same field name "files"
+      docTypesOrder.forEach(docType => {
+        if (documents[docType]) {
+          formData.append('files', documents[docType]);
+        }
+      });
+    
       setIsSubmitting(true);
 
-      const response = await fetch(`${API_URL}/users/upload-files?id=${user.userId}`, {
+      const response = await fetch(`${API_URL}/users/upload-files?id=${user?.userId}`, {
         method: "POST",
         body: formData
       });
-  
+    
       setIsSubmitting(false);
       
       if (response.ok) {
         const result = await response.json();
         toast.success(result.message || "Semua dokumen berhasil dikirim!");
         
-        // Clear localStorage and state after successful submission
-        localStorage.removeItem('requiredDocumentsMetadata');
+        // Clear state after successful submission
         setDocuments({
           ktp: null,
           pasFoto: null,
@@ -317,18 +279,18 @@ const RequiredDocumentsForm = ({ initialData }) => {
         toast.error(errorData.message || "Gagal mengupload dokumen");
       }
     } catch (err) {
-      toast.error(err.message || "Terjadi kesalahan saat mengupload");
+      console.error("Submit error:", err);
+      toast.error("Terjadi kesalahan saat mengupload");
       setIsSubmitting(false);
     }
   };
 
-  // Load documents from localStorage on component mount
+  // Load documents from API on component mount
   useEffect(() => {
-    // Attempt to load metadata from localStorage
-    const storedMetadata = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
-    
     const fetchUserDocuments = async () => {
       try {
+        if (!user?.userId) return;
+        
         const res = await fetch(`${API_URL}/users/user-files?userId=${user.userId}`);
         if (!res.ok) throw new Error("Gagal mengambil data dokumen");
 
@@ -336,11 +298,9 @@ const RequiredDocumentsForm = ({ initialData }) => {
         const initialPreviews = { ...previews };
         const initialDocuments = { ...documents };
 
-        // Periksa apakah respons memiliki array 'files'
+        // Process files array
         if (data.files && Array.isArray(data.files)) {
-          // Loop melalui files yang diterima dari API
           data.files.forEach(file => {
-            // Mapping dari backend file_type ke docType di frontend
             const backendToFrontendMap = {
               'ktp': 'ktp',
               'pas_foto': 'pasFoto',
@@ -374,73 +334,73 @@ const RequiredDocumentsForm = ({ initialData }) => {
       }
     };
 
-    // Panggil fetchUserDocuments jika user sudah login
-    if (user?.userId) {
-      fetchUserDocuments();
-    }
+    fetchUserDocuments();
   }, [user]);
     
   const handleFileChange = (e, documentType) => {
-    const file = e.target.files[0];
-    if (!file) return;
-  
-    // Set uploading status
-    setUploadingStatus(prev => ({
-      ...prev,
-      [documentType]: true
-    }));
+    try {
+      const file = e.target.files[0];
+      if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-  
-      // Store the actual File object in documents state
-      setDocuments(prev => ({ 
-        ...prev, 
-        [documentType]: file
+      // Set uploading status
+      setUploadingStatus(prev => ({
+        ...prev,
+        [documentType]: true
       }));
       
-      setPreviews(prev => ({ ...prev, [documentType]: dataUrl }));
-  
-      // Use the new safe metadata storage method
-      safelyStoreDocumentMetadata(documentType, file, dataUrl);
-      
-      // Reset uploading status
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target.result;
+    
+        // Store the file object
+        setDocuments(prev => ({ 
+          ...prev, 
+          [documentType]: file
+        }));
+        
+        setPreviews(prev => ({ 
+          ...prev, 
+          [documentType]: dataUrl 
+        }));
+        
+        // Reset uploading status
+        setUploadingStatus(prev => ({
+          ...prev,
+          [documentType]: false
+        }));
+      };
+    
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("File change error:", err);
+      toast.error("Gagal mengubah file");
       setUploadingStatus(prev => ({
         ...prev,
         [documentType]: false
       }));
-    };
-  
-    reader.readAsDataURL(file);
+    }
   };
 
   // Handle document deletion for a specific type
   const handleDeleteDocument = (documentType) => {
-    // Update states
-    setDocuments(prev => ({
-      ...prev,
-      [documentType]: null
-    }));
-    
-    setPreviews(prev => ({
-      ...prev,
-      [documentType]: null
-    }));
-    
-    // Update localStorage metadata
-    const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
-    delete currentDocs[documentType];
-    
     try {
-      localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
-    } catch (error) {
-      console.error('Error updating localStorage:', error);
-    }
-    
-    // Clear file input
-    if (fileInputRefs[documentType].current) {
-      fileInputRefs[documentType].current.value = '';
+      // Update states
+      setDocuments(prev => ({
+        ...prev,
+        [documentType]: null
+      }));
+      
+      setPreviews(prev => ({
+        ...prev,
+        [documentType]: null
+      }));
+      
+      // Clear file input
+      if (fileInputRefs[documentType]?.current) {
+        fileInputRefs[documentType].current.value = '';
+      }
+    } catch (err) {
+      console.error("Delete document error:", err);
     }
   };
 
@@ -451,6 +411,10 @@ const RequiredDocumentsForm = ({ initialData }) => {
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / 1048576).toFixed(1) + ' MB';
   };
+
+  if (!user) {
+    return <div className="bg-white rounded-lg shadow-md p-4 text-center">Loading user data...</div>;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md mb-4">
@@ -488,7 +452,7 @@ const RequiredDocumentsForm = ({ initialData }) => {
                     className={`
                       w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm transition-colors
                       ${index < currentStep && documents[docTypesOrder[index]] ? 'bg-green-500 text-white' : 
-                        index === currentStep ? 'bg-blue-500 ring-2 ring-blue-300 text-white' : 
+                        index === currentStep ? 'bg-blue-500 text-white' : 
                         'bg-gray-200 text-gray-500'}
                     `}
                   >
@@ -500,7 +464,7 @@ const RequiredDocumentsForm = ({ initialData }) => {
                       index + 1
                     )}
                   </button>
-                  <span className="text-2xs md:text-xs mt-1 text-center max-w-[60px] md:max-w-none whitespace-nowrap">
+                  <span className="text-xs mt-1 text-center max-w-[60px] md:max-w-none whitespace-nowrap">
                     {documentTypes[docType].label}
                   </span>
                 </div>
@@ -513,8 +477,8 @@ const RequiredDocumentsForm = ({ initialData }) => {
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
               <div>
                 <h3 className="text-sm md:text-md font-medium">{documentTypes[currentDocType].label}</h3>
-                <p className="text-2xs md:text-xs text-gray-500 mt-1">{documentTypes[currentDocType].description}</p>
-                <p className="text-2xs md:text-xs text-gray-400">Format: {documentTypes[currentDocType].formats} (Maks: {documentTypes[currentDocType].maxSize})</p>
+                <p className="text-xs text-gray-500 mt-1">{documentTypes[currentDocType].description}</p>
+                <p className="text-xs text-gray-400">Format: {documentTypes[currentDocType].formats} (Maks: {documentTypes[currentDocType].maxSize})</p>
               </div>
               
               <div className="flex flex-wrap gap-2 justify-end">
@@ -541,7 +505,7 @@ const RequiredDocumentsForm = ({ initialData }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
                     </svg>
-                    Unggah Tanda Tangan
+                    Unggah File Tanda Tangan
                     <input 
                       type="file" 
                       className="hidden" 
@@ -570,10 +534,11 @@ const RequiredDocumentsForm = ({ initialData }) => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 md:p-4 bg-gray-50">
                   <p className="text-xs md:text-sm text-center text-gray-500 mb-3">Buat tanda tangan digital Anda di bawah ini</p>
                   
-                  <div className="touch-none w-full">
+                  <div className="w-full">
                     <canvas
                       ref={canvasRef}
-                      className="w-full h-48 md:h-64 border border-gray-300 bg-white rounded cursor-crosshair touch-none"
+                      style={{ touchAction: 'none' }}
+                      className="w-full h-48 md:h-64 border border-gray-300 bg-white rounded cursor-crosshair"
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}
@@ -624,10 +589,10 @@ const RequiredDocumentsForm = ({ initialData }) => {
                       </div>
                       
                       <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-800 line-clamp-1">
+                        <p className="text-xs md:text-sm font-medium text-gray-800 truncate">
                           {documents[currentDocType].name || (currentDocType === 'digitalSignature' ? 'Tanda Tangan Digital.png' : 'Document')}
                         </p>
-                        <p className="text-2xs md:text-xs text-gray-500">
+                        <p className="text-xs text-gray-500">
                           {formatFileSize(documents[currentDocType].size)} • {new Date().toLocaleDateString('id-ID')}
                         </p>
                       </div>
