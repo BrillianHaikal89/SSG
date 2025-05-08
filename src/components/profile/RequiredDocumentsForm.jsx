@@ -5,29 +5,13 @@ import useAuthStore from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  
   // Add digital signature to document types order
   const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran', 'digitalSignature'];
   const currentDocType = docTypesOrder[currentStep];
-  const { user, role } = useAuthStore();
-  
-  // Check if mobile on component mount and resize
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
-
-  // Rest of your existing state and functions remain exactly the same
+  const { user , role} = useAuthStore();
   const [documents, setDocuments] = useState({
     ktp: null,
     pasFoto: null,
@@ -36,7 +20,6 @@ const RequiredDocumentsForm = () => {
     buktiPembayaran: null,
     digitalSignature: null
   });
-  
   const [previews, setPreviews] = useState({
     ktp: null,
     pasFoto: null,
@@ -45,7 +28,6 @@ const RequiredDocumentsForm = () => {
     buktiPembayaran: null,
     digitalSignature: null
   });
-  
   const [uploadingStatus, setUploadingStatus] = useState({
     ktp: false,
     pasFoto: false,
@@ -54,7 +36,6 @@ const RequiredDocumentsForm = () => {
     buktiPembayaran: false,
     digitalSignature: false
   });
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRefs = {
     ktp: useRef(null),
@@ -117,7 +98,6 @@ const RequiredDocumentsForm = () => {
     }
   };
 
-  // All your existing functions remain exactly the same
   // Initialize signature canvas when it's the current step
   useEffect(() => {
     if (currentDocType === 'digitalSignature' && canvasRef.current && !documents.digitalSignature) {
@@ -457,15 +437,11 @@ const RequiredDocumentsForm = () => {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      {/* Stepper Indicator - Responsive */}
-      <div className="flex justify-between mb-6 overflow-x-auto pb-2">
+    <div className="p-4">
+      {/* Stepper Indicator */}
+      <div className="flex justify-between mb-6">
         {docTypesOrder.map((docType, index) => (
-          <div 
-            key={docType} 
-            className="flex flex-col items-center min-w-[50px] cursor-pointer"
-            onClick={() => setCurrentStep(index)}
-          >
+          <div key={docType} className="flex flex-col items-center">
             <div 
               className={`w-8 h-8 rounded-full flex items-center justify-center 
                 ${index <= currentStep ? 'bg-blue-500 text-white' : 'bg-gray-200'} 
@@ -473,85 +449,56 @@ const RequiredDocumentsForm = () => {
             >
               {index + 1}
             </div>
-            {/* Only show labels on desktop */}
-            {!isMobile && (
-              <span className="text-xs mt-1 text-center whitespace-nowrap">
-                {documentTypes[docType].label}
-              </span>
-            )}
+            <span className="text-xs mt-1 text-center">
+              {documentTypes[docType].label}
+            </span>
           </div>
         ))}
       </div>
 
       {/* Current Step Content */}
-      <div className="border rounded-lg p-4 mb-6 bg-white shadow-sm">
-        {isMobile ? (
-          <>
-            <h3 className="text-md font-medium mb-2">{documentTypes[currentDocType].label}</h3>
-            <p className="text-sm text-gray-600">{documentTypes[currentDocType].description}</p>
-          </>
-        ) : (
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-            <div className="flex-1">
-              <h3 className="text-md font-medium">{documentTypes[currentDocType].label}</h3>
-              <p className="text-xs text-gray-500 mt-1">{documentTypes[currentDocType].description}</p>
-              <p className="text-xs text-gray-400">Format: {documentTypes[currentDocType].formats} (Maks: {documentTypes[currentDocType].maxSize})</p>
-            </div>
-            
-            {!documents[currentDocType] && currentDocType !== 'digitalSignature' && (
-              <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer ${uploadingStatus[currentDocType] ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} text-white whitespace-nowrap`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-                </svg>
-                Unggah
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  onChange={(e) => handleFileChange(e, currentDocType)} 
-                  accept={currentDocType === 'pasFoto' ? "image/jpeg,image/png" : "image/jpeg,image/png,application/pdf"}
-                  ref={fileInputRefs[currentDocType]}
-                  disabled={uploadingStatus[currentDocType]}
-                />
-              </label>
-            )}
-
-            {!documents[currentDocType] && currentDocType === 'digitalSignature' && (
-              <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer bg-gray-500 hover:bg-gray-600 text-white whitespace-nowrap`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-                </svg>
-                Unggah Tanda Tangan
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  onChange={(e) => handleFileChange(e, 'digitalSignature')} 
-                  accept="image/jpeg,image/png"
-                  ref={fileInputRefs.digitalSignature}
-                />
-              </label>
-            )}
+      <div className="border rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-md font-medium">{documentTypes[currentDocType].label}</h3>
+            <p className="text-xs text-gray-500 mt-1">{documentTypes[currentDocType].description}</p>
+            <p className="text-xs text-gray-400">Format: {documentTypes[currentDocType].formats} (Maks: {documentTypes[currentDocType].maxSize})</p>
           </div>
-        )}
-        
-        {/* Mobile Upload Button */}
-        {isMobile && !documents[currentDocType] && (
-          <div className="mt-3">
-            <input
-              type="file"
-              ref={fileInputRefs[currentDocType]}
-              onChange={(e) => handleFileChange(e, currentDocType)}
-              accept={currentDocType === 'pasFoto' || currentDocType === 'digitalSignature' ? "image/jpeg,image/png" : "image/jpeg,image/png,application/pdf"}
-              className="hidden"
-              id={`mobile-upload-${currentDocType}`}
-            />
-            <label 
-              htmlFor={`mobile-upload-${currentDocType}`}
-              className="block w-full py-2 px-3 bg-blue-500 text-white text-center rounded-md"
-            >
-              Upload File
+          
+          {!documents[currentDocType] && currentDocType !== 'digitalSignature' && (
+            <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer ${uploadingStatus[currentDocType] ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} text-white`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+              </svg>
+              Unggah
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={(e) => handleFileChange(e, currentDocType)} 
+                accept={currentDocType === 'pasFoto' ? "image/jpeg,image/png" : "image/jpeg,image/png,application/pdf"}
+                ref={fileInputRefs[currentDocType]}
+                disabled={uploadingStatus[currentDocType]}
+              />
             </label>
-          </div>
-        )}
+          )}
+
+          {/* For digital signature, show upload option as an alternative */}
+          {!documents[currentDocType] && currentDocType === 'digitalSignature' && (
+            <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer bg-gray-500 hover:bg-gray-600 text-white`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+              </svg>
+              Unggah Tanda Tangan
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={(e) => handleFileChange(e, 'digitalSignature')} 
+                accept="image/jpeg,image/png"
+                ref={fileInputRefs.digitalSignature}
+              />
+            </label>
+          )}
+        </div>
         
         {/* Uploading indicator */}
         {uploadingStatus[currentDocType] && (
@@ -571,7 +518,7 @@ const RequiredDocumentsForm = () => {
               
               <canvas
                 ref={canvasRef}
-                className="w-full h-48 sm:h-64 border border-gray-300 bg-white rounded cursor-crosshair touch-none"
+                className="w-full h-64 border border-gray-300 bg-white rounded cursor-crosshair touch-none"
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
@@ -581,7 +528,7 @@ const RequiredDocumentsForm = () => {
                 onTouchEnd={stopDrawing}
               />
               
-              <div className="flex flex-col sm:flex-row justify-center mt-4 gap-2 sm:gap-3">
+              <div className="flex justify-center mt-4 space-x-3">
                 <button
                   onClick={clearSignature}
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
@@ -604,7 +551,7 @@ const RequiredDocumentsForm = () => {
         {documents[currentDocType] && (
           <div className="mt-3">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
                   {/* Icon sesuai dengan tipe file */}
                   <div className="p-2 bg-blue-100 rounded-md text-blue-600">
@@ -619,8 +566,8 @@ const RequiredDocumentsForm = () => {
                     )}
                   </div>
                   
-                  <div className="overflow-hidden">
-                    <p className="text-sm font-medium text-gray-800 truncate">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
                       {documents[currentDocType].name || (currentDocType === 'digitalSignature' ? 'Tanda Tangan Digital.png' : 'Document')}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -631,13 +578,13 @@ const RequiredDocumentsForm = () => {
                 
                 {role === '0a' && (
                   <button 
-                    onClick={() => handleDeleteDocument(currentDocType)}
-                    className="p-1 hover:bg-red-100 rounded-full text-red-500 hover:text-red-700 transition-colors self-end sm:self-auto"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  onClick={() => handleDeleteDocument(currentDocType)}
+                  className="p-1 hover:bg-red-100 rounded-full text-red-500 hover:text-red-700 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
                 )}
               </div>
               
@@ -651,7 +598,6 @@ const RequiredDocumentsForm = () => {
                         src={previews[currentDocType]} 
                         className="w-full h-auto max-h-64 object-contain mx-auto" 
                         alt={documentTypes[currentDocType].label}
-                        loading="lazy"
                       />
                     </div>
                   )}
@@ -688,46 +634,48 @@ const RequiredDocumentsForm = () => {
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+      
+      <div className="flex justify-between mt-6">
         <button
           onClick={() => setCurrentStep(prev => Math.max(prev - 1, 0))}
           disabled={currentStep === 0}
-          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 order-2 sm:order-1"
+          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
         >
           Kembali
         </button>
         {currentStep < docTypesOrder.length - 1 ? (
-          <button
-            onClick={() => {
-              if (documents[currentDocType]) {
-                setCurrentStep(prev => prev + 1);
-              } else {
-                toast.error(`Harap upload ${documentTypes[currentDocType].label} terlebih dahulu`);
-              }
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md order-1 sm:order-2"
-          >
-            Lanjut
-          </button>
-        ) : (
-          role !== '1a' && (
-            <button
-              onClick={handleSubmit}
-              disabled={!documents[currentDocType] || isSubmitting}
-              className="px-4 py-2 bg-green-600 text-white rounded-md disabled:opacity-50 flex items-center justify-center order-1 sm:order-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Mengirim...
-                </>
-              ) : "Kirim Semua Dokumen"}
-            </button>
-          )
-        )}
+  <button
+    onClick={() => {
+      if (documents[currentDocType]) {
+        setCurrentStep(prev => prev + 1);
+      } else {
+        toast.error(`Harap upload ${documentTypes[currentDocType].label} terlebih dahulu`);
+      }
+    }}
+    className="px-4 py-2 bg-blue-500 text-white rounded-md"
+  >
+    Lanjut
+  </button>
+) : (
+  role !== '1a' && (
+    <button
+      onClick={handleSubmit}
+      disabled={!documents[currentDocType] || isSubmitting}
+      className="px-4 py-2 bg-green-600 text-white rounded-md disabled:opacity-50 flex items-center justify-center"
+    >
+      {isSubmitting ? (
+        <>
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Mengirim...
+        </>
+      ) : "Kirim Semua Dokumen"}
+    </button>
+  )
+)}
+
       </div>
     </div>
   );
