@@ -33,8 +33,6 @@ const MutabaahReport = ({ user, onClose }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - 5 + i);
 
-  const isFemale = user?.gender === 'female';
-
   useEffect(() => {
     if (user?.userId) {
       fetchIbadahData();
@@ -111,12 +109,7 @@ const MutabaahReport = ({ user, onClose }) => {
       // Add headers
       csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah";
-      if (isFemale) {
-        csvContent += ",Status Haid\n";
-      } else {
-        csvContent += "\n";
-      }
+      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah,Status Haid\n";
 
       // Add data rows
       allUserData.forEach(data => {
@@ -124,12 +117,8 @@ const MutabaahReport = ({ user, onClose }) => {
         csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
         csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
         csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah}`;
-        if (isFemale) {
-          csvContent += `,${data.haid}\n`;
-        } else {
-          csvContent += `\n`;
-        }
+        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah},`;
+        csvContent += `${data.haid}\n`;
       });
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -359,9 +348,7 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahajud</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dhuha</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shaum</th>
-                          {isFemale && (
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
-                          )}
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -375,7 +362,7 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
-                              {isFemale && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
+                              {data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
@@ -398,15 +385,13 @@ const MutabaahReport = ({ user, onClose }) => {
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
-                            {isFemale && (
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                {isValueActive(data.haid) ? (
-                                  <span className="text-red-600">✗</span>
-                                ) : (
-                                  <span className="text-green-600">✓</span>
-                                )}
-                              </td>
-                            )}
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {isValueActive(data.haid) ? (
+                                <span className="text-red-600">✗</span>
+                              ) : (
+                                <span className="text-green-600">✓</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -446,14 +431,12 @@ const MutabaahReport = ({ user, onClose }) => {
                           {stats.shaumDays}/{allUserData.length}
                         </div>
                       </div>
-                      {isFemale && (
-                        <div className="bg-red-50 p-4 rounded-lg">
-                          <div className="text-sm text-red-800">Haid (Hari)</div>
-                          <div className="text-2xl font-bold text-red-600">
-                            {stats.haidDays}/{allUserData.length}
-                          </div>
+                      <div className="bg-red-50 p-4 rounded-lg">
+                        <div className="text-sm text-red-800">Haid (Hari)</div>
+                        <div className="text-2xl font-bold text-red-600">
+                          {stats.haidDays}/{allUserData.length}
                         </div>
-                      )}
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
