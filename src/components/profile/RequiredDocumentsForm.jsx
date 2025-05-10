@@ -8,10 +8,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const RequiredDocumentsForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  // Add digital signature to document types order
   const docTypesOrder = ['ktp', 'pasFoto', 'suratIzin', 'suratSehat', 'buktiPembayaran', 'digitalSignature'];
   const currentDocType = docTypesOrder[currentStep];
-  const { user , role} = useAuthStore();
+  const { user, role } = useAuthStore();
   const [documents, setDocuments] = useState({
     ktp: null,
     pasFoto: null,
@@ -46,13 +45,11 @@ const RequiredDocumentsForm = () => {
     digitalSignature: useRef(null)
   };
   
-  // Signature pad reference
   const signaturePadRef = useRef(null);
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureExists, setSignatureExists] = useState(false);
 
-  // Document type labels and descriptions
   const documentTypes = {
     ktp: {
       label: "KTP",
@@ -98,43 +95,29 @@ const RequiredDocumentsForm = () => {
     }
   };
 
-  // Initialize signature canvas when it's the current step
   useEffect(() => {
     if (currentDocType === 'digitalSignature' && canvasRef.current && !documents.digitalSignature) {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      
-      // Set canvas size
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
-      
-      // Set initial canvas style
       context.lineWidth = 2;
       context.lineCap = 'round';
       context.strokeStyle = '#000000';
-      
-      // Clear canvas with white background
       context.fillStyle = '#ffffff';
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
   }, [currentDocType, documents.digitalSignature]);
 
-  // Signature pad event handlers
   const startDrawing = (e) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    
-    // Get mouse/touch position
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
     
     context.beginPath();
-    context.moveTo(
-      clientX - rect.left,
-      clientY - rect.top
-    );
-    
+    context.moveTo(clientX - rect.left, clientY - rect.top);
     setIsDrawing(true);
     setSignatureExists(true);
   };
@@ -146,15 +129,10 @@ const RequiredDocumentsForm = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    
-    // Get mouse/touch position
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
     
-    context.lineTo(
-      clientX - rect.left,
-      clientY - rect.top
-    );
+    context.lineTo(clientX - rect.left, clientY - rect.top);
     context.stroke();
   };
   
@@ -170,23 +148,11 @@ const RequiredDocumentsForm = () => {
   const clearSignature = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-    
-    // Clear canvas with white background
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    
     setSignatureExists(false);
-    
-    // Also clear any saved signature
-    setDocuments(prev => ({
-      ...prev,
-      digitalSignature: null
-    }));
-    
-    setPreviews(prev => ({
-      ...prev,
-      digitalSignature: null
-    }));
+    setDocuments(prev => ({ ...prev, digitalSignature: null }));
+    setPreviews(prev => ({ ...prev, digitalSignature: null }));
   };
   
   const saveSignature = () => {
@@ -196,58 +162,35 @@ const RequiredDocumentsForm = () => {
     }
     
     const canvas = canvasRef.current;
-    
-    // Convert canvas to blob
     canvas.toBlob((blob) => {
-      // Create a File object from the blob
       const signatureFile = new File([blob], "signature.png", { type: "image/png" });
-      
-      // Store the signature file in the documents state
-      setDocuments(prev => ({
-        ...prev,
-        digitalSignature: signatureFile
-      }));
-      
-      // Store the signature preview
+      setDocuments(prev => ({ ...prev, digitalSignature: signatureFile }));
       const dataUrl = canvas.toDataURL("image/png");
-      setPreviews(prev => ({
-        ...prev,
-        digitalSignature: dataUrl
-      }));
-      
-      // Save metadata
+      setPreviews(prev => ({ ...prev, digitalSignature: dataUrl }));
       safelyStoreDocumentMetadata('digitalSignature', signatureFile, dataUrl);
-      
       toast.success("Tanda tangan berhasil disimpan");
     });
   };
 
-  // Separate function to safely store document metadata
   const safelyStoreDocumentMetadata = (documentType, file, dataUrl) => {
     try {
       const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
-      
-      // Store only essential metadata, not the full data URL
       const metadata = {
         name: file.name,
         type: file.type,
         size: file.size,
         uploadDate: new Date().toISOString(),
-        // Store a truncated preview or hash instead of full data URL
         preview: dataUrl ? dataUrl.substring(0, 100) : null
       };
-
       currentDocs[documentType] = metadata;
       localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
     } catch (error) {
       console.error('Error storing document metadata:', error);
-      // Optional: Show a toast or handle the error
       toast.error('Tidak dapat menyimpan metadata dokumen');
     }
   };
 
   const handleSubmit = async () => {
-    // Validasi final
     const missingDocs = docTypesOrder.filter(docType => !documents[docType]);
   
     if (missingDocs.length > 0) {
@@ -257,27 +200,14 @@ const RequiredDocumentsForm = () => {
     }
   
     const formData = new FormData();
-    // formData.append('id', user.userId);
-  
-    // Add all files to formData with the same field name "files"
-    // The order matches the expected order in the backend
     docTypesOrder.forEach(docType => {
       if (documents[docType]) {
-        // Append all files with the same field name 'files'
         formData.append('files', documents[docType]);
       }
     });
   
-    // Debug: Lihat isi FormData
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value instanceof File ? 
-        `${value.name} (${value.size} bytes)` : 
-        value);
-    }
-  
     try {
       setIsSubmitting(true);
-
       const response = await fetch(`${API_URL}/users/upload-files?id=${user.userId}`, {
         method: "POST",
         body: formData
@@ -288,8 +218,6 @@ const RequiredDocumentsForm = () => {
       if (response.ok) {
         const result = await response.json();
         toast.success(result.message || "Semua dokumen berhasil dikirim!");
-        
-        // Clear localStorage and state after successful submission
         localStorage.removeItem('requiredDocumentsMetadata');
         setDocuments({
           ktp: null,
@@ -318,9 +246,7 @@ const RequiredDocumentsForm = () => {
     }
   };
 
-  // Load documents from localStorage on component mount
   useEffect(() => {
-    // Attempt to load metadata from localStorage
     const storedMetadata = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
     
     const fetchUserDocuments = async () => {
@@ -332,11 +258,8 @@ const RequiredDocumentsForm = () => {
         const initialPreviews = { ...previews };
         const initialDocuments = { ...documents };
 
-        // Periksa apakah respons memiliki array 'files'
         if (data.files && Array.isArray(data.files)) {
-          // Loop melalui files yang diterima dari API
           data.files.forEach(file => {
-            // Mapping dari backend file_type ke docType di frontend
             const backendToFrontendMap = {
               'ktp': 'ktp',
               'pas_foto': 'pasFoto',
@@ -370,7 +293,6 @@ const RequiredDocumentsForm = () => {
       }
     };
 
-    // Panggil fetchUserDocuments jika user sudah login
     if (user?.userId) {
       fetchUserDocuments();
     }
@@ -383,52 +305,25 @@ const RequiredDocumentsForm = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target.result;
-  
-      // Store the actual File object in documents state
-      setDocuments(prev => ({ 
-        ...prev, 
-        [documentType]: file
-      }));
-      
+      setDocuments(prev => ({ ...prev, [documentType]: file }));
       setPreviews(prev => ({ ...prev, [documentType]: dataUrl }));
-  
-      // Use the new safe metadata storage method
       safelyStoreDocumentMetadata(documentType, file, dataUrl);
     };
   
     reader.readAsDataURL(file);
   };
 
-  // Handle document deletion for a specific type
   const handleDeleteDocument = (documentType) => {
-    // Update states
-    setDocuments(prev => ({
-      ...prev,
-      [documentType]: null
-    }));
-    
-    setPreviews(prev => ({
-      ...prev,
-      [documentType]: null
-    }));
-    
-    // Update localStorage metadata
+    setDocuments(prev => ({ ...prev, [documentType]: null }));
+    setPreviews(prev => ({ ...prev, [documentType]: null }));
     const currentDocs = JSON.parse(localStorage.getItem('requiredDocumentsMetadata') || '{}');
     delete currentDocs[documentType];
-    
-    try {
-      localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
-    } catch (error) {
-      console.error('Error updating localStorage:', error);
-    }
-    
-    // Clear file input
+    localStorage.setItem('requiredDocumentsMetadata', JSON.stringify(currentDocs));
     if (fileInputRefs[documentType].current) {
       fileInputRefs[documentType].current.value = '';
     }
   };
 
-  // Format file size to human-readable format
   const formatFileSize = (bytes) => {
     if (!bytes) return '0 B';
     if (bytes < 1024) return bytes + ' B';
@@ -438,7 +333,7 @@ const RequiredDocumentsForm = () => {
 
   return (
     <div className="p-4">
-      {/* Stepper Indicator */}
+      {/* Stepper Indicator - Modified to show only numbers */}
       <div className="flex justify-between mb-6">
         {docTypesOrder.map((docType, index) => (
           <div key={docType} className="flex flex-col items-center">
@@ -449,9 +344,6 @@ const RequiredDocumentsForm = () => {
             >
               {index + 1}
             </div>
-            <span className="text-xs mt-1 text-center">
-              {documentTypes[docType].label}
-            </span>
           </div>
         ))}
       </div>
@@ -482,7 +374,6 @@ const RequiredDocumentsForm = () => {
             </label>
           )}
 
-          {/* For digital signature, show upload option as an alternative */}
           {!documents[currentDocType] && currentDocType === 'digitalSignature' && (
             <label className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium cursor-pointer bg-gray-500 hover:bg-gray-600 text-white`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -500,7 +391,6 @@ const RequiredDocumentsForm = () => {
           )}
         </div>
         
-        {/* Uploading indicator */}
         {uploadingStatus[currentDocType] && (
           <div className="mt-3">
             <p className="text-xs text-gray-500 mb-1">Mengunggah...</p>
@@ -510,7 +400,6 @@ const RequiredDocumentsForm = () => {
           </div>
         )}
         
-        {/* Digital Signature Canvas - Only show if current step is digitalSignature and no signature is uploaded yet */}
         {currentDocType === 'digitalSignature' && !documents.digitalSignature && (
           <div className="mt-6">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
@@ -547,13 +436,11 @@ const RequiredDocumentsForm = () => {
           </div>
         )}
         
-        {/* Document preview/info */}
         {documents[currentDocType] && (
           <div className="mt-3">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                  {/* Icon sesuai dengan tipe file */}
                   <div className="p-2 bg-blue-100 rounded-md text-blue-600">
                     {documents[currentDocType].type.startsWith('image/') ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -578,20 +465,18 @@ const RequiredDocumentsForm = () => {
                 
                 {role === '0a' && (
                   <button 
-                  onClick={() => handleDeleteDocument(currentDocType)}
-                  className="p-1 hover:bg-red-100 rounded-full text-red-500 hover:text-red-700 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+                    onClick={() => handleDeleteDocument(currentDocType)}
+                    className="p-1 hover:bg-red-100 rounded-full text-red-500 hover:text-red-700 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 )}
               </div>
               
-              {/* Preview section */}
               {previews[currentDocType] && (
                 <div className="mt-2">
-                  {/* Preview for images */}
                   {documents[currentDocType].type.startsWith('image/') && (
                     <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
                       <img 
@@ -602,7 +487,6 @@ const RequiredDocumentsForm = () => {
                     </div>
                   )}
                   
-                  {/* Preview for PDF and other files */}
                   {!documents[currentDocType].type.startsWith('image/') && (
                     <div className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -611,7 +495,6 @@ const RequiredDocumentsForm = () => {
                     </div>
                   )}
                   
-                  {/* View Document Button */}
                   <div className="mt-3 flex justify-center">
                     <a 
                       href={typeof previews[currentDocType] === 'string' ? previews[currentDocType] : '#'} 
@@ -634,7 +517,6 @@ const RequiredDocumentsForm = () => {
       </div>
 
       {/* Navigation Buttons */}
-      
       <div className="flex justify-between mt-6">
         <button
           onClick={() => setCurrentStep(prev => Math.max(prev - 1, 0))}
@@ -644,38 +526,37 @@ const RequiredDocumentsForm = () => {
           Kembali
         </button>
         {currentStep < docTypesOrder.length - 1 ? (
-  <button
-    onClick={() => {
-      if (documents[currentDocType]) {
-        setCurrentStep(prev => prev + 1);
-      } else {
-        toast.error(`Harap upload ${documentTypes[currentDocType].label} terlebih dahulu`);
-      }
-    }}
-    className="px-4 py-2 bg-blue-500 text-white rounded-md"
-  >
-    Lanjut
-  </button>
-) : (
-  role !== '1a' && (
-    <button
-      onClick={handleSubmit}
-      disabled={!documents[currentDocType] || isSubmitting}
-      className="px-4 py-2 bg-green-600 text-white rounded-md disabled:opacity-50 flex items-center justify-center"
-    >
-      {isSubmitting ? (
-        <>
-          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          Mengirim...
-        </>
-      ) : "Kirim Semua Dokumen"}
-    </button>
-  )
-)}
-
+          <button
+            onClick={() => {
+              if (documents[currentDocType]) {
+                setCurrentStep(prev => prev + 1);
+              } else {
+                toast.error(`Harap upload ${documentTypes[currentDocType].label} terlebih dahulu`);
+              }
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+            Lanjut
+          </button>
+        ) : (
+          role !== '1a' && (
+            <button
+              onClick={handleSubmit}
+              disabled={!documents[currentDocType] || isSubmitting}
+              className="px-4 py-2 bg-green-600 text-white rounded-md disabled:opacity-50 flex items-center justify-center"
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Mengirim...
+                </>
+              ) : "Kirim Semua Dokumen"}
+            </button>
+          )
+        )}
       </div>
     </div>
   );
