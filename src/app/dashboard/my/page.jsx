@@ -367,8 +367,7 @@ export default function MutabaahYaumiyahPage() {
             sholat_tahajud: false,
             sholat_dhuha: 0,
             sholat_rawatib: 0,
-            sholat_sunnah_lainnya: 0,
-            shaum_sunnah: false
+            sholat_sunnah_lainnya: 0
           } : {})
         };
         
