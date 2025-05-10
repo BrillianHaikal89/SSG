@@ -31,8 +31,8 @@ const DEFAULT_FORM_DATA = {
   sholawat_100x: 0,
   sholawat_completed: false,
   menyimak_mq_pagi: false,
-  kajian_al_hikam: false,  // New field for Thursday
-  kajian_marifatullah: false,  // New field for Thursday
+  kajian_al_hikam: false,
+  kajian_marifatullah: false,
   haid: false
 };
 
@@ -367,14 +367,19 @@ export default function MutabaahYaumiyahPage() {
             sholat_tahajud: false,
             sholat_dhuha: 0,
             sholat_rawatib: 0,
-            sholat_sunnah_lainnya: 0
-          } : {})
+            sholat_sunnah_lainnya: 0,
+            shaum_sunnah: true // Automatically check shaum sunnah when haid is checked
+          } : {
+            shaum_sunnah: false // Uncheck shaum sunnah when haid is unchecked
+          })
         };
         
         setFormData(updatedFormData);
         
         if (newValue) {
           setHeaderBgColor('bg-red-600');
+        } else {
+          updateHeaderBgColor(formData.date);
         }
       } 
       else if (isCheckbox && (field === 'istighfar_completed' || field === 'sholawat_completed')) {
@@ -462,7 +467,7 @@ export default function MutabaahYaumiyahPage() {
   };
 
   const handleRouteBack = () => {
-    router.back(); // Menggunakan router.back() untuk kembali ke halaman sebelumnya
+    router.back();
   };
 
   const handleSubmit = async (e) => {
@@ -728,70 +733,70 @@ export default function MutabaahYaumiyahPage() {
 
           {/* Haid checkbox - only show for female users (gender = 0) */}
           {user?.fullData.jenis_kelamin === "0" && (
-  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
-    <label className="flex items-center cursor-pointer">
-      <input 
-        type="checkbox" 
-        checked={formData.haid}
-        onChange={(e) => handleInputChange('haid', e.target.checked)}
-        className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
-      />
-      <span className="ml-2 text-xs sm:text-sm text-gray-700">
-        Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
-      </span>
-    </label>
-  </div>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+              <label className="flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={formData.haid}
+                  onChange={(e) => handleInputChange('haid', e.target.checked)}
+                  className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-red-600 rounded focus:ring-red-500" 
+                />
+                <span className="ml-2 text-xs sm:text-sm text-gray-700">
+                  Sedang berhalangan (haid/menstruasi) dan tidak dapat melaksanakan sholat
+                </span>
+              </label>
+            </div>
           )}
 
-<div className="mb-6 sm:mb-8">
-  <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
-    1.1 Sholat Wajib dan Sunnah
-  </h2>
-  
-  <div className="space-y-3 sm:space-y-4">
-    {sholatSection.map((item, index) => (
-      <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-        <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
-        
-        {item.type === "checkbox" ? (
-          <div className="flex items-center">
-            <input 
-              type="checkbox" 
-              checked={formData[item.field]}
-              onChange={(e) => handleInputChange(item.field, e.target.checked)}
-              className={`form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 ${
-                formData.haid ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              disabled={formData.haid && item.field === 'sholat_tahajud'}
-            />
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
+              1.1 Sholat Wajib dan Sunnah
+            </h2>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {sholatSection.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm text-gray-700 flex-1 pr-2">{item.label}</span>
+                  
+                  {item.type === "checkbox" ? (
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={formData[item.field]}
+                        onChange={(e) => handleInputChange(item.field, e.target.checked)}
+                        className={`form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 ${
+                          formData.haid ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={formData.haid && item.field === 'sholat_tahajud'}
+                      />
+                    </div>
+                  ) : (
+                    <select
+                      value={formData[item.field]}
+                      onChange={(e) => handleInputChange(item.field, e.target.value)}
+                      className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
+                        formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
+                      }`}
+                      disabled={formData.haid}
+                    >
+                      {/* Special case for Sholat Wajib 5 waktu */}
+                      {item.field === 'sholat_wajib' ? (
+                        [...Array(6).keys()].map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))
+                      ) : (
+                        /* Even numbers for other sholat */
+                        [...Array(Math.floor(item.max / 2) + 1).keys()].map(i => {
+                          const num = i * 2;
+                          return <option key={num} value={num}>{num}</option>;
+                        })
+                      )}
+                    </select>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <select
-            value={formData[item.field]}
-            onChange={(e) => handleInputChange(item.field, e.target.value)}
-            className={`shadow border rounded py-1 sm:py-2 px-2 sm:px-3 w-16 sm:w-20 text-gray-700 focus:outline-none focus:shadow-outline text-sm ${
-              formData.haid ? 'bg-gray-200 cursor-not-allowed' : ''
-            }`}
-            disabled={formData.haid}
-          >
-            {/* Special case for Sholat Wajib 5 waktu */}
-            {item.field === 'sholat_wajib' ? (
-              [...Array(6).keys()].map(num => (
-                <option key={num} value={num}>{num}</option>
-              ))
-            ) : (
-              /* Even numbers for other sholat */
-              [...Array(Math.floor(item.max / 2) + 1).keys()].map(i => {
-                const num = i * 2;
-                return <option key={num} value={num}>{num}</option>;
-              })
-            )}
-          </select>
-        )}
-      </div>
-    ))}
-  </div>
-</div>
 
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-700 border-b pb-2">
