@@ -276,6 +276,8 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
+  const isFemale = user?.gender === 'female';
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -348,7 +350,9 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahajud</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dhuha</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shaum</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
+                          {isFemale && (
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -362,7 +366,7 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
-                              {data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
+                              {isFemale && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
@@ -385,13 +389,25 @@ const MutabaahReport = ({ user, onClose }) => {
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {isValueActive(data.haid) ? (
+                            {isFemale ? (
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                {isValueActive(data.haid) ? (
+                                  <span className="text-red-600">✗</span>
+                                ) : (
+                                  <span className="text-green-600">✓</span>
+                                )}
+                              </td>
+                            ) : (
+                              // For male users, we can either show the column with all X or not show it at all
+                              // Here we've chosen to conditionally render the column based on isFemale
+                              // If you want to show it with all X marks, uncomment the following:
+                              /*
+                              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                 <span className="text-red-600">✗</span>
-                              ) : (
-                                <span className="text-green-600">✓</span>
-                              )}
-                            </td>
+                              </td>
+                              */
+                              null
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -431,12 +447,14 @@ const MutabaahReport = ({ user, onClose }) => {
                           {stats.shaumDays}/{allUserData.length}
                         </div>
                       </div>
-                      <div className="bg-red-50 p-4 rounded-lg">
-                        <div className="text-sm text-red-800">Haid (Hari)</div>
-                        <div className="text-2xl font-bold text-red-600">
-                          {stats.haidDays}/{allUserData.length}
+                      {isFemale && (
+                        <div className="bg-red-50 p-4 rounded-lg">
+                          <div className="text-sm text-red-800">Haid (Hari)</div>
+                          <div className="text-2xl font-bold text-red-600">
+                            {stats.haidDays}/{allUserData.length}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
