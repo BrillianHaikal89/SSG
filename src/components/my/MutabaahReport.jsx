@@ -276,6 +276,17 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
+  const renderHaidStatus = (haidValue) => {
+    if (user?.gender === 'male') {
+      return <span className="text-gray-500">✗</span>; // Gray X for males
+    }
+    return haidValue > 0 ? (
+      <span className="text-red-600">✗</span> // Red X for haid females
+    ) : (
+      <span className="text-green-600">✓</span> // Green check for non-haid females
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -296,6 +307,10 @@ const MutabaahReport = ({ user, onClose }) => {
             <div className="flex justify-between mb-2">
               <span className="font-medium">Nama:</span>
               <span>{user?.name || '-'}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">Jenis Kelamin:</span>
+              <span>{user?.gender === 'male' ? 'Laki-laki' : 'Perempuan'}</span>
             </div>
             <div className="flex justify-between mb-2">
               <span className="font-medium">Periode:</span>
@@ -362,7 +377,7 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
-                              {data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
+                              {data.haid > 0 && user?.gender !== 'male' && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
@@ -386,11 +401,7 @@ const MutabaahReport = ({ user, onClose }) => {
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {isValueActive(data.haid) ? (
-                                <span className="text-red-600">✗</span>
-                              ) : (
-                                <span className="text-green-600">✓</span>
-                              )}
+                              {renderHaidStatus(data.haid)}
                             </td>
                           </tr>
                         ))}
@@ -431,12 +442,14 @@ const MutabaahReport = ({ user, onClose }) => {
                           {stats.shaumDays}/{allUserData.length}
                         </div>
                       </div>
-                      <div className="bg-red-50 p-4 rounded-lg">
-                        <div className="text-sm text-red-800">Haid (Hari)</div>
-                        <div className="text-2xl font-bold text-red-600">
-                          {stats.haidDays}/{allUserData.length}
+                      {user?.gender !== 'male' && (
+                        <div className="bg-red-50 p-4 rounded-lg">
+                          <div className="text-sm text-red-800">Haid (Hari)</div>
+                          <div className="text-2xl font-bold text-red-600">
+                            {stats.haidDays}/{allUserData.length}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
