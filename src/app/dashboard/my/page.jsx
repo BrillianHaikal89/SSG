@@ -368,9 +368,9 @@ export default function MutabaahYaumiyahPage() {
             sholat_dhuha: 0,
             sholat_rawatib: 0,
             sholat_sunnah_lainnya: 0,
-            shaum_sunnah: true // Automatically check shaum sunnah when haid is checked
+            shaum_sunnah: false 
           } : {
-            shaum_sunnah: false // Uncheck shaum sunnah when haid is unchecked
+            shaum_sunnah: false 
           })
         };
         
