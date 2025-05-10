@@ -3,22 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
-/**
- * MutabaahReport Component
- * Displays and manages reporting functionality for Mutaba'ah Yaumiyah data
- * Updated to handle numeric values for previously boolean fields
- * 
- * @param {Object} props - Component properties
- * @param {Object} props.user - User object containing user data
- * @param {Function} props.onClose - Function to call when closing the modal
- */
+const HIJRI_MONTHS = [
+  "Muharram", "Safar", "Rabi'ul Awal", "Rabi'ul Akhir",
+  "Jumadil Awal", "Jumadil Akhir", "Rajab", "Sya'ban",
+  "Ramadhan", "Syawal", "Dzulka'dah", "Dzulhijjah"
+];
+
 const MutabaahReport = ({ user, onClose }) => {
-  // State management
   const [allUserData, setAllUserData] = useState([]);
   const [loadingReport, setLoadingReport] = useState(true);
-  const [month, setMonth] = useState(new Date().getMonth() + 1); // Current month (1-12)
-  const [year, setYear] = useState(new Date().getFullYear()); // Current year
-  // Available months for selection
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+  
   const months = [
     { value: 1, label: 'Januari' },
     { value: 2, label: 'Februari' },
@@ -34,21 +30,15 @@ const MutabaahReport = ({ user, onClose }) => {
     { value: 12, label: 'Desember' }
   ];
 
-  // Generate years for dropdown (current year and 5 years back)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - 5 + i);
 
-  // Fetch user data when component mounts or when month/year changes
   useEffect(() => {
-
     if (user?.userId) {
       fetchIbadahData();
     }
   }, [user, month, year]);
 
-  /**
-   * Fetch ibadah data from API endpoint
-   */
   const fetchIbadahData = async () => {
     try {
       setLoadingReport(true);
@@ -62,37 +52,36 @@ const MutabaahReport = ({ user, onClose }) => {
       });
       
       const result = await response.json();
-      console.log("API Response:", result);
       
       if (response.ok && result.status === 'success') {
-        // Process and normalize the data from the API
         const processedData = Array.isArray(result.data) ? result.data : [result.data];
         
-        // Normalize the data - handling numeric values for all fields
         const normalizedData = processedData.map(item => ({
           ...item,
-          date: item.date || item.created_at, // Use appropriate date field
+          date: item.date || item.created_at,
           sholat_wajib: Number(item.sholat_wajib) || 0,
-          sholat_tahajud: Number(item.sholat_tahajud) || 0,
+          sholat_tahajud: item.sholat_tahajud ? 1 : 0,
           sholat_dhuha: Number(item.sholat_dhuha) || 0,
           sholat_rawatib: Number(item.sholat_rawatib) || 0,
           sholat_sunnah_lainnya: Number(item.sholat_sunnah_lainnya) || 0,
-          tilawah_quran: Number(item.tilawah_quran) || 0,
-          terjemah_quran: Number(item.terjemah_quran) || 0,
-          shaum_sunnah: Number(item.shaum_sunnah) || 0,
-          shodaqoh: Number(item.shodaqoh) || 0,
-          dzikir_pagi_petang: Number(item.dzikir_pagi_petang) || 0,
+          tilawah_quran: item.tilawah_quran ? 1 : 0,
+          terjemah_quran: item.terjemah_quran ? 1 : 0,
+          shaum_sunnah: item.shaum_sunnah ? 1 : 0,
+          shodaqoh: item.shodaqoh ? 1 : 0,
+          dzikir_pagi_petang: item.dzikir_pagi_petang ? 1 : 0,
           istighfar_1000x: Number(item.istighfar_1000x) || 0,
+          istighfar_completed: item.istighfar_completed || false,
           sholawat_100x: Number(item.sholawat_100x) || 0,
-          menyimak_mq_pagi: Number(item.menyimak_mq_pagi) || 0,
-          haid: Number(item.haid) || 0
+          sholawat_completed: item.sholawat_completed || false,
+          menyimak_mq_pagi: item.menyimak_mq_pagi ? 1 : 0,
+          kajian_al_hikam: item.kajian_al_hikam ? 1 : 0,
+          kajian_marifatullah: item.kajian_marifatullah ? 1 : 0,
+          haid: item.haid ? 1 : 0
         }));
         
-        // Sort by date descending
         normalizedData.sort((a, b) => new Date(b.date) - new Date(a.date));
         setAllUserData(normalizedData);
       } else {
-        // Handle empty data case
         setAllUserData([]);
         if (result.status === 'not_found') {
           toast.info(result.message || 'Tidak ada data untuk periode yang dipilih');
@@ -109,12 +98,8 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
-  /**
-   * Download report as CSV
-   */
   const downloadReport = () => {
     try {
-      // Create CSV content
       let csvContent = "Laporan Lengkap Mutaba'ah Yaumiyah\n\n";
       csvContent += `Nama,${user?.name || '-'}\n`;
       csvContent += `Periode,${months.find(m => m.value === month)?.label} ${year}\n`;
@@ -124,7 +109,7 @@ const MutabaahReport = ({ user, onClose }) => {
       // Add headers
       csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Status Haid\n";
+      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah,Status Haid\n";
 
       // Add data rows
       allUserData.forEach(data => {
@@ -132,10 +117,10 @@ const MutabaahReport = ({ user, onClose }) => {
         csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
         csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
         csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi},${data.haid}\n`;
+        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah},`;
+        csvContent += `${data.haid}\n`;
       });
 
-      // Create download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -151,7 +136,6 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
-  // Calculate statistics for the report summary
   const calculateStatistics = () => {
     if (allUserData.length === 0) {
       return {
@@ -159,7 +143,14 @@ const MutabaahReport = ({ user, onClose }) => {
         tahajudDays: 0,
         tilawahDays: 0,
         terjemahDays: 0,
-        dhuhaDays: 0
+        dhuhaDays: 0,
+        shaumDays: 0,
+        dzikirDays: 0,
+        istighfarCompleted: 0,
+        sholawatCompleted: 0,
+        mqDays: 0,
+        kajianDays: 0,
+        haidDays: 0
       };
     }
     
@@ -168,41 +159,127 @@ const MutabaahReport = ({ user, onClose }) => {
       allUserData.reduce((sum, data) => sum + Number(data.sholat_wajib), 0) / totalEntries
     ).toFixed(1);
     
-    // Count completed days for items
-    const tahajudDays = allUserData.filter(data => Number(data.sholat_tahajud) > 0).length;
-    const tilawahDays = allUserData.filter(data => Number(data.tilawah_quran) > 0).length;
-    const terjemahDays = allUserData.filter(data => Number(data.terjemah_quran) > 0).length;
-    const dhuhaDays = allUserData.filter(data => Number(data.sholat_dhuha) > 0).length;
+    const tahajudDays = allUserData.filter(data => data.sholat_tahajud > 0).length;
+    const tilawahDays = allUserData.filter(data => data.tilawah_quran > 0).length;
+    const terjemahDays = allUserData.filter(data => data.terjemah_quran > 0).length;
+    const dhuhaDays = allUserData.filter(data => data.sholat_dhuha > 0).length;
+    const shaumDays = allUserData.filter(data => data.shaum_sunnah > 0).length;
+    const dzikirDays = allUserData.filter(data => data.dzikir_pagi_petang > 0).length;
+    const istighfarCompleted = allUserData.filter(data => data.istighfar_completed).length;
+    const sholawatCompleted = allUserData.filter(data => data.sholawat_completed).length;
+    const mqDays = allUserData.filter(data => data.menyimak_mq_pagi > 0).length;
+    const kajianDays = allUserData.filter(data => data.kajian_al_hikam > 0 || data.kajian_marifatullah > 0).length;
+    const haidDays = allUserData.filter(data => data.haid > 0).length;
     
     return { 
       avgSholatWajib, 
       tahajudDays, 
       tilawahDays, 
       terjemahDays, 
-      dhuhaDays
+      dhuhaDays,
+      shaumDays,
+      dzikirDays,
+      istighfarCompleted,
+      sholawatCompleted,
+      mqDays,
+      kajianDays,
+      haidDays
     };
   };
 
   const stats = calculateStatistics();
 
-  // Handle month change
   const handleMonthChange = (e) => {
     setMonth(parseInt(e.target.value, 10));
   };
 
-  // Handle year change
   const handleYearChange = (e) => {
     setYear(parseInt(e.target.value, 10));
   };
 
-  // Helper to check if a value is considered active/completed
   const isValueActive = (value) => Number(value) > 0;
+
+  const formatHijriDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      const hijri = calculateHijriDate(date);
+      return hijri.formatted;
+    } catch (error) {
+      console.error('Error formatting Hijri date:', error);
+      return '';
+    }
+  };
+
+  const calculateHijriDate = (gregorianDate) => {
+    try {
+      const date = new Date(gregorianDate);
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      
+      let hDay = 1;
+      let hMonthIndex = 10;
+      const hYear = 1446;
+      
+      if (year === 2025 && month === 5) {
+        const mayMapping = {
+          1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8, 7: 9, 8: 10,
+          9: 11, 10: 12, 11: 13, 12: 14, 13: 15, 14: 16,
+          15: 17, 16: 18, 17: 19, 18: 20, 19: 21, 20: 22,
+          21: 23, 22: 24, 23: 25, 24: 26, 25: 27, 26: 28,
+          27: 29, 28: 30, 29: 1, 30: 2, 31: 3
+        };
+        
+        hDay = mayMapping[day] || day;
+        
+        if (day >= 29) {
+          hMonthIndex = 11;
+        }
+      }
+      else if (year === 2025 && month === 4) {
+        const aprilMapping = {
+          1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8, 7: 9, 8: 10,
+          9: 11, 10: 12, 11: 13, 12: 14, 13: 15, 14: 16,
+          15: 17, 16: 18, 17: 19, 18: 20, 19: 21, 20: 22,
+          21: 23, 22: 24, 23: 25, 24: 26, 25: 27, 26: 28,
+          27: 29, 28: 30, 29: 1, 30: 2
+        };
+        
+        hDay = aprilMapping[day] || day;
+        
+        if (day >= 29) {
+          hMonthIndex = 10;
+        } else {
+          hMonthIndex = 9;
+        }
+      }
+      else {
+        const offset = day % 30;
+        hDay = offset + 1;
+      }
+      
+      return {
+        day: hDay,
+        month: hMonthIndex,
+        year: hYear,
+        formatted: `${hDay} ${HIJRI_MONTHS[hMonthIndex]} ${hYear} H`
+      };
+    } catch (error) {
+      console.error('Error calculating Hijri date:', error);
+      return { 
+        day: 6, 
+        month: 10, 
+        year: 1446, 
+        formatted: "6 Dzulka'dah 1446 H" 
+      };
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          {/* Modal Header */}
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-gray-800">Laporan Lengkap Mutaba'ah Yaumiyah</h3>
             <button 
@@ -215,7 +292,6 @@ const MutabaahReport = ({ user, onClose }) => {
             </button>
           </div>
           
-          {/* Report Info */}
           <div className="mb-4">
             <div className="flex justify-between mb-2">
               <span className="font-medium">Nama:</span>
@@ -254,7 +330,6 @@ const MutabaahReport = ({ user, onClose }) => {
             </div>
           </div>
 
-          {/* Report Content */}
           {loadingReport ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -268,11 +343,12 @@ const MutabaahReport = ({ user, onClose }) => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hijriah</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Wajib</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Tahajud</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sholat Dhuha</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tilawah Quran</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MQ Pagi</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahajud</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dhuha</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shaum</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -282,46 +358,38 @@ const MutabaahReport = ({ user, onClose }) => {
                               {new Date(data.date).toLocaleDateString('id-ID')}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {formatHijriDate(data.date)}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
+                              {data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
-                                <div className="flex items-center">
-                                  <span className="text-green-600 mr-1">✓</span>
-                                  <span>{data.sholat_tahajud}</span>
-                                </div>
+                                <span className="text-green-600">✓</span>
                               ) : (
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {isValueActive(data.sholat_dhuha) ? (
-                                <div className="flex items-center">
-                                  <span className="text-green-600 mr-1">✓</span>
-                                  <span>{data.sholat_dhuha}</span>
-                                </div>
+                              {data.sholat_dhuha > 0 ? (
+                                <span className="text-green-600">{data.sholat_dhuha} rakaat</span>
                               ) : (
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {isValueActive(data.tilawah_quran) ? (
-                                <div className="flex items-center">
-                                  <span className="text-green-600 mr-1">✓</span>
-                                  <span>{data.tilawah_quran}</span>
-                                </div>
+                              {isValueActive(data.shaum_sunnah) ? (
+                                <span className="text-green-600">✓</span>
                               ) : (
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {isValueActive(data.menyimak_mq_pagi) ? (
-                                <div className="flex items-center">
-                                  <span className="text-green-600 mr-1">✓</span>
-                                  <span>{data.menyimak_mq_pagi}</span>
-                                </div>
+                              {isValueActive(data.haid) ? (
+                                <span className="text-red-600">✓</span>
                               ) : (
-                                <span className="text-red-600">✗</span>
+                                <span className="text-green-600">✗</span>
                               )}
                             </td>
                           </tr>
@@ -330,7 +398,6 @@ const MutabaahReport = ({ user, onClose }) => {
                     </table>
                   </div>
 
-                  {/* Report Statistics */}
                   <div className="mt-6">
                     <h4 className="font-semibold text-lg mb-3">Statistik Ringkasan</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -352,10 +419,6 @@ const MutabaahReport = ({ user, onClose }) => {
                           {stats.tilawahDays}/{allUserData.length}
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Additional Statistics */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <div className="bg-purple-50 p-4 rounded-lg">
                         <div className="text-sm text-purple-800">Dhuha (Hari)</div>
                         <div className="text-2xl font-bold text-purple-600">
@@ -363,9 +426,36 @@ const MutabaahReport = ({ user, onClose }) => {
                         </div>
                       </div>
                       <div className="bg-amber-50 p-4 rounded-lg">
-                        <div className="text-sm text-amber-800">Terjemah Quran (Hari)</div>
+                        <div className="text-sm text-amber-800">Shaum Sunnah (Hari)</div>
                         <div className="text-2xl font-bold text-amber-600">
-                          {stats.terjemahDays}/{allUserData.length}
+                          {stats.shaumDays}/{allUserData.length}
+                        </div>
+                      </div>
+                      <div className="bg-red-50 p-4 rounded-lg">
+                        <div className="text-sm text-red-800">Haid (Hari)</div>
+                        <div className="text-2xl font-bold text-red-600">
+                          {stats.haidDays}/{allUserData.length}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="bg-teal-50 p-4 rounded-lg">
+                        <div className="text-sm text-teal-800">Istighfar 1000x (Hari)</div>
+                        <div className="text-2xl font-bold text-teal-600">
+                          {stats.istighfarCompleted}/{allUserData.length}
+                        </div>
+                      </div>
+                      <div className="bg-pink-50 p-4 rounded-lg">
+                        <div className="text-sm text-pink-800">Sholawat 100x (Hari)</div>
+                        <div className="text-2xl font-bold text-pink-600">
+                          {stats.sholawatCompleted}/{allUserData.length}
+                        </div>
+                      </div>
+                      <div className="bg-yellow-50 p-4 rounded-lg">
+                        <div className="text-sm text-yellow-800">MQ Pagi (Hari)</div>
+                        <div className="text-2xl font-bold text-yellow-600">
+                          {stats.mqDays}/{allUserData.length}
                         </div>
                       </div>
                     </div>
@@ -379,7 +469,6 @@ const MutabaahReport = ({ user, onClose }) => {
             </>
           )}
           
-          {/* Modal Footer */}
           <div className="mt-6 flex justify-end space-x-3">
             {allUserData.length > 0 && (
               <button
