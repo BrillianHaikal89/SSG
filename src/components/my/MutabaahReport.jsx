@@ -14,6 +14,7 @@ const MutabaahReport = ({ user, onClose }) => {
   const [loadingReport, setLoadingReport] = useState(true);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const months = [
     { value: 1, label: 'Januari' },
@@ -46,12 +47,15 @@ const MutabaahReport = ({ user, onClose }) => {
       setLoadingReport(true);
       
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/users/get-ibadah-month?user_id=${user.userId}&month=${String(month).padStart(2, '0')}&year=${year}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${API_URL}/users/get-ibadah-month?user_id=${user.userId}&month=${String(month).padStart(2, '0')}&year=${year}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
         }
-      });
+      );
       
       const result = await response.json();
       
@@ -100,50 +104,54 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
-  const downloadReport = () => {
+  const downloadReport = async () => {
     try {
-      let csvContent = "Laporan Lengkap Mutaba'ah Yaumiyah\n\n";
-      csvContent += `Nama,${user?.name || '-'}\n`;
-      csvContent += `Periode,${months.find(m => m.value === month)?.label} ${year}\n`;
-      csvContent += `Tanggal Laporan,${new Date().toLocaleDateString('id-ID')}\n`;
-      csvContent += `Total Data,${allUserData.length}\n\n`;
-
-      // Add headers
-      csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
-      csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah";
-      if (isFemale) {
-        csvContent += ",Status Haid\n";
-      } else {
-        csvContent += "\n";
-      }
-
-      // Add data rows
-      allUserData.forEach(data => {
-        csvContent += `${new Date(data.date).toLocaleDateString('id-ID')},${data.sholat_wajib},${data.sholat_tahajud},${data.sholat_dhuha},`;
-        csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
-        csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
-        csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah}`;
-        if (isFemale) {
-          csvContent += `,${data.haid}\n`;
-        } else {
-          csvContent += `\n`;
-        }
+      setIsDownloading(true);
+      toast.loading('Mempersiapkan laporan...');
+      
+      const response = await fetch('/api/download_mutabaah', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user: {
+            name: user?.name || 'User',
+            userId: user?.userId,
+            isFemale
+          },
+          period: {
+            month: months.find(m => m.value === month)?.label,
+            year
+          },
+          reportData: allUserData.map(item => ({
+            ...item,
+            date: new Date(item.date).toLocaleDateString('id-ID')
+          }))
+        })
       });
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `laporan_mutabaah_${user?.name || 'user'}_${months.find(m => m.value === month)?.label}_${year}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `laporan_mutabaah_${user?.name || 'user'}_${months.find(m => m.value === month)?.label}_${year}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Laporan berhasil diunduh');
     } catch (error) {
       console.error('Error downloading report:', error);
-      toast.error('Gagal mengunduh laporan');
+      toast.error(`Gagal mengunduh laporan: ${error.message}`);
+    } finally {
+      setIsDownloading(false);
+      toast.dismiss();
     }
   };
 
@@ -296,6 +304,7 @@ const MutabaahReport = ({ user, onClose }) => {
             <button 
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
+              disabled={isDownloading}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -315,6 +324,7 @@ const MutabaahReport = ({ user, onClose }) => {
                   value={month}
                   onChange={handleMonthChange}
                   className="border rounded px-2 py-1 text-sm"
+                  disabled={loadingReport || isDownloading}
                 >
                   {months.map(m => (
                     <option key={m.value} value={m.value}>{m.label}</option>
@@ -324,9 +334,10 @@ const MutabaahReport = ({ user, onClose }) => {
                   value={year}
                   onChange={handleYearChange}
                   className="border rounded px-2 py-1 text-sm"
+                  disabled={loadingReport || isDownloading}
                 >
-                  {years.map(year => (
-                    <option key={year} value={year}>{year}</option>
+                  {years.map(y => (
+                    <option key={y} value={y}>{y}</option>
                   ))}
                 </select>
               </div>
@@ -490,17 +501,31 @@ const MutabaahReport = ({ user, onClose }) => {
             {allUserData.length > 0 && (
               <button
                 onClick={downloadReport}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center disabled:opacity-50"
+                disabled={loadingReport || isDownloading}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-                Download CSV
+                {isDownloading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    Download CSV
+                  </>
+                )}
               </button>
             )}
             <button
               onClick={onClose}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg"
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg disabled:opacity-50"
+              disabled={loadingReport || isDownloading}
             >
               Tutup
             </button>
