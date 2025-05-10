@@ -33,6 +33,8 @@ const MutabaahReport = ({ user, onClose }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - 5 + i);
 
+  const isFemale = user?.gender === 'female';
+
   useEffect(() => {
     if (user?.userId) {
       fetchIbadahData();
@@ -109,7 +111,12 @@ const MutabaahReport = ({ user, onClose }) => {
       // Add headers
       csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah,Status Haid\n";
+      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah";
+      if (isFemale) {
+        csvContent += ",Status Haid\n";
+      } else {
+        csvContent += "\n";
+      }
 
       // Add data rows
       allUserData.forEach(data => {
@@ -117,8 +124,12 @@ const MutabaahReport = ({ user, onClose }) => {
         csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
         csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
         csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah},`;
-        csvContent += `${data.haid}\n`;
+        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah}`;
+        if (isFemale) {
+          csvContent += `,${data.haid}\n`;
+        } else {
+          csvContent += `\n`;
+        }
       });
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -276,8 +287,6 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
-  const isFemale = user?.gender === 'female';
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -389,7 +398,7 @@ const MutabaahReport = ({ user, onClose }) => {
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
-                            {isFemale ? (
+                            {isFemale && (
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                 {isValueActive(data.haid) ? (
                                   <span className="text-red-600">✗</span>
@@ -397,16 +406,6 @@ const MutabaahReport = ({ user, onClose }) => {
                                   <span className="text-green-600">✓</span>
                                 )}
                               </td>
-                            ) : (
-                              // For male users, we can either show the column with all X or not show it at all
-                              // Here we've chosen to conditionally render the column based on isFemale
-                              // If you want to show it with all X marks, uncomment the following:
-                              /*
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                <span className="text-red-600">✗</span>
-                              </td>
-                              */
-                              null
                             )}
                           </tr>
                         ))}
