@@ -213,10 +213,10 @@ export default function VerifyOtpPage() {
           
           <div className="mt-8 text-center">
             <button 
-              onClick={() => router.push('/login')}
+              onClick={() => router.back()} // Menggunakan router.back() untuk kembali ke halaman sebelumnya
               className="text-sm font-medium text-blue-800 hover:text-blue-900"
             >
-              Kembali ke halaman masuk
+              Kembali ke halaman sebelumnya
             </button>
           </div>
         </div>
