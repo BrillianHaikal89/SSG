@@ -26,7 +26,7 @@ const BannerSide = ({ signupStep }) => {
           className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
           onClick={() => router.push('/login')}
         >
-          Sudah punya akun? Masuk
+          Sudah punya akun? Bismillah masuk yuk
         </button>
       </div>
     </div>

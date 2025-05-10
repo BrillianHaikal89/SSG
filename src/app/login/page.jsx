@@ -255,7 +255,7 @@ export default function SignInPage() {
       >
         <div className="w-full max-w-md">
           <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">
-            Bismillah Masuk
+            Santri Siap Guna
           </h1>
           
           {/* Social login options */}
@@ -397,7 +397,7 @@ export default function SignInPage() {
                     </svg>
                     Memproses...
                   </>
-                ) : 'Masuk'}
+                ) : 'Bismillah Masuk'}
               </button>
             </div>
           </form>
@@ -412,14 +412,14 @@ export default function SignInPage() {
           transition={{ duration: 0.3 }}
           className="text-center"
         >
-          <h2 className="text-3xl font-bold text-white mb-2">Selamat datang</h2>
+          <h2 className="text-3xl font-bold text-white mb-2">Ahlan Wa Sahlan</h2>
           <p className="text-white text-sm mb-6">Belum punya akun?</p>
           <button
             type="button"
             onClick={navigateToSignup}
             className="inline-block py-2 px-6 border border-white rounded-full text-sm font-medium text-white hover:bg-white hover:text-blue-800 transition-colors"
           >
-            Daftar
+            Daftar Gratis
           </button>
         </motion.div>
       </div>
