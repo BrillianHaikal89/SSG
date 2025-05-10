@@ -34,6 +34,12 @@ export default function UsersManagement() {
     'tertanda': 'Tanda Tangan'
   };
   
+  const formatGender = (genderValue) => {
+  if (genderValue === '1' || genderValue === 1) return 'Laki-laki';
+  if (genderValue === '0' || genderValue === 0) return 'Perempuan';
+  return genderValue || 'N/A'; // Return original value if not 0 or 1, or N/A if null/undefined
+};
+  
   // Fetch users data
   const fetchUsers = async () => {
     try {
@@ -760,9 +766,9 @@ export default function UsersManagement() {
                       <span className="text-gray-500 w-32">Tanggal Lahir</span>
                       <span className="text-gray-900">{formatDate(selectedUser.tanggal_lahir)}</span>
                     </div>
-                    <div className="flex">
+                   <div className="flex">
                       <span className="text-gray-500 w-32">Jenis Kelamin</span>
-                      <span className="text-gray-900">{selectedUser.jenis_kelamin || 'N/A'}</span>
+                      <span className="text-gray-900">{formatGender(selectedUser.jenis_kelamin)}</span>
                     </div>
                     <div className="flex">
                       <span className="text-gray-500 w-32">Golongan Darah</span>
