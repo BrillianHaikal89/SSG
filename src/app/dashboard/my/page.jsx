@@ -646,9 +646,9 @@ export default function MutabaahYaumiyahPage() {
   const sholatSection = [
     { label: "Sholat Wajib 5 waktu", field: "sholat_wajib", max: 5, type: "number" },
     { label: "Sholat Tahajud & atau Witir 3 rakaat/hari", field: "sholat_tahajud", type: "checkbox" },
-    { label: "Sholat Dhuha 4 rakaat", field: "sholat_dhuha", max: 8, type: "number" },
+    { label: "Sholat Dhuha 4 rakaat", field: "sholat_dhuha", max: 12, type: "number" },
     { label: "Sholat Rawatib 10 rakaat", field: "sholat_rawatib", max: 12, type: "number" },
-    { label: "Sholat Sunnah Lainnya 6 rakaat", field: "sholat_sunnah_lainnya", max: 10, type: "number" },
+    { label: "Sholat Sunnah Lainnya 6 rakaat", field: "sholat_sunnah_lainnya", max: 12, type: "number" },
   ];
 
   const quranSection = [
