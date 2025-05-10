@@ -387,9 +387,9 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.haid) ? (
-                                <span className="text-red-600">✓</span>
+                                <span className="text-red-600">✗</span>
                               ) : (
-                                <span className="text-green-600">✗</span>
+                                <span className="text-green-600">✓</span>
                               )}
                             </td>
                           </tr>
