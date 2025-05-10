@@ -433,7 +433,7 @@ export default function SignInPage() {
             onClick={navigateToSignup}
             className="text-blue-800 font-medium"
           >
-            Daftar
+            Daftar Gratis
           </button>
         </div>
       </div>
