@@ -454,24 +454,20 @@ export default function MutabaahYaumiyahPage() {
       
       setFormData({
         ...DEFAULT_FORM_DATA,
-        date: date,
-        // Automatically set haid to false if user is male
-        haid: user?.fullData.jenis_kelamin === "1" ? false : DEFAULT_FORM_DATA.haid
+        date: date
       });
       
     } catch (error) {
       console.error('Error checking existing data:', error);
       setFormData({
         ...DEFAULT_FORM_DATA,
-        date: date,
-        // Automatically set haid to false if user is male
-        haid: user?.fullData.jenis_kelamin === "1" ? false : DEFAULT_FORM_DATA.haid
+        date: date
       });
     }
   };
 
   const handleRouteBack = () => {
-    router.back();
+    router.back(); // Menggunakan router.back() untuk kembali ke halaman sebelumnya
   };
 
   const handleSubmit = async (e) => {
@@ -577,19 +573,14 @@ export default function MutabaahYaumiyahPage() {
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
     setSelectedDate(todayString);
-    setFormData(prev => ({ 
-      ...prev, 
-      date: todayString,
-      // Automatically set haid to false if user is male
-      haid: user?.fullData.jenis_kelamin === "1" ? false : DEFAULT_FORM_DATA.haid
-    }));
+    setFormData(prev => ({ ...prev, date: todayString }));
     setSelectedDateTime(today);
     
     // Check if today is Thursday
     setIsThursday(today.getDay() === 4);
     
     // Check if user is female (gender = 0)
-    if (user && user.fullData.jenis_kelamin === "0") {
+    if (user && user.gender === "0") {
       setIsUserFemale(true);
     }
     
@@ -624,12 +615,7 @@ export default function MutabaahYaumiyahPage() {
         
         if (selectedDate !== todayString && isToday(formData.date)) {
           setSelectedDate(todayString);
-          setFormData(prev => ({ 
-            ...prev, 
-            date: todayString,
-            // Automatically set haid to false if user is male
-            haid: user?.fullData.jenis_kelamin === "1" ? false : prev.haid
-          }));
+          setFormData(prev => ({ ...prev, date: todayString }));
           setSelectedDateTime(now);
           updateHijriDate(now);
         }
@@ -645,7 +631,7 @@ export default function MutabaahYaumiyahPage() {
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [currentDateTime, selectedDate, formData.haid, formData.date, user]);
+  }, [currentDateTime, selectedDate, formData.haid, formData.date]);
 
   useEffect(() => {
     try {
