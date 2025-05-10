@@ -37,6 +37,7 @@ export default function UsersManagement() {
   const formatGender = (genderValue) => {
   if (genderValue === '1' || genderValue === 1) return 'Laki-laki';
   if (genderValue === '0' || genderValue === 0) return 'Perempuan';
+  if (genderValue === 'P' || genderValue === "P") return 'Perempuan';
   return genderValue || 'N/A'; // Return original value if not 0 or 1, or N/A if null/undefined
 };
   
