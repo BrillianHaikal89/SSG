@@ -53,21 +53,19 @@ export default function UsersManagement() {
       console.log("datanya : " , data);
       
       // Process and combine user data with flag status
-      const processedData = data.data.map((user, index) => {
+      const processedData = data.data.map(user => {
         // Find corresponding flag for this user
-        const userFlag = data.flag.find(f => f.user_id === index + 1);
+        const userFlag = data.flag.find(f => f.user_id === user.id);
         
         return {
           ...user,
-          id: index + 1, // Assign an ID based on the array index (1-based)
           flag_status: userFlag ? userFlag.flag : null
         };
       });
       
       setUsers(processedData);
       
-      // Fetch files data separately or mock it for now
-      // For example purposes, I'll use the "file" key from your provided response
+      // Store files data separately
       if (data.file) {
         setFiles(data.file);
       }
@@ -108,7 +106,7 @@ export default function UsersManagement() {
   // Check if user has submitted all required documents
   const hasAllDocuments = (userId) => {
     const userFiles = getUserFiles(userId);
-    const requiredTypes = ['ktp', 'pas_foto', 'surat_izin', 'surat_kesehatan', 'bukti_pembayaran'];
+    const requiredTypes = ['ktp', 'pas_foto', 'surat_izin', 'surat_kesehatan', 'bukti_pembayaran', 'tertanda'];
     return requiredTypes.every(type => userFiles.some(file => file.file_type === type));
   };
 
@@ -631,6 +629,44 @@ export default function UsersManagement() {
                       <button
                         onClick={() => paginate(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                          currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="sr-only">Previous</span>
+                        <ChevronLeft size={18} />
+                      </button>
+                      {/* Page numbers */}
+                      {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+                        // Calculate page numbers to show (simple pagination)
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = idx + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = idx + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + idx;
+                        } else {
+                          pageNum = currentPage - 2 + idx;
+                        }
+  
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => paginate(pageNum)}
+                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                              currentPage === pageNum
+                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                : 'text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                      <button
+                        onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
                         className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
                           currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
                         }`}
