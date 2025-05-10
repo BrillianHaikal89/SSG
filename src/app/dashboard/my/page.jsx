@@ -31,8 +31,8 @@ const DEFAULT_FORM_DATA = {
   sholawat_100x: 0,
   sholawat_completed: false,
   menyimak_mq_pagi: false,
-  kajian_al_hikam: false,
-  kajian_marifatullah: false,
+  kajian_al_hikam: false,  // New field for Thursday
+  kajian_marifatullah: false,  // New field for Thursday
   haid: false
 };
 
@@ -467,7 +467,7 @@ export default function MutabaahYaumiyahPage() {
   };
 
   const handleRouteBack = () => {
-    router.back();
+    router.back(); // Menggunakan router.back() untuk kembali ke halaman sebelumnya
   };
 
   const handleSubmit = async (e) => {
@@ -837,7 +837,10 @@ export default function MutabaahYaumiyahPage() {
                         type="checkbox" 
                         checked={formData[item.field]}
                         onChange={(e) => handleInputChange(item.field, e.target.checked)}
-                        className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500"
+                        className={`form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 ${
+                          formData.haid && item.field === 'shaum_sunnah' ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={formData.haid && item.field === 'shaum_sunnah'}
                       />
                     </div>
                   ) : item.type === "dual" ? (
