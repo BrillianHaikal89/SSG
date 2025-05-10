@@ -729,227 +729,226 @@ export default function UsersManagement() {
       </div>
 
       {/* User Detail Modal */}
-      {showDetailModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto mx-4">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Detail Pengguna</h3>
-              <button 
-                onClick={closeDetailModal}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="px-6 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Personal Information */}
-                <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-3">Informasi Pribadi</h4>
-                  <div className="space-y-2">
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Nama Lengkap</span>
-                      <span className="text-gray-900">{selectedUser.nama_lengkap || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">NIK</span>
-                      <span className="text-gray-900">{selectedUser.nik || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Tempat Lahir</span>
-                      <span className="text-gray-900">{selectedUser.tempat_lahir || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Tanggal Lahir</span>
-                      <span className="text-gray-900">{formatDate(selectedUser.tanggal_lahir)}</span>
-                    </div>
-                   <div className="flex">
-                      <span className="text-gray-500 w-32">Jenis Kelamin</span>
-                      <span className="text-gray-900">{formatGender(selectedUser.jenis_kelamin)}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Golongan Darah</span>
-                      <span className="text-gray-900">{selectedUser.golongan_darah || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Nomor HP</span>
-                      <span className="text-gray-900">{selectedUser.nomor_hp || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Address Information */}
-                <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-3">Alamat KTP</h4>
-                  <div className="space-y-2">
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Alamat</span>
-                      <span className="text-gray-900">{selectedUser.alamat || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">RT/RW</span>
-                      <span className="text-gray-900">
-                        {selectedUser.rt || 'N/A'}/{selectedUser.rw || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Kelurahan/Desa</span>
-                      <span className="text-gray-900">{selectedUser.kelurahan_desa || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Kecamatan</span>
-                      <span className="text-gray-900">{selectedUser.kecamatan || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Kabupaten/Kota</span>
-                      <span className="text-gray-900">{selectedUser.kabupaten_kota || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Provinsi</span>
-                      <span className="text-gray-900">{selectedUser.provinsi || 'N/A'}</span>
-                    </div>
-                    <div className="flex">
-                      <span className="text-gray-500 w-32">Kode Pos</span>
-                      <span className="text-gray-900">{selectedUser.kode_pos || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Domisili Information (if different) */}
-                {selectedUser.domisili_alamat && (
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-3">Alamat Domisili</h4>
-                    <div className="space-y-2">
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">Alamat</span>
-                        <span className="text-gray-900">{selectedUser.domisili_alamat || 'N/A'}</span>
-                      </div>
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">RT/RW</span>
-                        <span className="text-gray-900">
-                          {selectedUser.domisili_rt || 'N/A'}/{selectedUser.domisili_rw || 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">Kelurahan/Desa</span>
-                        <span className="text-gray-900">{selectedUser.domisili_kelurahan_desa || 'N/A'}</span>
-                      </div>
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">Kecamatan</span>
-                        <span className="text-gray-900">{selectedUser.domisili_kecamatan || 'N/A'}</span>
-                      </div>
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">Kabupaten/Kota</span>
-                        <span className="text-gray-900">{selectedUser.domisili_kabupaten_kota || 'N/A'}</span>
-                      </div>
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">Provinsi</span>
-                        <span className="text-gray-900">{selectedUser.domisili_provinsi || 'N/A'}</span>
-                      </div>
-                      <div className="flex">
-                        <span className="text-gray-500 w-32">Kode Pos</span>
-                        <span className="text-gray-900">{selectedUser.domisili_kode_pos || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Documents Section */}
-                <div className="md:col-span-2">
-                  <h4 className="text-md font-medium text-gray-900 mb-3">Dokumen</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {getUserFiles(selectedUser.id).length > 0 ? (
-                      getUserFiles(selectedUser.id).map((file, index) => (
-                        <div key={index} className="border rounded-lg p-3 hover:bg-gray-50">
-                          <div className="flex items-center mb-2">
-                            <FileText size={18} className="text-gray-500 mr-2" />
-                            <span className="font-medium text-gray-900">
-                              {fileTypeNames[file.file_type] || file.file_type}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-500">
-                              {getFileIcon(file.file_name)} {file.file_name || 'file'}
-                            </span>
-                            <button
-                              onClick={() => viewFile(file.google_drive_file_id
-                              )}
-                              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                            >
-                              <Eye size={16} className="mr-1" />
-                              Lihat
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center text-gray-500 py-4">
-                        Belum ada dokumen yang diunggah
-                      </div>
-                    )}
-                  </div>
-                </div>
+{showDetailModal && selectedUser && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+        <h3 className="text-lg font-medium text-gray-900">Detail Pengguna</h3>
+        <button 
+          onClick={closeDetailModal}
+          className="text-gray-400 hover:text-gray-500 p-1 -mr-1"
+          aria-label="Close"
+        >
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="px-4 sm:px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Personal Information */}
+          <div>
+            <h4 className="text-md font-medium text-gray-900 mb-3">Informasi Pribadi</h4>
+            <div className="space-y-2">
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Nama Lengkap</span>
+                <span className="text-gray-900 break-words">{selectedUser.nama_lengkap || 'N/A'}</span>
               </div>
-            </div>
-            
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
-              <div>
-                <span className="text-gray-500 mr-2">Status:</span>
-                {getUserFlagStatus(selectedUser) === 'active' ? (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <Check size={14} className="mr-1" />
-                    Aktif
-                  </span>
-                ) : getUserFlagStatus(selectedUser) === 'inactive' ? (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    <AlertCircle size={14} className="mr-1" />
-                    Tidak Aktif
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    Belum Update
-                  </span>
-                )}
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">NIK</span>
+                <span className="text-gray-900 break-words">{selectedUser.nik || 'N/A'}</span>
               </div>
-              
-              <div className="flex space-x-3">
-                <button
-                  onClick={closeDetailModal}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Tutup
-                </button>
-                
-                {getUserFlagStatus(selectedUser) !== 'active' && (
-                  <button
-                    onClick={() => {
-                      activateUser(selectedUser.id);
-                      closeDetailModal();
-                    }}
-                    disabled={activatingUser === selectedUser.id}
-                    className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                      activatingUser === selectedUser.id ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {activatingUser === selectedUser.id ? (
-                      <span className="flex items-center">
-                        <RefreshCw size={16} className="animate-spin mr-2" />
-                        Mengaktifkan...
-                      </span>
-                    ) : (
-                      'Aktifkan Pengguna'
-                    )}
-                  </button>
-                )}
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Tempat Lahir</span>
+                <span className="text-gray-900 break-words">{selectedUser.tempat_lahir || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Tanggal Lahir</span>
+                <span className="text-gray-900 break-words">{formatDate(selectedUser.tanggal_lahir)}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Jenis Kelamin</span>
+                <span className="text-gray-900 break-words">{formatGender(selectedUser.jenis_kelamin)}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Golongan Darah</span>
+                <span className="text-gray-900 break-words">{selectedUser.golongan_darah || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Nomor HP</span>
+                <span className="text-gray-900 break-words">{selectedUser.nomor_hp || 'N/A'}</span>
               </div>
             </div>
           </div>
+          
+          {/* Address Information */}
+          <div>
+            <h4 className="text-md font-medium text-gray-900 mb-3">Alamat KTP</h4>
+            <div className="space-y-2">
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Alamat</span>
+                <span className="text-gray-900 break-words">{selectedUser.alamat || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">RT/RW</span>
+                <span className="text-gray-900 break-words">
+                  {selectedUser.rt || 'N/A'}/{selectedUser.rw || 'N/A'}
+                </span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Kelurahan/Desa</span>
+                <span className="text-gray-900 break-words">{selectedUser.kelurahan_desa || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Kecamatan</span>
+                <span className="text-gray-900 break-words">{selectedUser.kecamatan || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Kabupaten/Kota</span>
+                <span className="text-gray-900 break-words">{selectedUser.kabupaten_kota || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Provinsi</span>
+                <span className="text-gray-900 break-words">{selectedUser.provinsi || 'N/A'}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-gray-500 w-32 flex-shrink-0">Kode Pos</span>
+                <span className="text-gray-900 break-words">{selectedUser.kode_pos || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Domisili Information (if different) */}
+          {selectedUser.domisili_alamat && (
+            <div className="md:col-span-2">
+              <h4 className="text-md font-medium text-gray-900 mb-3">Alamat Domisili</h4>
+              <div className="space-y-2">
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">Alamat</span>
+                  <span className="text-gray-900 break-words">{selectedUser.domisili_alamat || 'N/A'}</span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">RT/RW</span>
+                  <span className="text-gray-900 break-words">
+                    {selectedUser.domisili_rt || 'N/A'}/{selectedUser.domisili_rw || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">Kelurahan/Desa</span>
+                  <span className="text-gray-900 break-words">{selectedUser.domisili_kelurahan_desa || 'N/A'}</span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">Kecamatan</span>
+                  <span className="text-gray-900 break-words">{selectedUser.domisili_kecamatan || 'N/A'}</span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">Kabupaten/Kota</span>
+                  <span className="text-gray-900 break-words">{selectedUser.domisili_kabupaten_kota || 'N/A'}</span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">Provinsi</span>
+                  <span className="text-gray-900 break-words">{selectedUser.domisili_provinsi || 'N/A'}</span>
+                </div>
+                <div className="flex flex-wrap">
+                  <span className="text-gray-500 w-32 flex-shrink-0">Kode Pos</span>
+                  <span className="text-gray-900 break-words">{selectedUser.domisili_kode_pos || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Documents Section */}
+          <div className="md:col-span-2">
+            <h4 className="text-md font-medium text-gray-900 mb-3">Dokumen</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {getUserFiles(selectedUser.id).length > 0 ? (
+                getUserFiles(selectedUser.id).map((file, index) => (
+                  <div key={index} className="border rounded-lg p-3 hover:bg-gray-50 flex flex-col">
+                    <div className="flex items-center mb-2">
+                      <FileText size={18} className="text-gray-500 mr-2 flex-shrink-0" />
+                      <span className="font-medium text-gray-900 truncate">
+                        {fileTypeNames[file.file_type] || file.file_type}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-auto">
+                      <span className="text-sm text-gray-500 truncate flex-1 min-w-0 pr-2">
+                        {getFileIcon(file.file_name)} {file.file_name || 'file'}
+                      </span>
+                      <button
+                        onClick={() => viewFile(file.google_drive_file_id)}
+                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center whitespace-nowrap pl-2"
+                      >
+                        <Eye size={16} className="mr-1 flex-shrink-0" />
+                        Lihat
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center text-gray-500 py-4">
+                  Belum ada dokumen yang diunggah
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
+      
+      <div className="px-4 sm:px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 sticky bottom-0 bg-white">
+        <div className="w-full sm:w-auto">
+          <span className="text-gray-500 mr-2">Status:</span>
+          {getUserFlagStatus(selectedUser) === 'active' ? (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <Check size={14} className="mr-1" />
+              Aktif
+            </span>
+          ) : getUserFlagStatus(selectedUser) === 'inactive' ? (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+              <AlertCircle size={14} className="mr-1" />
+              Tidak Aktif
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              Belum Update
+            </span>
+          )}
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            onClick={closeDetailModal}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
+          >
+            Tutup
+          </button>
+          
+          {getUserFlagStatus(selectedUser) !== 'active' && (
+            <button
+              onClick={() => {
+                activateUser(selectedUser.id);
+                closeDetailModal();
+              }}
+              disabled={activatingUser === selectedUser.id}
+              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full sm:w-auto ${
+                activatingUser === selectedUser.id ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {activatingUser === selectedUser.id ? (
+                <span className="flex items-center justify-center">
+                  <RefreshCw size={16} className="animate-spin mr-2" />
+                  Mengaktifkan...
+                </span>
+              ) : (
+                'Aktifkan Pengguna'
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
