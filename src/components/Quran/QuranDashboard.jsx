@@ -8,6 +8,7 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
+import toast from 'react-hot-toast';
 import '../../app/styles/quran-styles.css'; // Import the custom CSS
 
 const QuranDashboard = () => {
@@ -32,6 +33,7 @@ const QuranDashboard = () => {
     
     // Methods
     fetchAyat,
+    fetchSurahDetails,
     generateAyatOptions,
     handleSurahChange,
     handleAyatChange,
@@ -41,6 +43,8 @@ const QuranDashboard = () => {
     handleSearch,
     scrollToTop,
     setShowScrollTop,
+    setSelectedSurah,
+    setSelectedAyat,
     
     // Continue functionality
     isAtEndOfContent,
@@ -98,6 +102,26 @@ const QuranDashboard = () => {
   // Handle font size change
   const handleFontSizeChange = (size) => {
     setFontSizeClass(size);
+  };
+  
+  // Handle bookmark navigation
+  const handleNavigateToBookmark = (bookmark) => {
+    // First navigate to the correct surah
+    const surahId = bookmark.surah;
+    setSelectedSurah(surahId.toString());
+    
+    // Then navigate to the specific ayat
+    setSelectedAyat(bookmark.ayah.toString());
+    
+    // Fetch the content
+    fetchSurahDetails(surahId);
+    fetchAyat(surahId, bookmark.ayah);
+    
+    // Scroll to top
+    scrollToTop();
+    
+    // Show success notification
+    toast.success('Berhasil navigasi ke bookmark');
   };
   
   if (!isClient) {
@@ -171,6 +195,7 @@ const QuranDashboard = () => {
           handleFontSizeChange={handleFontSizeChange}
           showTranslation={showTranslation}
           setShowTranslation={setShowTranslation}
+          handleNavigateToBookmark={handleNavigateToBookmark}
         />
       </div>
 

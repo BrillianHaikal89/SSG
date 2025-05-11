@@ -281,3 +281,62 @@
         margin-right: 0.5rem;
     }
 }
+
+
+/* Additional styles for Arabic text on mobile */
+
+@media (max-width: 640px) {
+    .arab {
+        font-size: 1.5rem !important;
+        /* Override inline styles if any */
+        word-wrap: break-word !important;
+        overflow-wrap: anywhere !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        line-height: 2.5rem !important;
+        text-align: right !important;
+    }
+    /* Ensure the page doesn't overflow horizontally */
+    body {
+        overflow-x: hidden !important;
+    }
+    /* Adjust ayat number for mobile */
+    .ayat-number {
+        min-width: 2rem !important;
+        height: 2rem !important;
+        margin-top: 0.35rem !important;
+    }
+}
+
+
+/* Improve Tajwid highlighting for all devices */
+
+[class^="tajwid-"] {
+    transition: all 0.2s ease;
+}
+
+[class^="tajwid-"]:hover {
+    filter: brightness(1.1);
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Scrollbar styles for desktop */
+
+@media (min-width: 640px) {
+     ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+     ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+     ::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+     ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+}
