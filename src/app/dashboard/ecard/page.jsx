@@ -91,16 +91,30 @@ export default function ECard() {
       {/* Header hanya ditampilkan saat tidak print */}
       <header className="bg-blue-900 text-white shadow-lg print:hidden">
         <div className="container mx-auto flex justify-between items-center px-4 py-4">
+          {/* Tombol kembali di kiri */}
           <div className="flex items-center">
-            <Image 
-              src="/img/logossg_white.png" 
-              alt="Santri Siap Guna Logo" 
-              width={40} 
-              height={40} 
-              className="mr-3"
-            />
-            <span className="text-xl font-bold tracking-tight">SANTRI SIAP GUNA</span>
+            <button 
+              onClick={navigateBack}
+              className="text-white mr-4"
+              aria-label="Kembali ke dashboard"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            
+            <div className="flex items-center">
+              <Image 
+                src="/img/logossg_white.png" 
+                alt="Santri Siap Guna Logo" 
+                width={40} 
+                height={40} 
+                className="mr-3"
+              />
+              <span className="text-xl font-bold tracking-tight">SANTRI SIAP GUNA</span>
+            </div>
           </div>
+          
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold shadow-md">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -250,18 +264,8 @@ export default function ECard() {
             </p>
           </div>
 
-          {/* Buttons - hide when printing */}
+          {/* Buttons - hide when printing (tombol kembali sudah dipindah ke header) */}
           <div className="flex flex-col sm:flex-row justify-center gap-3 print:hidden">
-            <button 
-              onClick={navigateBack}
-              className="bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors flex items-center justify-center shadow-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Kembali
-            </button>
-            
             {/* Print Buttons */}
             <button 
               onClick={() => handlePrint('front')}
