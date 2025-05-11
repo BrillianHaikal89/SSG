@@ -29,18 +29,24 @@ const QuranDashboard = () => {
     currentHal,
     currentJuz,
     showScrollTop,
+    lastReadPage,
     
     // Methods
+    fetchSurahList,
     fetchAyat,
+    fetchByPage,
     generateAyatOptions,
     handleSurahChange,
     handleAyatChange,
     handleJuzChange,
     handlePageChange,
+    goToPreviousPage,
+    goToNextPage,
     handleSearchChange,
     handleSearch,
     scrollToTop,
     setShowScrollTop,
+    loadLastReadPage,
     
     // Continue functionality
     isAtEndOfContent,
@@ -87,6 +93,17 @@ const QuranDashboard = () => {
     };
   }, [setShowScrollTop]);
   
+  // Check if we should load the last read page
+  useEffect(() => {
+    if (isClient && !selectedSurah && !selectedAyat && !currentHal && !currentJuz && quranContent.length === 0 && !loading) {
+      // If no content is loaded and we're not in the process of loading anything,
+      // let's show the "last read" notification
+      
+      // We'll let the user decide if they want to continue reading from where they left off
+      // rather than loading it automatically
+    }
+  }, [isClient, selectedSurah, selectedAyat, currentHal, currentJuz, quranContent, loading]);
+  
   // Save font settings to localStorage when they change
   useEffect(() => {
     if (isClient) {
@@ -113,8 +130,8 @@ const QuranDashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-blue-50">
-      {/* Header */}
-      <Header />
+      {/* Header dengan tombol kembali di kiri */}
+      <Header title="Al-Qur'an" showBackButton={true} />
 
       {/* Mobile Controls */}
       <MobileControls 
@@ -155,6 +172,70 @@ const QuranDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-3 py-4">
+        {/* Last Read Banner - only show when no content is loaded yet */}
+        {lastReadPage && quranContent.length === 0 && !loading && !error && (
+          <div className="bg-blue-100 border-l-4 border-blue-500 p-4 mb-6 rounded shadow-sm">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 text-blue-500">
+                <svg className="h-5 w-5 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">Lanjutkan Membaca</h3>
+                <div className="mt-1 text-sm text-blue-700">
+                  <p>Terakhir Anda membaca Al-Qur'an di halaman {lastReadPage}.</p>
+                  <button 
+                    onClick={loadLastReadPage} 
+                    className="mt-2 py-1 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md shadow-sm transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Lanjutkan membaca dari halaman {lastReadPage}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Page Navigation Buttons - always show when a page is selected */}
+        {currentHal && (
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentHal === "1"}
+              className={`flex items-center space-x-1 py-1 px-3 rounded ${
+                currentHal === "1" 
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Halaman Sebelumnya</span>
+            </button>
+            
+            <span className="text-sm font-medium bg-blue-100 text-blue-800 py-1 px-3 rounded-full">
+              Halaman {currentHal} dari 604
+            </span>
+            
+            <button
+              onClick={goToNextPage}
+              disabled={currentHal === "604"}
+              className={`flex items-center space-x-1 py-1 px-3 rounded ${
+                currentHal === "604" 
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              <span>Halaman Berikutnya</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
+        
         <QuranContent 
           loading={loading}
           error={error}
