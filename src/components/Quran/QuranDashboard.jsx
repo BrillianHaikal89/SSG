@@ -8,12 +8,12 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
-import '../../app/styles/quran-styles.css'; // Import the custom CSS
+import '../../app/styles/quran-styles.css';
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [fontSizeClass, setFontSizeClass] = useState('medium'); // One size control for all text
+  const [fontSizeClass, setFontSizeClass] = useState('medium');
   const [showTranslation, setShowTranslation] = useState(true);
   const { user } = useAuthStore();
   
@@ -45,49 +45,61 @@ const QuranDashboard = () => {
     // Continue functionality
     isAtEndOfContent,
     getNextContent,
-    handleContinueToNext
+    handleContinueToNext,
+    handleNextPage,
+    handlePrevPage
   } = useQuran();
   
-  // Handle client-side rendering and responsive layout
   useEffect(() => {
     setIsClient(true);
     
-    // Check if mobile view based on screen width
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 640);
+      setIsMobile(window.innerWidth < 768); // Changed to 768 for better tablet support
     };
     
-    // Run on mount
     checkIsMobile();
-    
-    // Set up event listener for window resize
     window.addEventListener('resize', checkIsMobile);
     
-    // Set up scroll listener for back-to-top button
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
     window.addEventListener('scroll', handleScroll);
     
-    // Load font settings from localStorage if available
+    // Load settings from localStorage
     const savedFontSize = localStorage.getItem('quranFontSize');
-    if (savedFontSize) {
-      setFontSizeClass(savedFontSize);
-    }
+    if (savedFontSize) setFontSizeClass(savedFontSize);
     
     const savedShowTranslation = localStorage.getItem('quranShowTranslation');
-    if (savedShowTranslation !== null) {
-      setShowTranslation(savedShowTranslation === 'true');
-    }
+    if (savedShowTranslation !== null) setShowTranslation(savedShowTranslation === 'true');
     
-    // Clean up
+    // Load bookmarked page if coming from dashboard
+    const loadBookmark = async () => {
+      if (user?.userId) {
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL;
+          const response = await fetch(`${API_URL}/quran/bookmark/${user.userId}`);
+          if (response.ok) {
+            const bookmark = await response.json();
+            if (bookmark) {
+              if (bookmark.page) handlePageChange(bookmark.page);
+              if (bookmark.juz) handleJuzChange(bookmark.juz);
+              if (bookmark.surah) handleSurahChange(bookmark.surah);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading bookmark:', error);
+        }
+      }
+    };
+    
+    loadBookmark();
+    
     return () => {
       window.removeEventListener('resize', checkIsMobile);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [setShowScrollTop]);
+  }, [setShowScrollTop, user]);
   
-  // Save font settings to localStorage when they change
   useEffect(() => {
     if (isClient) {
       localStorage.setItem('quranFontSize', fontSizeClass);
@@ -95,7 +107,6 @@ const QuranDashboard = () => {
     }
   }, [fontSizeClass, showTranslation, isClient]);
   
-  // Handle font size change
   const handleFontSizeChange = (size) => {
     setFontSizeClass(size);
   };
@@ -113,10 +124,8 @@ const QuranDashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-blue-50">
-      {/* Header */}
       <Header />
 
-      {/* Mobile Controls */}
       <MobileControls 
         selectedSurah={selectedSurah}
         handleSurahChange={handleSurahChange}
@@ -131,9 +140,10 @@ const QuranDashboard = () => {
         searchText={searchText}
         handleSearchChange={handleSearchChange}
         handleSearch={handleSearch}
+        handleNextPage={handleNextPage}
+        handlePrevPage={handlePrevPage}
       />
 
-      {/* Desktop Controls */}
       <DesktopControls 
         selectedSurah={selectedSurah}
         handleSurahChange={handleSurahChange}
@@ -148,12 +158,12 @@ const QuranDashboard = () => {
         searchText={searchText}
         handleSearchChange={handleSearchChange}
         handleSearch={handleSearch}
+        handleNextPage={handleNextPage}
+        handlePrevPage={handlePrevPage}
       />
 
-      {/* Information Bar */}
       <InfoBar />
 
-      {/* Main Content */}
       <div className="flex-grow container mx-auto px-3 py-4">
         <QuranContent 
           loading={loading}
@@ -171,10 +181,11 @@ const QuranDashboard = () => {
           handleFontSizeChange={handleFontSizeChange}
           showTranslation={showTranslation}
           setShowTranslation={setShowTranslation}
+          handleNextPage={handleNextPage}
+          handlePrevPage={handlePrevPage}
         />
       </div>
 
-      {/* Scroll to Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}

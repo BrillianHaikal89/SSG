@@ -20,7 +20,9 @@ const QuranContent = ({
   fontSizeClass,
   handleFontSizeChange,
   showTranslation,
-  setShowTranslation
+  setShowTranslation,
+  handleNextPage,
+  handlePrevPage
 }) => {
   if (error) {
     return (
@@ -35,12 +37,33 @@ const QuranContent = ({
   }
   
   if (quranContent && quranContent.length > 0) {
-    // Check if we're at the end of content and get the next content item
     const showNextButton = isAtEndOfContent();
     const nextContent = showNextButton ? getNextContent() : null;
     
     return (
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-4 relative">
+        {/* Page navigation buttons */}
+        <div className="flex justify-between mb-4">
+          <button
+            onClick={handlePrevPage}
+            className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Sebelumnya
+          </button>
+          <button
+            onClick={handleNextPage}
+            className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors flex items-center"
+          >
+            Berikutnya
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+        
         {/* Surah header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold mb-2">
@@ -54,7 +77,7 @@ const QuranContent = ({
           </p>
         </div>
         
-        {/* Font size controls - simplified */}
+        {/* Font size controls */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
@@ -118,11 +141,9 @@ const QuranContent = ({
           <p className="text-xs text-gray-500">Pengaturan ini akan berlaku untuk semua ayat. Perubahan akan disimpan untuk kunjungan berikutnya.</p>
         </div>
         
-        {/* Tajwid guide */}
         <TajwidGuide />
         
-        {/* Ayat list with Tajwid highlighting */}
-        <div className="space-y-6">
+        <div className="space-y-6 arabic-text-container">
           {quranContent.map((ayat) => (
             <AyatItem 
               key={`${ayat.no_surat}-${ayat.no_ayat}`} 
@@ -134,7 +155,6 @@ const QuranContent = ({
           ))}
         </div>
         
-        {/* Next Content Button */}
         {showNextButton && nextContent && (
           <NextContentButton
             currentType={nextContent.type}

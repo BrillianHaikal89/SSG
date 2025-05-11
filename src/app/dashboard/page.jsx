@@ -7,49 +7,49 @@ import useAuthStore from '../../stores/authStore';
 import Dashboard from '../../components/Dashboard';
 
 export default function SSGDashboardPage() {
-const MySwal = withReactContent(Swal);
+  const MySwal = withReactContent(Swal);
   const router = useRouter();
   const { user, userId, logout, checkAuth, verify, role } = useAuthStore();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
-  
-  // Notification state
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
-  
+  const [notificationType, setNotificationType] = useState('success');
+
   // Navigation functions
-  const navigateToMY = () => {
-    router.push('/dashboard/my');
-  };
+  const navigateToMY = () => router.push('/dashboard/my');
+  const navigateToECard = () => router.push('/dashboard/ecard');
+  const navigateToPeserta = () => router.push('/dashboard/peserta');
+  const navigateToScan = () => router.push('/dashboard/scan');
+  const navigateToProfile = () => router.push('/dashboard/profile');
+  const navigateToPresensi = () => router.push('/dashboard/presensi');
+  const navigateToHome = () => router.push('/dashboard');
 
-  const navigateToECard = () => {
-    router.push('/dashboard/ecard');
-  };
+  const navigateToAlQuran = async () => {
+    try {
+      if (!userId) {
+        router.push('/dashboard/Quran');
+        return;
+      }
 
-  const navigateToPeserta = () => {
-    router.push('/dashboard/peserta');
-  };
-
-  const navigateToScan = () => {
-    router.push('/dashboard/scan');
-  }
-  
-  const navigateToProfile = () => {
-    router.push('/dashboard/profile');
-  };
-  
-  const navigateToPresensi = () => {
-    router.push('/dashboard/presensi');
-  };
-
-  const navigateToAlQuran = () => {
-    router.push('/dashboard/Quran');
-  };
-
-  const navigateToHome = () => {
-    router.push('/dashboard');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/quran/bookmark/${userId}`);
+      
+      if (response.ok) {
+        const bookmark = await response.json();
+        if (bookmark) {
+          router.push(`/dashboard/Quran?juz=${bookmark.juz}&page=${bookmark.page}&surah=${bookmark.surah}`);
+        } else {
+          router.push('/dashboard/Quran');
+        }
+      } else {
+        router.push('/dashboard/Quran');
+      }
+    } catch (error) {
+      console.error('Error fetching bookmark:', error);
+      router.push('/dashboard/Quran');
+    }
   };
 
   useEffect(() => {
@@ -57,19 +57,14 @@ const MySwal = withReactContent(Swal);
       router.replace('/verify-otp');
     }
   }, [verify, router]);
-  
-  // Handle client-side rendering
+
   useEffect(() => {
     setIsClient(true);
-    
-    // Debug the current state when component mounts
     console.log("Dashboard page mounted, auth store state:", useAuthStore.getState());
   }, []);
-  
-  // Check authentication on component mount
+
   useEffect(() => {
     if (isClient) {
-      // Check if authenticated using Zustand store
       const isAuthorized = checkAuth();
       console.log("Dashboard auth check result:", isAuthorized);
       
@@ -79,123 +74,159 @@ const MySwal = withReactContent(Swal);
         return;
       }
       
-      // If authenticated, fetch user data
       fetchUserData();
     }
   }, [router, checkAuth, isClient]);
 
-  // Effect to hide notification after some time
   useEffect(() => {
     if (showNotification) {
       const timer = setTimeout(() => {
         setShowNotification(false);
-      }, 3000); // Hide after 3 seconds
-      
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [showNotification]);
 
-  // Fetch user data
   const fetchUserData = () => {
     try {
-      // If we already have basic user data in the Zustand store, use it
       const storeUser = useAuthStore.getState().user;
       const userVerify = useAuthStore.getState().verify;
       const userRole = useAuthStore.getState().role;
       console.log("userVerify:", verify);
       console.log("user role:", role);
 
-      // Extract name from store data - first try to get nomor_hp for display
       const userPhone = storeUser?.nomor_hp || '08212651023';
       const userName = storeUser?.name || storeUser?.name || "ilham";
       
-      // Mock data - in a real app, this would come from an API call
-      // Merge any existing user data from Zustand store with additional dashboard data
-      setUserData({
-        ...storeUser,
-        name: userName, 
-        phone: userPhone,
-        level: 'Pleton 20',
-        taskCompleted: 40,
-        taskTotal: 50,
-        completionRate: 70,
-        notifications: 3,
-        quranProgress: {
-          juz: 5,
-          surah: 'Al-Baqarah',
-          page: 21,
-          lastRead: '15 Maret 2025',
+      // Fetch bookmark data
+      const fetchBookmark = async () => {
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL;
+          const response = await fetch(`${API_URL}/quran/bookmark/${userId}`);
+          let quranProgress = {
+            juz: 1,
+            surah: 'Al-Fatihah',
+            page: 1,
+            lastRead: new Date().toLocaleDateString('id-ID', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+          };
+
+          if (response.ok) {
+            const bookmark = await response.json();
+            if (bookmark) {
+              quranProgress = {
+                juz: bookmark.juz,
+                surah: bookmark.surah,
+                page: bookmark.page,
+                lastRead: new Date(bookmark.updatedAt).toLocaleDateString('id-ID', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })
+              };
+            }
+          }
+
+          return quranProgress;
+        } catch (error) {
+          console.error('Error fetching bookmark:', error);
+          return {
+            juz: 1,
+            surah: 'Al-Fatihah',
+            page: 1,
+            lastRead: new Date().toLocaleDateString('id-ID', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+          };
         }
+      };
+
+      fetchBookmark().then(quranProgress => {
+        setUserData({
+          ...storeUser,
+          name: userName, 
+          phone: userPhone,
+          level: 'Pleton 20',
+          taskCompleted: 40,
+          taskTotal: 50,
+          completionRate: 70,
+          notifications: 3,
+          quranProgress
+        });
+        setLoading(false);
       });
-      
-      setLoading(false);
+
     } catch (error) {
       console.error("Error loading user data:", error);
       setNotificationType('error');
       setNotificationMessage('Gagal memuat data pengguna. Silakan coba lagi.');
       setShowNotification(true);
       
-      // Redirect after showing error
       setTimeout(() => {
         router.push('/login');
       }, 3000);
     }
   };
-  // Handle logout using Zustand store
-const handleLogout = () => {
-  MySwal.fire({
-    title: 'Yakin ingin logout?',
-    text: "Anda perlu login kembali untuk mengakses sistem",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Ya, Logout!',
-    cancelButtonText: 'Batal',
-    backdrop: `
-      rgba(0,0,123,0.4)
-      url("/images/nyan-cat.gif")
-      left top
-      no-repeat
-    `
-  }).then((result) => {
-    if (result.isConfirmed) {
-      try {
-        MySwal.fire({
-          title: 'Logging out...',
-          timer: 1500,
-          timerProgressBar: true,
-          didOpen: () => {
-            MySwal.showLoading();
-          }
-        }).then(() => {
-          // Call logout function from Zustand store
-          logout();
-          router.push('/login');
-          
-          // Optional: Show success toast after redirect
-          MySwal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Logout berhasil!',
-            showConfirmButton: false,
-            timer: 3000
-          });
-        });
-      } catch (error) {
-        console.error("Error during logout process:", error);
-        MySwal.fire({
-          icon: 'error',
-          title: 'Gagal logout',
-          text: 'Silakan coba lagi',
-        });
-      }
-    }
-  });
-};
 
-  // If we're server-side or still loading, show a loading spinner
+  const handleLogout = () => {
+    MySwal.fire({
+      title: 'Yakin ingin logout?',
+      text: "Anda perlu login kembali untuk mengakses sistem",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Logout!',
+      cancelButtonText: 'Batal',
+      backdrop: `
+        rgba(0,0,123,0.4)
+        url("/images/nyan-cat.gif")
+        left top
+        no-repeat
+      `
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          MySwal.fire({
+            title: 'Logging out...',
+            timer: 1500,
+            timerProgressBar: true,
+            didOpen: () => {
+              MySwal.showLoading();
+            }
+          }).then(() => {
+            logout();
+            router.push('/login');
+            
+            MySwal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Logout berhasil!',
+              showConfirmButton: false,
+              timer: 3000
+            });
+          });
+        } catch (error) {
+          console.error("Error during logout process:", error);
+          MySwal.fire({
+            icon: 'error',
+            title: 'Gagal logout',
+            text: 'Silakan coba lagi',
+          });
+        }
+      }
+    });
+  };
+
   if (!isClient || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -214,7 +245,7 @@ const handleLogout = () => {
     <Dashboard 
       userData={userData}
       loading={loading}
-      navigateToScan ={navigateToScan}
+      navigateToScan={navigateToScan}
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}
       navigateToPeserta={navigateToPeserta}
