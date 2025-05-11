@@ -90,35 +90,30 @@ export default function ECard() {
     <div className="min-h-screen bg-gray-100">
       {/* Header hanya ditampilkan saat tidak print */}
       <header className="bg-blue-900 text-white shadow-lg print:hidden">
-        <div className="container mx-auto flex justify-between items-center px-4 py-4">
+        <div className="container mx-auto px-4 py-4 relative">
           {/* Tombol kembali di kiri */}
-          <div className="flex items-center">
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
             <button 
               onClick={navigateBack}
-              className="text-white mr-4"
+              className="text-white"
               aria-label="Kembali ke dashboard"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
-            
-            <div className="flex items-center">
-              <Image 
-                src="/img/logossg_white.png" 
-                alt="Santri Siap Guna Logo" 
-                width={40} 
-                height={40} 
-                className="mr-3"
-              />
-              <span className="text-xl font-bold tracking-tight">SANTRI SIAP GUNA</span>
-            </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold shadow-md">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </div>
+          {/* Santri Siap Guna di tengah */}
+          <div className="flex items-center justify-center">
+            <Image 
+              src="/img/logossg_white.png" 
+              alt="Santri Siap Guna Logo" 
+              width={40} 
+              height={40} 
+              className="mr-3"
+            />
+            <span className="text-xl font-bold tracking-tight">SANTRI SIAP GUNA</span>
           </div>
         </div>
       </header>
