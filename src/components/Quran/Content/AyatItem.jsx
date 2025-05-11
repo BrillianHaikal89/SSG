@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
@@ -9,38 +9,32 @@ const AyatItem = ({
   showTranslation = true 
 }) => {
   const [bookmark, setBookmark] = useState(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const { user } = useAuthStore();
 
-  // Check if this ayat is bookmarked when component mounts
-  useEffect(() => {
-    checkBookmarkStatus();
-  }, [ayat.no_ayat, selectedSurah]);
-
-  // Get appropriate CSS classes based on font size - with improved mobile sizing
+  // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
-        return 'text-xl sm:text-xl';
+        return 'text-xl';
       case 'medium':
-        return 'text-2xl sm:text-2xl';
+        return 'text-2xl';
       case 'large':
-        return 'text-3xl sm:text-3xl';
+        return 'text-3xl';
       default:
-        return 'text-2xl sm:text-2xl';
+        return 'text-2xl';
     }
   };
 
   const getTranslationFontSizeClass = (size) => {
     switch (size) {
       case 'small':
-        return 'text-xs sm:text-xs';
+        return 'text-xs';
       case 'medium':
-        return 'text-sm sm:text-sm';
+        return 'text-sm';
       case 'large':
-        return 'text-base sm:text-base';
+        return 'text-base';
       default:
-        return 'text-sm sm:text-sm';
+        return 'text-sm';
     }
   };
 
@@ -117,47 +111,13 @@ const AyatItem = ({
     return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Check if this ayat is already bookmarked
-  const checkBookmarkStatus = async () => {
-    if (!user || !user.userId) return;
-    
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    try {
-      const response = await fetch(`${API_URL}/quran/bookmark/check`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user.userId,
-          surah: selectedSurah || ayat.surah_name,
-          ayah: ayat.no_ayat
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsBookmarked(data.isBookmarked || false);
-        if (data.bookmark) {
-          setBookmark(data.bookmark);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking bookmark status:', error);
-    }
-  };
-
   const saveBookmark = async () => {
     if (!user) {
       toast.error('Anda harus login terlebih dahulu');
       return;
     }
-    
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     try {
-      // Show loading toast
-      const loadingToast = toast.loading('Menyimpan bookmark...');
-      
       const response = await fetch(`${API_URL}/quran/bookmark`, {
         method: 'POST',
         headers: {
@@ -172,18 +132,12 @@ const AyatItem = ({
         })
       });
 
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
-
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
       toast.success(data.message || 'Bookmark berhasil disimpan');
-      
-      // Update state to show bookmark is active
-      setIsBookmarked(true);
       setBookmark({
         surah: selectedSurah || ayat.surah_name,
         ayah: ayat.no_ayat,
@@ -196,60 +150,10 @@ const AyatItem = ({
     }
   };
 
-  const removeBookmark = async () => {
-    if (!user) {
-      toast.error('Anda harus login terlebih dahulu');
-      return;
-    }
-    
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    try {
-      // Show loading toast
-      const loadingToast = toast.loading('Menghapus bookmark...');
-      
-      const response = await fetch(`${API_URL}/quran/bookmark/remove`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user?.userId,
-          surah: selectedSurah || ayat.surah_name,
-          ayah: ayat.no_ayat
-        })
-      });
-
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      toast.success(data.message || 'Bookmark berhasil dihapus');
-      
-      // Update state to show bookmark is inactive
-      setIsBookmarked(false);
-      setBookmark(null);
-    } catch (error) {
-      console.error('Error removing bookmark:', error);
-      toast.error('Gagal menghapus bookmark: ' + error.message);
-    }
-  };
-
-  const toggleBookmark = () => {
-    if (isBookmarked) {
-      removeBookmark();
-    } else {
-      saveBookmark();
-    }
-  };
-
   return (
-    <div className="ayat-item mb-8">
+    <div className="ayat-item">
       <div className="flex items-start">
-        <span className="ayat-number flex items-center justify-center min-w-8 h-8 mr-3 bg-blue-100 text-blue-900 rounded-full text-sm font-medium mt-1">
+        <span className="ayat-number">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -259,30 +163,24 @@ const AyatItem = ({
             </div>
           )}
           
-          {/* Add explicit width control for mobile display */}
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)} w-full overflow-hidden break-words`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
           {ayat.tafsir && showTranslation && (
-            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)} text-gray-700`}>
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
               {ayat.tafsir}
             </p>
           )}
           
-          <div className="mt-3">
+          <div className="mt-2">
             <button 
-              onClick={toggleBookmark}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm transition-colors duration-200 ${
-                isBookmarked 
-                  ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
-              aria-label={isBookmarked ? "Hapus bookmark" : "Simpan bookmark"}
+              onClick={saveBookmark}
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
             >
-              {isBookmarked ? (
+              {bookmark ? (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
