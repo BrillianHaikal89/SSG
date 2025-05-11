@@ -200,7 +200,18 @@ const ProfileForm = () => {
       {/* Header */}
       <header className="bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            {/* Back Button - Now on the left side */}
+            <button 
+              onClick={handleBack}
+              className="text-white mr-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            
+            {/* Logo and Title */}
             <div className="flex items-center">
               <Image 
                 src="/img/logossg_white.png" 
@@ -210,16 +221,6 @@ const ProfileForm = () => {
                 className="mr-2"
               />
               <h1 className="text-xl font-bold">SANTRI SIAP GUNA</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={handleBack}
-                className="text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
