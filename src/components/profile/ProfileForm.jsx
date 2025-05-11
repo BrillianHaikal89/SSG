@@ -200,16 +200,19 @@ const ProfileForm = () => {
       {/* Header */}
       <header className="bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex justify-between items-center">
-            {/* Left side with back button */}
-            <button 
-              onClick={handleBack}
-              className="text-white"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
+          <div className="relative flex items-center justify-center">
+            {/* Back button positioned absolutely on the left */}
+            <div className="absolute left-0">
+              <button 
+                onClick={handleBack}
+                className="text-white"
+                aria-label="Kembali ke dashboard"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+            </div>
             
             {/* Logo and Title in center */}
             <div className="flex items-center">
@@ -222,9 +225,6 @@ const ProfileForm = () => {
               />
               <h1 className="text-xl font-bold">SANTRI SIAP GUNA</h1>
             </div>
-            
-            {/* Empty div to balance the layout */}
-            <div className="w-6"></div>
           </div>
         </div>
       </header>
