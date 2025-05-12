@@ -8,16 +8,13 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
-import '../../app/styles/quran-styles.css';
+import '../../app/styles/quran-styles.css'; // Import the custom CSS
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [fontSizeClass, setFontSizeClass] = useState('medium');
+  const [fontSizeClass, setFontSizeClass] = useState('medium'); // One size control for all text
   const [showTranslation, setShowTranslation] = useState(true);
-  const [footnotes, setFootnotes] = useState([]);
-  const [footnotesLoading, setFootnotesLoading] = useState(false);
-  const [footnotesError, setFootnotesError] = useState(null);
   const { user } = useAuthStore();
   
   const {
@@ -50,27 +47,7 @@ const QuranDashboard = () => {
     getNextContent,
     handleContinueToNext
   } = useQuran();
-
-  // Fetch footnotes data
-  const fetchFootnotes = async () => {
-    setFootnotesLoading(true);
-    setFootnotesError(null);
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/quran/footnotes`);
-      if (!response.ok) {
-        throw new Error('Gagal memuat catatan kaki');
-      }
-      const data = await response.json();
-      setFootnotes(data);
-    } catch (err) {
-      console.error('Error fetching footnotes:', err);
-      setFootnotesError(err.message);
-    } finally {
-      setFootnotesLoading(false);
-    }
-  };
-
+  
   // Handle client-side rendering and responsive layout
   useEffect(() => {
     setIsClient(true);
@@ -83,14 +60,16 @@ const QuranDashboard = () => {
     // Run on mount
     checkIsMobile();
     
-    // Set up event listeners
+    // Set up event listener for window resize
     window.addEventListener('resize', checkIsMobile);
+    
+    // Set up scroll listener for back-to-top button
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
     window.addEventListener('scroll', handleScroll);
     
-    // Load settings from localStorage
+    // Load font settings from localStorage if available
     const savedFontSize = localStorage.getItem('quranFontSize');
     if (savedFontSize) {
       setFontSizeClass(savedFontSize);
@@ -100,9 +79,6 @@ const QuranDashboard = () => {
     if (savedShowTranslation !== null) {
       setShowTranslation(savedShowTranslation === 'true');
     }
-    
-    // Fetch footnotes when component mounts
-    fetchFootnotes();
     
     // Clean up
     return () => {
@@ -179,15 +155,9 @@ const QuranDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-3 py-4">
-        {footnotesError && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded-md">
-            <p>Catatan kaki tidak tersedia: {footnotesError}</p>
-          </div>
-        )}
-        
         <QuranContent 
-          loading={loading || footnotesLoading}
-          error={error || footnotesError}
+          loading={loading}
+          error={error}
           quranContent={quranContent}
           surahDetails={surahDetails}
           surahList={surahList}
@@ -201,7 +171,6 @@ const QuranDashboard = () => {
           handleFontSizeChange={handleFontSizeChange}
           showTranslation={showTranslation}
           setShowTranslation={setShowTranslation}
-          footnotes={footnotes}
         />
       </div>
 

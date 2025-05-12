@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
@@ -20,41 +20,13 @@ const QuranContent = ({
   fontSizeClass,
   handleFontSizeChange,
   showTranslation,
-  setShowTranslation,
-  footnotes // Data catatan kaki dari API
+  setShowTranslation
 }) => {
-  const [activeFootnote, setActiveFootnote] = useState(null);
-  const [currentFootnoteContent, setCurrentFootnoteContent] = useState('');
-
-  // Fungsi untuk memproses teks dengan catatan kaki yang bisa diklik
-  const processTranslation = (text) => {
+  // Function to remove footnotes from translation
+  const cleanTranslation = (text) => {
     if (!text) return text;
-    
-    return text.replace(/<sup>\[(\d+)]<\/sup>/g, (match, num) => {
-      return `<sup><a href="#footnote-${num}" 
-                class="text-blue-600 hover:underline cursor-pointer footnote-link"
-                data-footnote="${num}"
-                onclick="event.preventDefault(); window.reactFootnotes?.showFootnote(${num})"
-              >[${num}]</a></sup>`;
-    });
+    return text.replace(/<sup>\[\d+]<\/sup>/g, '');
   };
-
-  // Fungsi untuk menampilkan catatan kaki
-  const showFootnote = (num) => {
-    const footnote = footnotes?.find(fn => fn.no_foot === parseInt(num));
-    if (footnote) {
-      setActiveFootnote(num);
-      setCurrentFootnoteContent(footnote.t_foot);
-    }
-  };
-
-  // Expose function to window untuk inline onclick handlers
-  useEffect(() => {
-    window.reactFootnotes = { showFootnote };
-    return () => {
-      delete window.reactFootnotes;
-    };
-  }, [footnotes]);
 
   if (error) {
     return (
@@ -73,55 +45,21 @@ const QuranContent = ({
     const nextContent = showNextButton ? getNextContent() : null;
     
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 relative">
-        {/* Popup Catatan Kaki */}
-        {activeFootnote && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-bold">Catatan Kaki [{activeFootnote}]</h3>
-                <button 
-                  onClick={() => setActiveFootnote(null)}
-                  className="text-gray-500 hover:text-gray-700 text-xl"
-                  aria-label="Tutup"
-                >
-                  &times;
-                </button>
-              </div>
-              <div className="prose text-gray-700">
-                <p>{currentFootnoteContent}</p>
-              </div>
-              <div className="mt-4 text-right">
-                <button
-                  onClick={() => setActiveFootnote(null)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                >
-                  Tutup
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Header Surah */}
+      <div className="bg-white rounded-lg shadow-md p-4">
+        {/* Surah header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold mb-2">
             {surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
-            <div>
-              <p 
-                className="text-md text-gray-700 mb-2" 
-                dangerouslySetInnerHTML={{ __html: processTranslation(surahDetails.arti_surat) }} 
-              />
-            </div>
+            <p className="text-md text-gray-700 mb-2">{cleanTranslation(surahDetails.arti_surat)}</p>
           )}
           <p className="text-sm text-gray-600">
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
           </p>
         </div>
         
-        {/* Pengaturan Tampilan */}
+        {/* Font size controls */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
@@ -185,27 +123,26 @@ const QuranContent = ({
           <p className="text-xs text-gray-500">Pengaturan ini akan berlaku untuk semua ayat. Perubahan akan disimpan untuk kunjungan berikutnya.</p>
         </div>
         
-        {/* Panduan Tajwid */}
+        {/* Tajwid guide */}
         <TajwidGuide />
         
-        {/* Daftar Ayat */}
+        {/* Ayat list with Tajwid highlighting */}
         <div className="space-y-6">
           {quranContent.map((ayat) => (
-            <div key={`${ayat.no_surat}-${ayat.no_ayat}`}>
-              <AyatItem 
-                ayat={{
-                  ...ayat,
-                  tafsir: processTranslation(ayat.tafsir)
-                }}
-                selectedSurah={selectedSurah}
-                fontSizeClass={fontSizeClass}
-                showTranslation={showTranslation}
-              />
-            </div>
+            <AyatItem 
+              key={`${ayat.no_surat}-${ayat.no_ayat}`} 
+              ayat={{
+                ...ayat,
+                tafsir: cleanTranslation(ayat.tafsir)
+              }}
+              selectedSurah={selectedSurah}
+              fontSizeClass={fontSizeClass}
+              showTranslation={showTranslation}
+            />
           ))}
         </div>
         
-        {/* Tombol Lanjut */}
+        {/* Next Content Button */}
         {showNextButton && nextContent && (
           <NextContentButton
             currentType={nextContent.type}

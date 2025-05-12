@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
@@ -11,51 +11,65 @@ const AyatItem = ({
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
 
-  // Handle footnote clicks
-  useEffect(() => {
-    const handleFootnoteClick = (e) => {
-      if (e.target.classList.contains('footnote-link')) {
-        e.preventDefault();
-        const num = e.target.getAttribute('data-footnote');
-        window.reactFootnotes?.showFootnote(parseInt(num));
-      }
-    };
-
-    // Attach to window for inline handlers
-    window.handleFootnoteClick = handleFootnoteClick;
-
-    return () => {
-      delete window.handleFootnoteClick;
-    };
-  }, []);
-
-  // Get font size classes
+  // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
-      case 'small': return 'text-xl';
-      case 'medium': return 'text-2xl';
-      case 'large': return 'text-3xl';
-      default: return 'text-2xl';
+      case 'small':
+        return 'text-xl';
+      case 'medium':
+        return 'text-2xl';
+      case 'large':
+        return 'text-3xl';
+      default:
+        return 'text-2xl';
     }
   };
 
   const getTranslationFontSizeClass = (size) => {
     switch (size) {
-      case 'small': return 'text-xs';
-      case 'medium': return 'text-sm';
-      case 'large': return 'text-base';
-      default: return 'text-sm';
+      case 'small':
+        return 'text-xs';
+      case 'medium':
+        return 'text-sm';
+      case 'large':
+        return 'text-base';
+      default:
+        return 'text-sm';
     }
   };
 
-  // Render Arabic with Tajwid highlighting
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
-      // ... (keep your existing tajwid rules)
+      // Nun Sukun & Tanwin Rules
+      { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
+      { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
+      { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
+      { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
+      
+      // Mim Sukun Rules
+      { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
+      { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
+      { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
+      
+      // Mad Rules
+      { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
+      { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
+      { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
+      { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
+      
+      // Other Rules
+      { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
+      { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
+      { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
+      { regex: /ـ۠/g, rule: 'ghunnah', color: '#F44336' },
+      { regex: /ْ/g, rule: 'sukun', color: '#9C27B0' },
+      { regex: /ً|ٍ|ٌ/g, rule: 'tanwin', color: '#2196F3' },
+      { regex: /ۜ|ۛ|ۚ|ۖ|ۗ|ۙ|ۘ/g, rule: 'waqf', color: '#795548' },
     ];
 
     const processedMap = new Map();
     let decoratedText = arabicText;
+    let hasMatches = false;
     
     tajwidRules.forEach(({ regex, rule, color }) => {
       decoratedText = decoratedText.replace(regex, (match) => {
@@ -63,6 +77,7 @@ const AyatItem = ({
           return processedMap.get(match + rule);
         }
         
+        hasMatches = true;
         const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
         processedMap.set(match + rule, span);
         return span;
@@ -74,7 +89,24 @@ const AyatItem = ({
 
   const getTajwidRuleName = (rule) => {
     const ruleNames = {
-      // ... (keep your existing rule names)
+      'izhar': 'Izhar',
+      'idgham': 'Idgham',
+      'iqlab': 'Iqlab',
+      'ikhfa': 'Ikhfa',
+      'idgham-syafawi': 'Idgham Syafawi',
+      'ikhfa-syafawi': 'Ikhfa Syafawi',
+      'izhar-syafawi': 'Izhar Syafawi',
+      'mad-thabii': 'Mad Thabii',
+      'mad-lazim': 'Mad Lazim',
+      'mad-arid': 'Mad Arid',
+      'mad-lin': 'Mad Lin',
+      'qalqalah': 'Qalqalah',
+      'lafadz-allah': 'Lafadz Allah',
+      'tashdid': 'Tashdid',
+      'ghunnah': 'Ghunnah',
+      'sukun': 'Sukun',
+      'tanwin': 'Tanwin',
+      'waqf': 'Tanda Waqaf'
     };
     return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
@@ -84,9 +116,8 @@ const AyatItem = ({
       toast.error('Anda harus login terlebih dahulu');
       return;
     }
-    
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/quran/bookmark`, {
         method: 'POST',
         headers: {
@@ -101,7 +132,9 @@ const AyatItem = ({
         })
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
 
       const data = await response.json();
       toast.success(data.message || 'Bookmark berhasil disimpan');
@@ -118,9 +151,9 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item mb-6 pb-6 border-b border-gray-100 last:border-0">
+    <div className="ayat-item">
       <div className="flex items-start">
-        <span className="ayat-number flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full mr-3 mt-1 text-sm font-medium">
+        <span className="ayat-number">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -131,23 +164,21 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)} mb-3 leading-loose`}
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
           {ayat.tafsir && showTranslation && (
-            <div 
-              className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)} text-gray-700`}
-              dangerouslySetInnerHTML={{ __html: ayat.tafsir }}
-              onClick={(e) => window.handleFootnoteClick(e)}
-            />
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
+              {ayat.tafsir}
+            </p>
           )}
           
-          <div className="mt-3 flex justify-between items-center">
+          <div className="mt-2">
             <button 
               onClick={saveBookmark}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 text-sm font-medium transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
             >
               {bookmark ? (
                 <>
