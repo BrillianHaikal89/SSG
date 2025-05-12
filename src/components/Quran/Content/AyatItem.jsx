@@ -11,20 +11,30 @@ const AyatItem = ({
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
 
-  // Fixed Arabic font size and style
-  const arabicStyle = {
-    fontSize: '28px',
-    lineHeight: '2.5',
-    fontFamily: "'Amiri Quran', 'Scheherazade New', serif"
+  // Get appropriate CSS classes based on font size
+  const getArabicFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xl';
+      case 'medium':
+        return 'text-2xl';
+      case 'large':
+        return 'text-3xl';
+      default:
+        return 'text-2xl';
+    }
   };
 
-  // Translation font sizes remain adjustable
   const getTranslationFontSizeClass = (size) => {
     switch (size) {
-      case 'small': return 'text-xs';
-      case 'medium': return 'text-sm';
-      case 'large': return 'text-base';
-      default: return 'text-sm';
+      case 'small':
+        return 'text-xs';
+      case 'medium':
+        return 'text-sm';
+      case 'large':
+        return 'text-base';
+      default:
+        return 'text-sm';
     }
   };
 
@@ -59,10 +69,15 @@ const AyatItem = ({
 
     const processedMap = new Map();
     let decoratedText = arabicText;
+    let hasMatches = false;
     
     tajwidRules.forEach(({ regex, rule, color }) => {
       decoratedText = decoratedText.replace(regex, (match) => {
-        if (processedMap.has(match + rule)) return processedMap.get(match + rule);
+        if (processedMap.has(match + rule)) {
+          return processedMap.get(match + rule);
+        }
+        
+        hasMatches = true;
         const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
         processedMap.set(match + rule, span);
         return span;
@@ -117,8 +132,10 @@ const AyatItem = ({
         })
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
-      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const data = await response.json();
       toast.success(data.message || 'Bookmark berhasil disimpan');
       setBookmark({
@@ -147,9 +164,8 @@ const AyatItem = ({
           )}
           
           <div 
-            className="arab-text"
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
-            style={arabicStyle}
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
