@@ -281,3 +281,126 @@
         margin-right: 0.5rem;
     }
 }
+
+
+/* Arabic Text Consistency Fixes */
+
+.arab-text {
+    font-family: 'Amiri Quran', 'Scheherazade New', 'Traditional Arabic', serif;
+    font-size: 28px !important;
+    line-height: 2.5 !important;
+    text-align: right;
+    word-spacing: 0.3em;
+    letter-spacing: 0;
+    font-weight: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "calt" 1;
+    padding: 0 5px;
+}
+
+
+/* iOS Specific Fixes */
+
+@supports (-webkit-touch-callout: none) {
+    .arab-text {
+        font-size: 26px !important;
+        line-height: 2.8 !important;
+        font-family: 'Amiri Quran', 'Scheherazade New', -apple-system, serif;
+    }
+}
+
+
+/* Android Chrome Fixes */
+
+@supports (font: -apple-system-body) and (-webkit-appearance: none) {
+    .arab-text {
+        font-family: 'Amiri Quran', 'Scheherazade New', 'Roboto', sans-serif;
+    }
+}
+
+
+/* Tajwid Highlighting */
+
+.tajwid-izhar {
+    color: #673AB7 !important;
+}
+
+.tajwid-idgham {
+    color: #3F51B5 !important;
+}
+
+.tajwid-iqlab {
+    color: #8BC34A !important;
+}
+
+.tajwid-ikhfa {
+    color: #FF5722 !important;
+}
+
+.tajwid-idgham-syafawi {
+    color: #00BCD4 !important;
+}
+
+.tajwid-ikhfa-syafawi {
+    color: #9E9E9E !important;
+}
+
+.tajwid-izhar-syafawi {
+    color: #607D8B !important;
+}
+
+.tajwid-mad-thabii {
+    color: #4CAF50 !important;
+}
+
+.tajwid-mad-lazim {
+    color: #009688 !important;
+}
+
+.tajwid-mad-arid {
+    color: #CDDC39 !important;
+}
+
+.tajwid-mad-lin {
+    color: #03A9F4 !important;
+}
+
+.tajwid-qalqalah {
+    color: #FFC107 !important;
+}
+
+.tajwid-lafadz-allah {
+    color: #E91E63 !important;
+}
+
+.tajwid-tashdid {
+    color: #FF9800 !important;
+}
+
+.tajwid-ghunnah {
+    color: #F44336 !important;
+}
+
+.tajwid-sukun {
+    color: #9C27B0 !important;
+}
+
+.tajwid-tanwin {
+    color: #2196F3 !important;
+}
+
+.tajwid-waqf {
+    color: #795548 !important;
+}
+
+
+/* Responsive Adjustments */
+
+@media (max-width: 640px) {
+    .arab-text {
+        font-size: 24px !important;
+        line-height: 2.2 !important;
+    }
+}
