@@ -11,8 +11,20 @@ const AyatItem = ({
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
 
-  // Font size classes - Arabic will now always use the same size regardless of device
-  const arabicFontSizeClass = 'text-3xl'; // Fixed size for Arabic text
+  // Get appropriate CSS classes based on font size
+  const getArabicFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xl';
+      case 'medium':
+        return 'text-2xl';
+      case 'large':
+        return 'text-3xl';
+      default:
+        return 'text-2xl';
+    }
+  };
+
   const getTranslationFontSizeClass = (size) => {
     switch (size) {
       case 'small':
@@ -152,7 +164,7 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${arabicFontSizeClass}`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
