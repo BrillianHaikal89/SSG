@@ -6,52 +6,58 @@ const AyatItem = ({
   ayat, 
   selectedSurah, 
   fontSizeClass = 'medium',
-  showTranslation = true,
-  showTafsir = false
+  showTranslation = true 
 }) => {
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
 
-  const getArabicFontSizeClass = () => {
-    switch (fontSizeClass) {
-      case 'small': return 'text-2xl';
-      case 'medium': return 'text-3xl';
-      case 'large': return 'text-4xl';
-      default: return 'text-3xl';
+  // Get appropriate CSS classes based on font size
+  const getArabicFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xl';
+      case 'medium':
+        return 'text-2xl';
+      case 'large':
+        return 'text-3xl';
+      default:
+        return 'text-2xl';
     }
   };
 
-  const getTranslationFontSizeClass = () => {
-    switch (fontSizeClass) {
-      case 'small': return 'text-xs';
-      case 'medium': return 'text-sm';
-      case 'large': return 'text-base';
-      default: return 'text-sm';
-    }
-  };
-
-  const getTafsirFontSizeClass = () => {
-    switch (fontSizeClass) {
-      case 'small': return 'text-xs';
-      case 'medium': return 'text-sm';
-      case 'large': return 'text-base';
-      default: return 'text-sm';
+  const getTranslationFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xs';
+      case 'medium':
+        return 'text-sm';
+      case 'large':
+        return 'text-base';
+      default:
+        return 'text-sm';
     }
   };
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
+      // Nun Sukun & Tanwin Rules
       { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
       { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
       { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
       { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
+      
+      // Mim Sukun Rules
       { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
       { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
       { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
+      
+      // Mad Rules
       { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
       { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
       { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
       { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
+      
+      // Other Rules
       { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
       { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
       { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
@@ -61,37 +67,64 @@ const AyatItem = ({
       { regex: /ۜ|ۛ|ۚ|ۖ|ۗ|ۙ|ۘ/g, rule: 'waqf', color: '#795548' },
     ];
 
+    const processedMap = new Map();
     let decoratedText = arabicText;
+    let hasMatches = false;
+    
     tajwidRules.forEach(({ regex, rule, color }) => {
-      decoratedText = decoratedText.replace(regex, 
-        match => `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`
-      );
+      decoratedText = decoratedText.replace(regex, (match) => {
+        if (processedMap.has(match + rule)) {
+          return processedMap.get(match + rule);
+        }
+        
+        hasMatches = true;
+        const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
+        processedMap.set(match + rule, span);
+        return span;
+      });
     });
+
     return decoratedText;
   };
 
   const getTajwidRuleName = (rule) => {
     const ruleNames = {
-      'izhar': 'Izhar', 'idgham': 'Idgham', 'iqlab': 'Iqlab', 'ikhfa': 'Ikhfa',
-      'idgham-syafawi': 'Idgham Syafawi', 'ikhfa-syafawi': 'Ikhfa Syafawi', 
-      'izhar-syafawi': 'Izhar Syafawi', 'mad-thabii': 'Mad Thabii', 
-      'mad-lazim': 'Mad Lazim', 'mad-arid': 'Mad Arid', 'mad-lin': 'Mad Lin',
-      'qalqalah': 'Qalqalah', 'lafadz-allah': 'Lafadz Allah', 'tashdid': 'Tashdid',
-      'ghunnah': 'Ghunnah', 'sukun': 'Sukun', 'tanwin': 'Tanwin', 'waqf': 'Tanda Waqaf'
+      'izhar': 'Izhar',
+      'idgham': 'Idgham',
+      'iqlab': 'Iqlab',
+      'ikhfa': 'Ikhfa',
+      'idgham-syafawi': 'Idgham Syafawi',
+      'ikhfa-syafawi': 'Ikhfa Syafawi',
+      'izhar-syafawi': 'Izhar Syafawi',
+      'mad-thabii': 'Mad Thabii',
+      'mad-lazim': 'Mad Lazim',
+      'mad-arid': 'Mad Arid',
+      'mad-lin': 'Mad Lin',
+      'qalqalah': 'Qalqalah',
+      'lafadz-allah': 'Lafadz Allah',
+      'tashdid': 'Tashdid',
+      'ghunnah': 'Ghunnah',
+      'sukun': 'Sukun',
+      'tanwin': 'Tanwin',
+      'waqf': 'Tanda Waqaf'
     };
     return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const saveBookmark = async () => {
-    if (!user) return toast.error('Anda harus login terlebih dahulu');
-    
+    if (!user) {
+      toast.error('Anda harus login terlebih dahulu');
+      return;
+    }
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/quran/bookmark`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          user_id: user.userId,
+          user_id: user?.userId,
           surah: selectedSurah || ayat.surah_name,
           ayah: ayat.no_ayat,
           page: ayat.no_hal,
@@ -99,8 +132,10 @@ const AyatItem = ({
         })
       });
 
-      if (!response.ok) throw new Error('Gagal menyimpan bookmark');
-      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const data = await response.json();
       toast.success(data.message || 'Bookmark berhasil disimpan');
       setBookmark({
@@ -110,14 +145,15 @@ const AyatItem = ({
         juz: ayat.no_juz
       });
     } catch (error) {
-      toast.error(error.message || 'Gagal menyimpan bookmark');
+      console.error('Error saving bookmark:', error);
+      toast.error('Gagal menyimpan bookmark: ' + error.message);
     }
   };
 
   return (
-    <div className="ayat-item mb-6 pb-6 border-b border-gray-200 last:border-0">
+    <div className="ayat-item">
       <div className="flex items-start">
-        <span className="ayat-number inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-medium mr-3 mt-1">
+        <span className="ayat-number">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -128,30 +164,21 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass()} leading-loose mb-2`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
-          {showTranslation && ayat.arti && (
-            <p className={`translation mt-2 mb-2 text-gray-700 ${getTranslationFontSizeClass()}`}>
-              {ayat.arti}
+          {ayat.tafsir && showTranslation && (
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
+              {ayat.tafsir}
             </p>
           )}
           
-          {showTafsir && ayat.tafsir && (
-            <div className="mt-2 mb-4 p-3 bg-gray-50 rounded-md">
-              <h4 className="text-sm font-semibold text-gray-800 mb-1">Tafsir:</h4>
-              <p className={`tafsir text-gray-600 ${getTafsirFontSizeClass()}`}>
-                {ayat.tafsir}
-              </p>
-            </div>
-          )}
-          
-          <div className="mt-3">
+          <div className="mt-2">
             <button 
               onClick={saveBookmark}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
             >
               {bookmark ? (
                 <>
