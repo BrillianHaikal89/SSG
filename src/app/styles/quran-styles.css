@@ -281,3 +281,13 @@
         margin-right: 0.5rem;
     }
 }
+
+
+/* Dalam file quran-styles.css */
+
+.arab {
+    font-family: 'Traditional Arabic', 'Amiri', 'Scheherazade New', serif;
+    line-height: 2.5;
+    text-align: right;
+    word-spacing: 0.2em;
+}
