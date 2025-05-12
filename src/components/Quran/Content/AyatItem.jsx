@@ -169,11 +169,13 @@ const AyatItem = ({
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
-          {ayat.tafsir && showTranslation && (
-            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
-              {ayat.tafsir}
-            </p>
-          )}
+          // Di dalam AyatItem.jsx, ganti bagian terjemahan dengan:
+{ayat.tafsir && showTranslation && (
+  <p 
+    className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}
+    dangerouslySetInnerHTML={{ __html: ayat.tafsir }}
+  />
+)}
           
           <div className="mt-2">
             <button 

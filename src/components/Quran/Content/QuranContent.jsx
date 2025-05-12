@@ -22,10 +22,19 @@ const QuranContent = ({
   showTranslation,
   setShowTranslation
 }) => {
-  // Function to remove footnotes from translation
-  const cleanTranslation = (text) => {
+  // Function to process translation with footnotes
+  const processTranslation = (text) => {
     if (!text) return text;
-    return text.replace(/<sup>\[\d+]<\/sup>/g, '');
+    
+    // Extract footnotes and create a mapping
+    const footnoteMap = {};
+    let processedText = text.replace(/<sup>\[(\d+)]<\/sup>/g, (match, num) => {
+      const id = `footnote-${num}`;
+      footnoteMap[id] = num;
+      return `<sup><a href="#${id}" class="text-blue-600 hover:underline">[${num}]</a></sup>`;
+    });
+    
+    return processedText;
   };
 
   if (error) {
@@ -52,7 +61,12 @@ const QuranContent = ({
             {surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
-            <p className="text-md text-gray-700 mb-2">{cleanTranslation(surahDetails.arti_surat)}</p>
+            <div>
+              <p 
+                className="text-md text-gray-700 mb-2" 
+                dangerouslySetInnerHTML={{ __html: processTranslation(surahDetails.arti_surat) }} 
+              />
+            </div>
           )}
           <p className="text-sm text-gray-600">
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
@@ -129,16 +143,17 @@ const QuranContent = ({
         {/* Ayat list with Tajwid highlighting */}
         <div className="space-y-6">
           {quranContent.map((ayat) => (
-            <AyatItem 
-              key={`${ayat.no_surat}-${ayat.no_ayat}`} 
-              ayat={{
-                ...ayat,
-                tafsir: cleanTranslation(ayat.tafsir)
-              }}
-              selectedSurah={selectedSurah}
-              fontSizeClass={fontSizeClass}
-              showTranslation={showTranslation}
-            />
+            <div key={`${ayat.no_surat}-${ayat.no_ayat}`}>
+              <AyatItem 
+                ayat={{
+                  ...ayat,
+                  tafsir: processTranslation(ayat.tafsir)
+                }}
+                selectedSurah={selectedSurah}
+                fontSizeClass={fontSizeClass}
+                showTranslation={showTranslation}
+              />
+            </div>
           ))}
         </div>
         
