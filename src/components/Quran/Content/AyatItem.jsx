@@ -6,40 +6,26 @@ const AyatItem = ({
   ayat, 
   selectedSurah, 
   fontSizeClass = 'medium',
-  showTranslation = true,
-  showTafsir = false,
-  isMobile = false
+  showTranslation = true 
 }) => {
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
 
+  // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
         return 'text-xl';
       case 'medium':
-        return isMobile ? 'text-3xl' : 'text-2xl'; // Larger on mobile
+        return 'text-2xl';
       case 'large':
-        return isMobile ? 'text-4xl' : 'text-3xl'; // Larger on mobile
+        return 'text-3xl';
       default:
-        return isMobile ? 'text-3xl' : 'text-2xl';
+        return 'text-2xl';
     }
   };
 
   const getTranslationFontSizeClass = (size) => {
-    switch (size) {
-      case 'small':
-        return 'text-xs';
-      case 'medium':
-        return 'text-sm';
-      case 'large':
-        return 'text-base';
-      default:
-        return 'text-sm';
-    }
-  };
-
-  const getTafsirFontSizeClass = (size) => {
     switch (size) {
       case 'small':
         return 'text-xs';
@@ -165,9 +151,9 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item mb-6 pb-6 border-b border-gray-200 last:border-0">
+    <div className="ayat-item">
       <div className="flex items-start">
-        <span className="ayat-number inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-medium mr-3 mt-1">
+        <span className="ayat-number">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -178,30 +164,21 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)} leading-loose mb-2`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
-          {ayat.arti && showTranslation && (
-            <p className={`translation mt-2 mb-2 text-gray-700 ${getTranslationFontSizeClass(fontSizeClass)}`}>
-              {ayat.arti}
+          {ayat.tafsir && showTranslation && (
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
+              {ayat.tafsir}
             </p>
           )}
           
-          {ayat.tafsir && showTafsir && (
-            <div className="mt-2 mb-4 p-3 bg-gray-50 rounded-md">
-              <h4 className="text-sm font-semibold text-gray-800 mb-1">Tafsir:</h4>
-              <p className={`tafsir text-gray-600 ${getTafsirFontSizeClass(fontSizeClass)}`}>
-                {ayat.tafsir}
-              </p>
-            </div>
-          )}
-          
-          <div className="mt-3">
+          <div className="mt-2">
             <button 
               onClick={saveBookmark}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
             >
               {bookmark ? (
                 <>

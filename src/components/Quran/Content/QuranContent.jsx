@@ -20,10 +20,7 @@ const QuranContent = ({
   fontSizeClass,
   handleFontSizeChange,
   showTranslation,
-  setShowTranslation,
-  showTafsir,
-  setShowTafsir,
-  isMobile
+  setShowTranslation
 }) => {
   if (error) {
     return (
@@ -38,14 +35,15 @@ const QuranContent = ({
   }
   
   if (quranContent && quranContent.length > 0) {
+    // Check if we're at the end of content and get the next content item
     const showNextButton = isAtEndOfContent();
     const nextContent = showNextButton ? getNextContent() : null;
     
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+      <div className="bg-white rounded-lg shadow-md p-4">
         {/* Surah header */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+          <h2 className="text-2xl font-bold mb-2">
             {surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
@@ -56,7 +54,7 @@ const QuranContent = ({
           </p>
         </div>
         
-        {/* Display settings */}
+        {/* Font size controls - simplified */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
@@ -95,7 +93,7 @@ const QuranContent = ({
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Terjemahan:</span>
+              <span className="text-sm font-medium text-gray-700">Tampilkan Terjemahan:</span>
               <div className="relative inline-block w-10 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -116,29 +114,6 @@ const QuranContent = ({
                 </label>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Tafsir:</span>
-              <div className="relative inline-block w-10 align-middle select-none">
-                <input 
-                  type="checkbox" 
-                  id="toggle-tafsir"
-                  checked={showTafsir} 
-                  onChange={() => setShowTafsir(!showTafsir)} 
-                  className="sr-only"
-                />
-                <label 
-                  htmlFor="toggle-tafsir"
-                  className={`block h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in 
-                    ${showTafsir ? 'bg-blue-600' : 'bg-gray-300'}`}
-                >
-                  <span 
-                    className={`block h-4 w-4 ml-1 mt-1 rounded-full transition-transform duration-200 ease-in transform 
-                    ${showTafsir ? 'translate-x-4 bg-white' : 'bg-white'}`} 
-                  />
-                </label>
-              </div>
-            </div>
           </div>
           <p className="text-xs text-gray-500">Pengaturan ini akan berlaku untuk semua ayat. Perubahan akan disimpan untuk kunjungan berikutnya.</p>
         </div>
@@ -155,8 +130,6 @@ const QuranContent = ({
               selectedSurah={selectedSurah}
               fontSizeClass={fontSizeClass}
               showTranslation={showTranslation}
-              showTafsir={showTafsir}
-              isMobile={isMobile}
             />
           ))}
         </div>

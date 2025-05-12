@@ -1,5 +1,5 @@
 import React from 'react';
-import FontSizeSelector from '../Content/FontSizeSelector';
+import SearchBar from './SearchBar';
 
 const MobileControls = ({
   selectedSurah,
@@ -14,124 +14,85 @@ const MobileControls = ({
   handleJuzChange,
   searchText,
   handleSearchChange,
-  handleSearch,
-  lastBookmark
+  handleSearch
 }) => {
   return (
-    <div className="sm:hidden bg-white shadow-md p-3 mb-4 sticky top-0 z-10">
-      <div className="flex flex-col gap-3">
-        {/* Bookmark button */}
-        {lastBookmark && (
-          <button
-            onClick={() => handleContinueToBookmark()}
-            className="px-3 py-2 bg-blue-100 text-blue-800 rounded-md text-sm font-medium flex items-center justify-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-            </svg>
-            Lanjutkan dari terakhir dibaca
-          </button>
-        )}
-
-        {/* Surah selector */}
-        <div>
-          <label htmlFor="surah-select-mobile" className="block text-sm font-medium text-gray-700 mb-1">
-            Surah
-          </label>
-          <select
-            id="surah-select-mobile"
-            value={selectedSurah}
-            onChange={handleSurahChange}
-            className="w-full p-2 border border-gray-300 rounded-md text-sm"
-          >
-            <option value="">Pilih Surah</option>
-            {surahList.map((surah) => (
-              <option key={surah.no_surat} value={surah.no_surat}>
-                {surah.no_surat}. {surah.nm_surat} ({surah.arti_surat})
-              </option>
-            ))}
-          </select>
+    <div className="bg-blue-100 sm:hidden">
+      {/* Search Bar at the top matching the screenshot */}
+      <div className="container mx-auto py-2 px-3">
+        <div className="w-full mb-2">
+          <SearchBar 
+            value={searchText}
+            onChange={handleSearchChange}
+            onSubmit={handleSearch}
+          />
         </div>
-
-        {/* Ayat selector */}
-        {selectedSurah && (
-          <div>
-            <label htmlFor="ayat-select-mobile" className="block text-sm font-medium text-gray-700 mb-1">
-              Ayat
-            </label>
+        
+        {/* Surah and Ayat selectors in the same row */}
+        <div className="flex items-center mb-2">
+          <div className="w-3/4 pr-1">
             <select
-              id="ayat-select-mobile"
-              value={selectedAyat}
-              onChange={handleAyatChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm"
+              value={selectedSurah}
+              onChange={handleSurahChange}
+              className="block w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
+              aria-label="Select Surah"
             >
-              <option value="">Semua Ayat</option>
-              {ayatOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  Ayat {option.label}
+              <option value="">Pilih Surat</option>
+              {surahList.map(surah => (
+                <option key={surah.no_surat} value={surah.no_surat}>
+                  {surah.no_surat}. {surah.nm_surat}
                 </option>
               ))}
             </select>
           </div>
-        )}
-
-        {/* Juz selector */}
-        <div>
-          <label htmlFor="juz-select-mobile" className="block text-sm font-medium text-gray-700 mb-1">
-            Juz
-          </label>
-          <select
-            id="juz-select-mobile"
-            value={currentJuz}
-            onChange={handleJuzChange}
-            className="w-full p-2 border border-gray-300 rounded-md text-sm"
-          >
-            <option value="">Pilih Juz</option>
-            {Array.from({ length: 30 }, (_, i) => i + 1).map((juz) => (
-              <option key={juz} value={juz}>
-                Juz {juz}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Page selector */}
-        <div>
-          <label htmlFor="page-select-mobile" className="block text-sm font-medium text-gray-700 mb-1">
-            Halaman
-          </label>
-          <select
-            id="page-select-mobile"
-            value={currentHal}
-            onChange={handlePageChange}
-            className="w-full p-2 border border-gray-300 rounded-md text-sm"
-          >
-            <option value="">Pilih Halaman</option>
-            {Array.from({ length: 604 }, (_, i) => i + 1).map((page) => (
-              <option key={page} value={page}>
-                Halaman {page}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Search */}
-        <div>
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              type="text"
-              value={searchText}
-              onChange={handleSearchChange}
-              placeholder="Cari dalam Al-Quran..."
-              className="flex-1 p-2 border border-gray-300 rounded-md text-sm"
-            />
-            <button
-              type="submit"
-              className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium"
+          
+          <div className="w-1/4 pl-1">
+            <select
+              value={selectedAyat}
+              onChange={handleAyatChange}
+              disabled={!selectedSurah}
+              className="block w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-2 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500 disabled:bg-gray-200 disabled:text-gray-500"
+              aria-label="Select Ayat"
             >
-              Cari
-            </button>
-          </form>
+              <option value="">Ayat</option>
+              {ayatOptions.map(ayat => (
+                <option key={ayat.value} value={ayat.value}>
+                  {ayat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        {/* Halaman and Juz selectors in one row */}
+        <div className="flex items-center mb-1">
+          <div className="w-1/2 pr-1">
+            <select
+              value={currentHal}
+              onChange={handlePageChange}
+              className="block w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
+              aria-label="Select Page"
+            >
+              <option value="">Halaman</option>
+              {Array.from({ length: 604 }, (_, i) => (
+                <option key={i+1} value={i+1}>{i+1}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="w-1/2 pl-1">
+            <select
+              value={currentJuz}
+              onChange={handleJuzChange}
+              className="block w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
+              aria-label="Select Juz"
+            >
+              <option value="">Juz</option>
+              {Array.from({ length: 30 }, (_, i) => (
+                <option key={i+1} value={i+1}>{i+1}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>
