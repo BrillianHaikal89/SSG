@@ -1,26 +1,11 @@
 /* Quran Styling */
 
 
-/* Load Mushaf Quran / LPMQ IsepMisbah font */
-
-@font-face {
-    font-family: 'Mushaf Quran';
-    src: url('https://cdn.rawgit.com/mustafa0x/quran-fonts/master/fonts/mushaf/mushaf-regular.woff2') format('woff2'), url('https://cdn.rawgit.com/mustafa0x/quran-fonts/master/fonts/mushaf/mushaf-regular.woff') format('woff');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'LPMQ IsepMisbah';
-    src: url('https://www.almuhannad.net/fonts/LPMQ/lpmq.eot');
-    src: url('https://www.almuhannad.net/fonts/LPMQ/lpmq.eot?#iefix') format('embedded-opentype'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff2') format('woff2'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff') format('woff'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.ttf') format('truetype');
-    font-display: swap;
-}
-
-
 /* Arabic text styles */
 
 .arab {
-    font-family: 'LPMQ IsepMisbah', 'Mushaf Quran', serif;
+    font-family: inherit;
+    /* Menggunakan font yang sudah ditentukan di database */
     line-height: 2;
     letter-spacing: 0;
     margin-bottom: 0.75rem;
