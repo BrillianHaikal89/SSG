@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
@@ -6,42 +6,81 @@ const AyatItem = ({
   ayat, 
   selectedSurah, 
   fontSizeClass = 'medium',
-  showTranslation = true 
+  showTranslation = true,
+  isPlayingSurah,
+  currentPlayingAyat,
+  onPlaySurah,
+  onStopSurah,
+  surahAudioQueue,
+  isLastAyat
 }) => {
   const [bookmark, setBookmark] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const { user } = useAuthStore();
+  const audioRef = useRef(null);
+
+  // Handle play/stop when currentPlayingAyat changes
+  useEffect(() => {
+    if (isPlayingSurah && currentPlayingAyat === ayat.no_ayat) {
+      playAudio();
+    } else if (isPlaying && currentPlayingAyat !== ayat.no_ayat) {
+      stopAudio();
+    }
+  }, [currentPlayingAyat, isPlayingSurah]);
 
   // Clean up audio when component unmounts
   useEffect(() => {
     return () => {
-      if (audio) {
-        audio.pause();
-        audio.removeEventListener('ended', handleAudioEnd);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener('ended', handleAudioEnd);
+        audioRef.current.removeEventListener('error', handleAudioError);
       }
     };
-  }, [audio]);
+  }, []);
 
   const handleAudioEnd = () => {
     setIsPlaying(false);
     setIsLoadingAudio(false);
+    
+    // Move to next ayat in surah if playing full surah
+    if (isPlayingSurah && currentPlayingAyat === ayat.no_ayat) {
+      const currentIndex = surahAudioQueue.findIndex(a => a.no_ayat === ayat.no_ayat);
+      if (currentIndex < surahAudioQueue.length - 1) {
+        onPlaySurah(surahAudioQueue[currentIndex + 1].no_ayat);
+      } else {
+        onStopSurah();
+        toast.success('Pemutaran surah selesai');
+      }
+    }
+  };
+
+  const handleAudioError = (error) => {
+    console.error('Audio error:', error);
+    setIsLoadingAudio(false);
+    setIsPlaying(false);
+    toast.error('Gagal memutar audio');
   };
 
   const toggleAudio = () => {
     if (isLoadingAudio) return;
     
-    if (audio) {
-      if (isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
-        setIsLoadingAudio(false);
-      } else {
-        playAudio();
+    if (isPlaying) {
+      stopAudio();
+      if (isPlayingSurah) {
+        onStopSurah();
       }
     } else {
       playAudio();
+    }
+  };
+
+  const togglePlaySurah = () => {
+    if (isPlayingSurah && currentPlayingAyat === ayat.no_ayat) {
+      onStopSurah();
+    } else {
+      onPlaySurah(ayat.no_ayat);
     }
   };
 
@@ -49,9 +88,10 @@ const AyatItem = ({
     setIsLoadingAudio(true);
     
     // Stop any currently playing audio
-    if (audio) {
-      audio.pause();
-      audio.removeEventListener('ended', handleAudioEnd);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeEventListener('ended', handleAudioEnd);
+      audioRef.current.removeEventListener('error', handleAudioError);
     }
 
     // Format surah and ayah numbers with leading zeros
@@ -67,79 +107,75 @@ const AyatItem = ({
     ];
 
     let currentSourceIndex = 0;
-    let audioError = null;
+    let lastAudioError = null;
 
     const tryNextSource = () => {
       if (currentSourceIndex >= audioSources.length) {
         // All sources failed
-        console.error('All audio sources failed:', audioError);
+        console.error('All audio sources failed:', lastAudioError);
         toast.error('Tidak dapat memutar audio saat ini');
         setIsLoadingAudio(false);
         return;
       }
 
-      const newAudio = new Audio(audioSources[currentSourceIndex]);
+      audioRef.current = new Audio(audioSources[currentSourceIndex]);
       
-      // Remove previous event listeners if any
-      newAudio.removeEventListener('error', handleAudioError);
-      newAudio.removeEventListener('canplaythrough', handleCanPlay);
-      
-      newAudio.addEventListener('error', handleAudioError);
-      newAudio.addEventListener('canplaythrough', handleCanPlay);
-      newAudio.addEventListener('ended', handleAudioEnd);
+      // Set up event listeners
+      audioRef.current.addEventListener('error', (e) => {
+        lastAudioError = e;
+        currentSourceIndex++;
+        tryNextSource();
+      });
 
-      // Start loading the audio
-      newAudio.load();
-      
-      function handleCanPlay() {
-        newAudio.play()
+      audioRef.current.addEventListener('canplaythrough', () => {
+        audioRef.current.play()
           .then(() => {
-            setAudio(newAudio);
             setIsPlaying(true);
             setIsLoadingAudio(false);
           })
           .catch(error => {
-            audioError = error;
+            lastAudioError = error;
             currentSourceIndex++;
             tryNextSource();
           });
-      }
+      }, { once: true });
 
-      function handleAudioError(e) {
-        audioError = e;
-        currentSourceIndex++;
-        tryNextSource();
-      }
+      audioRef.current.addEventListener('ended', handleAudioEnd, { once: true });
+      audioRef.current.addEventListener('error', handleAudioError, { once: true });
+
+      // Start loading the audio
+      audioRef.current.load();
     };
 
     // Start trying sources
     tryNextSource();
   };
 
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setIsLoadingAudio(false);
+  };
+
   // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
-      case 'small':
-        return 'text-xl';
-      case 'medium':
-        return 'text-2xl';
-      case 'large':
-        return 'text-3xl';
-      default:
-        return 'text-2xl';
+      case 'small': return 'text-xl';
+      case 'medium': return 'text-2xl';
+      case 'large': return 'text-3xl';
+      default: return 'text-2xl';
     }
   };
 
   const getTranslationFontSizeClass = (size) => {
     switch (size) {
-      case 'small':
-        return 'text-xs';
-      case 'medium':
-        return 'text-sm';
-      case 'large':
-        return 'text-base';
-      default:
-        return 'text-sm';
+      case 'small': return 'text-xs';
+      case 'medium': return 'text-sm';
+      case 'large': return 'text-base';
+      default: return 'text-sm';
     }
   };
 
@@ -174,7 +210,6 @@ const AyatItem = ({
 
     const processedMap = new Map();
     let decoratedText = arabicText;
-    let hasMatches = false;
     
     tajwidRules.forEach(({ regex, rule, color }) => {
       decoratedText = decoratedText.replace(regex, (match) => {
@@ -182,7 +217,6 @@ const AyatItem = ({
           return processedMap.get(match + rule);
         }
         
-        hasMatches = true;
         const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
         processedMap.set(match + rule, span);
         return span;
@@ -256,9 +290,16 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item bg-white rounded-lg p-4 shadow-sm mb-4">
+    <div 
+      className={`ayat-item bg-white rounded-lg p-4 shadow-sm mb-4 transition-all ${
+        isPlayingSurah && currentPlayingAyat === ayat.no_ayat 
+          ? 'border-2 border-green-500 bg-green-50' 
+          : 'border border-gray-200'
+      }`}
+      id={`ayat-${ayat.no_ayat}`}
+    >
       <div className="flex items-start">
-        <span className="ayat-number bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 text-sm">
+        <span className="ayat-number bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 text-sm font-medium">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -269,7 +310,7 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)} leading-loose mb-3`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)} leading-loose mb-3 text-right font-arabic`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
@@ -280,7 +321,7 @@ const AyatItem = ({
             </p>
           )}
           
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex gap-2 flex-wrap">
             <button 
               onClick={toggleAudio}
               disabled={isLoadingAudio}
@@ -312,6 +353,33 @@ const AyatItem = ({
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
                   <span>Dengarkan</span>
+                </>
+              )}
+            </button>
+            
+            <button 
+              onClick={togglePlaySurah}
+              disabled={isLoadingAudio}
+              className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isPlayingSurah && currentPlayingAyat === ayat.no_ayat
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                  : 'bg-purple-500 hover:bg-purple-600 text-white'
+              }`}
+            >
+              {isPlayingSurah && currentPlayingAyat === ayat.no_ayat ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>Hentikan Surah</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3.75a.75.75 0 00-1.264-.546L4.703 7H3.167a.75.75 0 00-.7.48A6.985 6.985 0 002 10c0 .887.165 1.737.468 2.52.111.29.39.48.7.48h1.535l4.033 3.796A.75.75 0 0010 16.25V3.75zM15.95 5.05a.75.75 0 00-1.06 1.061 5.5 5.5 0 010 7.778.75.75 0 001.06 1.06 7 7 0 000-9.899z" />
+                    <path d="M13.829 7.172a.75.75 0 00-1.061 1.06 2.5 2.5 0 010 3.536.75.75 0 001.06 1.06 4 4 0 000-5.656z" />
+                  </svg>
+                  <span>Putar Surah</span>
                 </>
               )}
             </button>
