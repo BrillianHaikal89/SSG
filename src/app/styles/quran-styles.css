@@ -1,29 +1,52 @@
+/* Arabic font - Mushaf Quran/Uthmani */
+
+@font-face {
+    font-family: 'Uthmanic Hafs';
+    src: url('fonts/UthmanicHafs.woff2') format('woff2'), url('fonts/UthmanicHafs.woff') format('woff');
+    font-display: swap;
+}
+
+
+/* Fallback to Amiri Quran if Uthmanic not available */
+
+@font-face {
+    font-family: 'Amiri Quran';
+    src: url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
+    font-display: swap;
+}
+
+
 /* Quran Styling */
 
 
 /* Arabic text styles */
 
 .arab {
-    font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif;
+    font-family: 'Uthmanic Hafs', 'Amiri Quran', 'Scheherazade New', 'Traditional Arabic', serif;
     line-height: 2;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     margin-bottom: 0.75rem;
     text-align: right;
+    word-spacing: -2px;
+    font-weight: normal;
+    direction: rtl;
 }
 
 
 /* Font sizes for Arabic text */
 
 .arab.text-xl {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 
 .arab.text-2xl {
-    font-size: 2rem;
+    font-size: 2.2rem;
+    line-height: 2.2;
 }
 
 .arab.text-3xl {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
+    line-height: 2.5;
 }
 
 
@@ -35,6 +58,8 @@
     margin-top: 0.75rem;
     margin-bottom: 1rem;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    direction: ltr;
+    text-align: left;
 }
 
 
@@ -73,6 +98,7 @@
     margin-top: 0.25rem;
     flex-shrink: 0;
     border: 1px solid #e2e8f0;
+    font-family: system-ui, sans-serif;
 }
 
 
@@ -81,6 +107,7 @@
 .ayat-item {
     padding: 1rem;
     border-bottom: 1px solid #e2e8f0;
+    display: flex;
 }
 
 .ayat-item:last-child {
@@ -89,6 +116,13 @@
 
 .ayat-item:hover {
     background-color: #f7fafc;
+}
+
+
+/* Arabic text container */
+
+.arabic-text-container {
+    flex-grow: 1;
 }
 
 
@@ -263,13 +297,13 @@
 
 @media (max-width: 640px) {
     .arab.text-xl {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
     }
     .arab.text-2xl {
-        font-size: 1.75rem;
+        font-size: 1.8rem;
     }
     .arab.text-3xl {
-        font-size: 2.25rem;
+        font-size: 2.2rem;
     }
     .ayat-item {
         padding: 0.75rem;
@@ -280,41 +314,4 @@
         font-size: 0.75rem;
         margin-right: 0.5rem;
     }
-}
-
-
-/* Arabic text styles */
-
-.arab {
-    font-family: 'Amiri Quran', 'Traditional Arabic', 'Scheherazade New', serif;
-    line-height: 2;
-    letter-spacing: 0;
-    margin-bottom: 0.75rem;
-    text-align: right;
-    font-weight: normal;
-    word-spacing: -2px;
-}
-
-
-/* Font sizes for Arabic text */
-
-.arab.text-xl {
-    font-size: 1.8rem;
-}
-
-.arab.text-2xl {
-    font-size: 2.2rem;
-}
-
-.arab.text-3xl {
-    font-size: 2.8rem;
-}
-
-
-/* Arabic font */
-
-@font-face {
-    font-family: 'Uthmanic';
-    src: url('https://fonts.arabicfonts.com/download/uthmanic-hafs.woff2') format('woff2');
-    font-display: swap;
 }
