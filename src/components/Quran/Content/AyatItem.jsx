@@ -11,16 +11,30 @@ const AyatItem = ({
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
 
-  const getArabicFontSizeClass = () => {
-    return `quran-arabic ${fontSizeClass}`;
+  // Get appropriate CSS classes based on font size
+  const getArabicFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xl';
+      case 'medium':
+        return 'text-2xl';
+      case 'large':
+        return 'text-3xl';
+      default:
+        return 'text-2xl';
+    }
   };
 
-  const getTranslationFontSizeClass = () => {
-    switch (fontSizeClass) {
-      case 'small': return 'text-xs';
-      case 'medium': return 'text-sm';
-      case 'large': return 'text-base';
-      default: return 'text-sm';
+  const getTranslationFontSizeClass = (size) => {
+    switch (size) {
+      case 'small':
+        return 'text-xs';
+      case 'medium':
+        return 'text-sm';
+      case 'large':
+        return 'text-base';
+      default:
+        return 'text-sm';
     }
   };
 
@@ -53,13 +67,48 @@ const AyatItem = ({
       { regex: /ۜ|ۛ|ۚ|ۖ|ۗ|ۙ|ۘ/g, rule: 'waqf', color: '#795548' },
     ];
 
+    const processedMap = new Map();
     let decoratedText = arabicText;
+    let hasMatches = false;
+    
     tajwidRules.forEach(({ regex, rule, color }) => {
-      decoratedText = decoratedText.replace(regex, match => 
-        `<span class="tajwid-${rule}" style="color:${color}" title="${rule.replace('-', ' ')}">${match}</span>`
-      );
+      decoratedText = decoratedText.replace(regex, (match) => {
+        if (processedMap.has(match + rule)) {
+          return processedMap.get(match + rule);
+        }
+        
+        hasMatches = true;
+        const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
+        processedMap.set(match + rule, span);
+        return span;
+      });
     });
+
     return decoratedText;
+  };
+
+  const getTajwidRuleName = (rule) => {
+    const ruleNames = {
+      'izhar': 'Izhar',
+      'idgham': 'Idgham',
+      'iqlab': 'Iqlab',
+      'ikhfa': 'Ikhfa',
+      'idgham-syafawi': 'Idgham Syafawi',
+      'ikhfa-syafawi': 'Ikhfa Syafawi',
+      'izhar-syafawi': 'Izhar Syafawi',
+      'mad-thabii': 'Mad Thabii',
+      'mad-lazim': 'Mad Lazim',
+      'mad-arid': 'Mad Arid',
+      'mad-lin': 'Mad Lin',
+      'qalqalah': 'Qalqalah',
+      'lafadz-allah': 'Lafadz Allah',
+      'tashdid': 'Tashdid',
+      'ghunnah': 'Ghunnah',
+      'sukun': 'Sukun',
+      'tanwin': 'Tanwin',
+      'waqf': 'Tanda Waqaf'
+    };
+    return ruleNames[rule] || rule.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const saveBookmark = async () => {
@@ -67,13 +116,15 @@ const AyatItem = ({
       toast.error('Anda harus login terlebih dahulu');
       return;
     }
-    
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quran/bookmark`, {
+      const response = await fetch(`${API_URL}/quran/bookmark`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          user_id: user.userId,
+          user_id: user?.userId,
           surah: selectedSurah || ayat.surah_name,
           ayah: ayat.no_ayat,
           page: ayat.no_hal,
@@ -81,8 +132,10 @@ const AyatItem = ({
         })
       });
 
-      if (!response.ok) throw new Error('Gagal menyimpan bookmark');
-      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const data = await response.json();
       toast.success(data.message || 'Bookmark berhasil disimpan');
       setBookmark({
@@ -98,7 +151,7 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item mb-8">
+    <div className="ayat-item">
       <div className="flex items-start">
         <span className="ayat-number">
           {ayat.no_ayat}
@@ -111,20 +164,21 @@ const AyatItem = ({
           )}
           
           <div 
-            className={getArabicFontSizeClass()}
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
+            dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
           {ayat.tafsir && showTranslation && (
-            <p className={`translation mt-3 ${getTranslationFontSizeClass()} text-gray-700`}>
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
               {ayat.tafsir}
             </p>
           )}
           
-          <div className="mt-3">
+          <div className="mt-2">
             <button 
               onClick={saveBookmark}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
             >
               {bookmark ? (
                 <>
