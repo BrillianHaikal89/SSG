@@ -50,9 +50,9 @@ const AyatItem = ({
       audio.removeEventListener('ended', handleAudioEnd);
     }
 
-    // Create new audio instance
+    // Create new audio instance with Mishary Rasyid Al-Afasy audio
     const newAudio = new Audio(
-      `https://verses.quran.com/AbdulBaset/Mujawwad/mp3/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
+      `https://server8.mp3quran.net/afs/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
     );
     
     newAudio.addEventListener('ended', handleAudioEnd);
