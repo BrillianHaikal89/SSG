@@ -1,19 +1,15 @@
 /* Quran Styling */
 
 
-/* Load LPMQ IsepMisbah font */
-
-@font-face {
-    font-family: 'LPMQ IsepMisbah';
-    src: url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff2') format('woff2'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff') format('woff');
-    font-display: swap;
-}
-
-
-/* Arabic text styles */
+/* Arabic text styles - optimized for cross-platform compatibility */
 
 .arab {
-    font-family: 'LPMQ IsepMisbah', 'Traditional Arabic', 'Scheherazade New', 'Amiri', serif;
+    font-family: 'Kitab', /* Available on some Arabic systems */
+    'Scheherazade', /* Pre-installed on many devices */
+    'Amiri Quran', /* Google Font alternative */
+    'Traditional Arabic', /* Common on Windows */
+    'Arial Unicode MS', /* Fallback for older systems */
+    sans-serif;
     line-height: 2;
     letter-spacing: 0;
     margin-bottom: 0.75rem;
@@ -45,7 +41,8 @@
     line-height: 1.6;
     margin-top: 0.75rem;
     margin-bottom: 1rem;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, /* Optimized for Apple devices */
+    BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 
