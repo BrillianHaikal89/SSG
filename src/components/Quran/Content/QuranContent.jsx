@@ -22,6 +22,12 @@ const QuranContent = ({
   showTranslation,
   setShowTranslation
 }) => {
+  // Function to remove footnotes from translation
+  const cleanTranslation = (text) => {
+    if (!text) return text;
+    return text.replace(/<sup>\[\d+]<\/sup>/g, '');
+  };
+
   if (error) {
     return (
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
@@ -35,7 +41,6 @@ const QuranContent = ({
   }
   
   if (quranContent && quranContent.length > 0) {
-    // Check if we're at the end of content and get the next content item
     const showNextButton = isAtEndOfContent();
     const nextContent = showNextButton ? getNextContent() : null;
     
@@ -47,14 +52,14 @@ const QuranContent = ({
             {surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
-            <p className="text-md text-gray-700 mb-2">{surahDetails.arti_surat}</p>
+            <p className="text-md text-gray-700 mb-2">{cleanTranslation(surahDetails.arti_surat)}</p>
           )}
           <p className="text-sm text-gray-600">
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
           </p>
         </div>
         
-        {/* Font size controls - simplified */}
+        {/* Font size controls */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
@@ -126,7 +131,10 @@ const QuranContent = ({
           {quranContent.map((ayat) => (
             <AyatItem 
               key={`${ayat.no_surat}-${ayat.no_ayat}`} 
-              ayat={ayat}
+              ayat={{
+                ...ayat,
+                tafsir: cleanTranslation(ayat.tafsir)
+              }}
               selectedSurah={selectedSurah}
               fontSizeClass={fontSizeClass}
               showTranslation={showTranslation}
