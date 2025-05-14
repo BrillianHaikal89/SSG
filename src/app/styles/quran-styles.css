@@ -329,58 +329,57 @@
 }
 
 
-/* ===== BACKGROUND HIJAU UNTUK ARAB + TERJEMAHAN ===== */
+/* Reset default margin/padding */
 
-body {
-    background-color: #f8f9fa;
-    /* Warna netral untuk body */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
 
-/* Container utama */
-
-.quran-container {
-    background-color: #e8f5e9;
-    /* Hijau muda untuk seluruh konten */
-    min-height: 100vh;
-    padding: 20px;
-    margin-top: 0;
-    /* Pastikan tidak ada gap dengan header */
-}
-
-
-/* Header tetap putih */
+/* Header putih */
 
 .control-panel {
-    background-color: white;
-    padding: 15px;
+    background: white;
+    padding: 1rem;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Container utama untuk konten hijau */
+
+.quran-content {
+    background: #e8f5e9;
+    /* Warna hijau */
+    min-height: calc(100vh - 60px);
+    /* Fullscreen minus header */
+    padding: 2rem;
 }
 
 
 /* Teks Arab */
 
 .arab {
-    background-color: transparent;
-    /* Mengikuti warna container */
-    padding: 10px 0;
+    font-family: 'Amiri Quran', serif;
+    font-size: 1.8rem;
+    text-align: right;
+    padding: 0.5rem 0;
 }
 
 
 /* Terjemahan */
 
 .translation {
-    background-color: transparent;
-    /* Mengikuti warna container */
-    padding: 10px 0;
+    padding: 1rem 0;
     border-top: 1px solid #c8e6c9;
-    /* Garis pemisah hijau */
+    /* Garis pemisah */
 }
 
 
 /* Ayat container */
 
 .ayat-item {
-    background-color: transparent;
-    margin-bottom: 15px;
+    margin-bottom: 1.5rem;
 }
