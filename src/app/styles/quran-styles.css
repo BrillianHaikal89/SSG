@@ -4,9 +4,9 @@
 /* Arabic text styles */
 
 .arab {
-    font-family: 'Mushaf Quran', 'Traditional Arabic', serif;
+    font-family: 'LPMQ IsepMisbah', 'Mushaf Quran';
     line-height: 2;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     margin-bottom: 0.75rem;
     text-align: right;
     font-weight: normal;
@@ -17,15 +17,15 @@
 /* Font sizes for Arabic text */
 
 .arab.text-xl {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
 }
 
 .arab.text-2xl {
-    font-size: 2.2rem;
+    font-size: 2rem;
 }
 
 .arab.text-3xl {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
 }
 
 
@@ -265,13 +265,13 @@
 
 @media (max-width: 640px) {
     .arab.text-xl {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
     .arab.text-2xl {
-        font-size: 1.9rem;
+        font-size: 1.75rem;
     }
     .arab.text-3xl {
-        font-size: 2.3rem;
+        font-size: 2.25rem;
     }
     .ayat-item {
         padding: 0.75rem;
@@ -282,4 +282,19 @@
         font-size: 0.75rem;
         margin-right: 0.5rem;
     }
+}
+
+
+/* Arabic font import */
+
+@font-face {
+    font-family: 'LPMQ IsepMisbah';
+    src: url('path-to-lpmq-isepmisbah.woff2') format('woff2'), url('path-to-lpmq-isepmisbah.woff') format('woff');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Mushaf Quran';
+    src: url('path-to-mushaf-quran.woff2') format('woff2'), url('path-to-mushaf-quran.woff') format('woff');
+    font-display: swap;
 }
