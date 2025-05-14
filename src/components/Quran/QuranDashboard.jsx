@@ -16,7 +16,7 @@ const QuranDashboard = () => {
   const [fontSizeClass, setFontSizeClass] = useState('medium');
   const [showTranslation, setShowTranslation] = useState(true);
   const [currentAudio, setCurrentAudio] = useState(null);
-  const [reciter, setReciter] = useState('AbdulBaset'); // Default reciter
+  const [reciter, setReciter] = useState('AbdulBaset');
   const { user } = useAuthStore();
   
   const {
@@ -32,7 +32,6 @@ const QuranDashboard = () => {
     currentJuz,
     showScrollTop,
     
-    // Methods
     fetchAyat,
     generateAyatOptions,
     handleSurahChange,
@@ -44,7 +43,6 @@ const QuranDashboard = () => {
     scrollToTop,
     setShowScrollTop,
     
-    // Continue functionality
     isAtEndOfContent,
     getNextContent,
     handleContinueToNext
@@ -58,7 +56,6 @@ const QuranDashboard = () => {
     };
     
     checkIsMobile();
-    
     window.addEventListener('resize', checkIsMobile);
     
     const handleScroll = () => {
@@ -118,11 +115,9 @@ const QuranDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-blue-50 font-amiri">
-      {/* Header */}
+    <div className="flex flex-col min-h-screen bg-blue-50">
       <Header />
 
-      {/* Mobile Controls */}
       <MobileControls 
         selectedSurah={selectedSurah}
         handleSurahChange={handleSurahChange}
@@ -139,7 +134,6 @@ const QuranDashboard = () => {
         handleSearch={handleSearch}
       />
 
-      {/* Desktop Controls */}
       <DesktopControls 
         selectedSurah={selectedSurah}
         handleSurahChange={handleSurahChange}
@@ -156,10 +150,8 @@ const QuranDashboard = () => {
         handleSearch={handleSearch}
       />
 
-      {/* Information Bar */}
       <InfoBar />
 
-      {/* Main Content */}
       <div className="flex-grow container mx-auto px-3 py-4">
         <QuranContent 
           loading={loading}
@@ -184,7 +176,6 @@ const QuranDashboard = () => {
         />
       </div>
 
-      {/* Scroll to Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}

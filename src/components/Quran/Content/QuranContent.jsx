@@ -27,35 +27,56 @@ const QuranContent = ({
   currentAudio
 }) => {
   const [currentPlayingAyat, setCurrentPlayingAyat] = useState(null);
-  const [playbackQueue, setPlaybackQueue] = useState([]);
-  const [isPlayingSurah, setIsPlayingSurah] = useState(false);
 
-  // Function to remove footnotes from translation
+  // Reciter options with working audio sources
+  const reciters = [
+    { 
+      id: 'AbdulBaset', 
+      name: 'Abdul Basit (Mujawwad)',
+      baseUrl: 'https://download.quranicaudio.com/quran/abdul_baset_mujawwad/'
+    },
+    { 
+      id: 'Husary', 
+      name: 'Mahmoud Khalil Al-Husary',
+      baseUrl: 'https://download.quranicaudio.com/quran/husary_mujawwad/'
+    },
+    { 
+      id: 'Minshawi', 
+      name: 'Mohamed Siddiq El-Minshawi',
+      baseUrl: 'https://download.quranicaudio.com/quran/minshawi_mujawwad/'
+    },
+    { 
+      id: 'Alafasy', 
+      name: 'Mishary Rashid Alafasy',
+      baseUrl: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/'
+    },
+    { 
+      id: 'Hudhaify', 
+      name: 'Ali Abdur-Rahman al-Huthaify',
+      baseUrl: 'https://download.quranicaudio.com/quran/hudhaify_64kbps/'
+    }
+  ];
+
   const cleanTranslation = (text) => {
     if (!text) return text;
     return text.replace(/<sup>\[\d+]<\/sup>/g, '');
   };
 
-  // Reciter options
-  const reciters = [
-    { id: 'AbdulBaset', name: 'Abdul Basit (Mujawwad)' },
-    { id: 'Husary', name: 'Mahmoud Khalil Al-Husary' },
-    { id: 'Minshawi', name: 'Mohamed Siddiq El-Minshawi' },
-    { id: 'Alafasy', name: 'Mishary Rashid Alafasy' },
-    { id: 'Hudhaify', name: 'Ali Abdur-Rahman al-Huthaify' }
-  ];
-
   const playAyat = (ayat) => {
     stopAudio();
     setCurrentPlayingAyat(ayat);
     
-    const audio = new Audio(
-      `https://verses.quran.com/${reciter}/Mujawwad/mp3/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
-    );
+    const selectedReciter = reciters.find(r => r.id === reciter);
+    if (!selectedReciter) return;
+    
+    const surahNumber = String(ayat.no_surat).padStart(3, '0');
+    const ayatNumber = String(ayat.no_ayat).padStart(3, '0');
+    const audioUrl = `${selectedReciter.baseUrl}${surahNumber}${ayatNumber}.mp3`;
+    
+    const audio = new Audio(audioUrl);
     
     audio.addEventListener('ended', () => {
       setCurrentPlayingAyat(null);
-      playNextInQueue();
     });
     
     audio.play()
@@ -67,28 +88,6 @@ const QuranContent = ({
       });
   };
 
-  const playSurah = () => {
-    if (!quranContent || quranContent.length === 0) return;
-    
-    setIsPlayingSurah(true);
-    setPlaybackQueue(quranContent);
-    playAyat(quranContent[0]);
-  };
-
-  const playNextInQueue = () => {
-    if (playbackQueue.length > 0) {
-      const nextQueue = [...playbackQueue];
-      nextQueue.shift(); // Remove the first item
-      setPlaybackQueue(nextQueue);
-      
-      if (nextQueue.length > 0) {
-        playAyat(nextQueue[0]);
-      } else {
-        setIsPlayingSurah(false);
-      }
-    }
-  };
-
   const stopAudio = () => {
     if (currentAudio) {
       currentAudio.pause();
@@ -97,8 +96,6 @@ const QuranContent = ({
       setCurrentAudio(null);
     }
     setCurrentPlayingAyat(null);
-    setPlaybackQueue([]);
-    setIsPlayingSurah(false);
   };
 
   useEffect(() => {
@@ -125,7 +122,6 @@ const QuranContent = ({
     
     return (
       <div className="bg-white rounded-lg shadow-md p-4">
-        {/* Surah header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold mb-2">
             {surahDetails?.nm_surat || ''}
@@ -138,7 +134,6 @@ const QuranContent = ({
           </p>
         </div>
         
-        {/* Audio controls */}
         <div className="mb-6 p-4 bg-blue-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Audio:</h3>
           
@@ -155,31 +150,9 @@ const QuranContent = ({
                 ))}
               </select>
             </div>
-            
-            <button
-              onClick={isPlayingSurah ? stopAudio : playSurah}
-              className={`px-4 py-2 rounded-md text-white text-sm ${isPlayingSurah ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-            >
-              {isPlayingSurah ? (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  Hentikan Surah
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  Putar Seluruh Surah
-                </>
-              )}
-            </button>
           </div>
         </div>
         
-        {/* Font size controls */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
@@ -243,10 +216,8 @@ const QuranContent = ({
           <p className="text-xs text-gray-500">Pengaturan ini akan berlaku untuk semua ayat. Perubahan akan disimpan untuk kunjungan berikutnya.</p>
         </div>
         
-        {/* Tajwid guide */}
         <TajwidGuide />
         
-        {/* Ayat list with Tajwid highlighting */}
         <div className="space-y-6">
           {quranContent.map((ayat) => (
             <AyatItem 
@@ -258,7 +229,6 @@ const QuranContent = ({
               selectedSurah={selectedSurah}
               fontSizeClass={fontSizeClass}
               showTranslation={showTranslation}
-              reciter={reciter}
               isPlaying={currentPlayingAyat?.no_ayat === ayat.no_ayat}
               isCurrentPlaying={currentPlayingAyat?.no_ayat === ayat.no_ayat}
               onPlay={playAyat}
@@ -267,7 +237,6 @@ const QuranContent = ({
           ))}
         </div>
         
-        {/* Next Content Button */}
         {showNextButton && nextContent && (
           <NextContentButton
             currentType={nextContent.type}

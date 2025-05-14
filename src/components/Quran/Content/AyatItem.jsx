@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
@@ -7,11 +7,10 @@ const AyatItem = ({
   selectedSurah, 
   fontSizeClass = 'medium',
   showTranslation = true,
-  reciter = 'AbdulBaset',
   isPlaying,
+  isCurrentPlaying,
   onPlay,
-  onStop,
-  isCurrentPlaying
+  onStop
 }) => {
   const [bookmark, setBookmark] = useState(null);
   const { user } = useAuthStore();
@@ -24,7 +23,6 @@ const AyatItem = ({
     }
   };
 
-  // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
@@ -53,24 +51,17 @@ const AyatItem = ({
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
-      // Nun Sukun & Tanwin Rules
       { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
       { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
       { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
       { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
-      
-      // Mim Sukun Rules
       { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
       { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
       { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
-      
-      // Mad Rules
       { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
       { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
       { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
       { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
-      
-      // Other Rules
       { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
       { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
       { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
@@ -82,7 +73,6 @@ const AyatItem = ({
 
     const processedMap = new Map();
     let decoratedText = arabicText;
-    let hasMatches = false;
     
     tajwidRules.forEach(({ regex, rule, color }) => {
       decoratedText = decoratedText.replace(regex, (match) => {
@@ -90,7 +80,6 @@ const AyatItem = ({
           return processedMap.get(match + rule);
         }
         
-        hasMatches = true;
         const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
         processedMap.set(match + rule, span);
         return span;
