@@ -1,3 +1,4 @@
+// hooks/useQuran.js
 import { useState, useEffect } from 'react';
 import { quranApi } from '../services/ApiQuran';
 
@@ -9,7 +10,7 @@ const useQuran = () => {
     const [quranContent, setQuranContent] = useState([]);
     const [surahDetails, setSurahDetails] = useState(null);
 
-    // UI states - initially set as empty strings to show placeholder text
+    // UI states
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchText, setSearchText] = useState("");
@@ -32,7 +33,7 @@ const useQuran = () => {
             setSurahList(data);
         } catch (error) {
             console.error(error);
-            setError('Failed to fetch surah list');
+            setError('Gagal memuat daftar surah');
         } finally {
             setLoading(false);
         }
@@ -49,12 +50,12 @@ const useQuran = () => {
 
             // Update juz and page information
             if (data.ayahs && data.ayahs.length > 0) {
-                setCurrentJuz(data.ayahs[0].no_juz ? data.ayahs[0].no_juz.toString() : "");
-                setCurrentHal(data.ayahs[0].no_hal ? data.ayahs[0].no_hal.toString() : "");
+                setCurrentJuz(data.ayahs[0].juz ? data.ayahs[0].juz.toString() : "");
+                setCurrentHal(data.ayahs[0].page ? data.ayahs[0].page.toString() : "");
             }
         } catch (error) {
             console.error(error);
-            setError('Failed to fetch surah details');
+            setError('Gagal memuat detail surah');
         } finally {
             setLoading(false);
         }
@@ -69,19 +70,20 @@ const useQuran = () => {
             const data = await quranApi.getAyat(surahId, ayatId);
 
             // Format the data for display
-            setQuranContent(data);
+            const formattedData = Array.isArray(data) ? data : [data];
+            setQuranContent(formattedData);
 
             // Update juz and page if data is available
-            if (data && data.length > 0) {
-                setCurrentJuz(data[0].no_juz ? data[0].no_juz.toString() : "");
-                setCurrentHal(data[0].no_hal ? data[0].no_hal.toString() : "");
+            if (formattedData && formattedData.length > 0) {
+                setCurrentJuz(formattedData[0].juz ? formattedData[0].juz.toString() : "");
+                setCurrentHal(formattedData[0].page ? formattedData[0].page.toString() : "");
             }
 
             // Scroll to top after loading new content
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
-            setError('Failed to fetch Quranic verses');
+            setError('Gagal memuat ayat Quran');
         } finally {
             setLoading(false);
         }
@@ -105,7 +107,7 @@ const useQuran = () => {
 
             // Update juz if first ayah has juz information
             if (data && data.length > 0) {
-                setCurrentJuz(data[0].no_juz ? data[0].no_juz.toString() : "");
+                setCurrentJuz(data[0].juz ? data[0].juz.toString() : "");
             }
 
             // Update page title to show first surah on this page
@@ -125,7 +127,7 @@ const useQuran = () => {
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
-            setError('Failed to load page data');
+            setError('Gagal memuat halaman');
         } finally {
             setLoading(false);
         }
@@ -149,7 +151,7 @@ const useQuran = () => {
 
             // Update the first page from returned data
             if (data && data.length > 0) {
-                setCurrentHal(data[0].no_hal ? data[0].no_hal.toString() : "");
+                setCurrentHal(data[0].page ? data[0].page.toString() : "");
             }
 
             // Update page title to show juz number
@@ -163,7 +165,7 @@ const useQuran = () => {
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
-            setError('Failed to load juz data');
+            setError('Gagal memuat juz');
         } finally {
             setLoading(false);
         }
@@ -190,7 +192,7 @@ const useQuran = () => {
             window.scrollTo(0, 0);
         } catch (error) {
             console.error(error);
-            setError('Failed to complete search');
+            setError('Gagal melakukan pencarian');
         } finally {
             setLoading(false);
         }
@@ -200,11 +202,11 @@ const useQuran = () => {
     const generateAyatOptions = () => {
         if (!selectedSurah) return [];
 
-        const surah = surahList.find(s => s.no_surat === parseInt(selectedSurah));
+        const surah = surahList.find(s => s.nomor === parseInt(selectedSurah));
         if (!surah) return [];
 
         const ayatOptions = [];
-        for (let i = 1; i <= surah.jml_ayat; i++) {
+        for (let i = 1; i <= surah.jumlah_ayat; i++) {
             ayatOptions.push({ value: i.toString(), label: i.toString() });
         }
         return ayatOptions;
@@ -247,7 +249,7 @@ const useQuran = () => {
         const juzId = e.target.value;
         if (!juzId) return;
 
-        setCurrentJuz(juzId); // Store as string to maintain empty state
+        setCurrentJuz(juzId);
         fetchJuz(juzId);
     };
 
@@ -256,7 +258,7 @@ const useQuran = () => {
         const pageId = e.target.value;
         if (!pageId) return;
 
-        setCurrentHal(pageId); // Store as string to maintain empty state
+        setCurrentHal(pageId);
         fetchByPage(pageId);
     };
 
@@ -310,22 +312,19 @@ const useQuran = () => {
 
         if (selectedSurah && surahDetails) {
             // For surah view, check if we're at the last ayat
-            return lastItem.no_ayat === surahDetails.jml_ayat;
+            return lastItem.nomor_ayat === surahDetails.jumlah_ayat;
         } else if (currentHal) {
             // For page view, check if this is the last ayat on the page
-            // This requires additional information about page boundaries from your API
-            // As a simplification, we'll check if another ayat from the same page exists
             return quranContent.filter(item =>
-                item.no_hal === lastItem.no_hal &&
-                item.no_ayat > lastItem.no_ayat
+                item.page === lastItem.page &&
+                item.nomor_ayat > lastItem.nomor_ayat
             ).length === 0;
         } else if (currentJuz) {
             // For juz view, check if this is the last ayat in the juz
-            // Similar to page view, requires information about juz boundaries
             return quranContent.filter(item =>
-                item.no_juz === lastItem.no_juz &&
-                (item.no_surat > lastItem.no_surat ||
-                    (item.no_surat === lastItem.no_surat && item.no_ayat > lastItem.no_ayat))
+                item.juz === lastItem.juz &&
+                (item.nomor_surah > lastItem.nomor_surah ||
+                    (item.nomor_surah === lastItem.nomor_surah && item.nomor_ayat > lastItem.nomor_ayat))
             ).length === 0;
         }
 
@@ -339,13 +338,13 @@ const useQuran = () => {
             const currentSurahId = parseInt(selectedSurah);
             const nextSurahId = currentSurahId + 1;
 
-            const nextSurah = surahList.find(s => s.no_surat === nextSurahId);
+            const nextSurah = surahList.find(s => s.nomor === nextSurahId);
             if (nextSurah) {
                 return {
                     type: 'surah',
                     item: {
                         id: nextSurahId,
-                        name: nextSurah.nm_surat,
+                        name: nextSurah.nama_latin,
                         number: nextSurahId
                     }
                 };

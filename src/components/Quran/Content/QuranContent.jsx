@@ -1,3 +1,4 @@
+// components/Quran/Content/QuranContent.jsx
 import React from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
@@ -22,12 +23,6 @@ const QuranContent = ({
   showTranslation,
   setShowTranslation
 }) => {
-  // Function to remove footnotes from translation
-  const cleanTranslation = (text) => {
-    if (!text) return text;
-    return text.replace(/<sup>\[\d+]<\/sup>/g, '');
-  };
-
   if (error) {
     return (
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md">
@@ -49,10 +44,12 @@ const QuranContent = ({
         {/* Surah header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold mb-2">
-            {surahDetails?.nm_surat || ''}
+            {surahDetails?.nama_latin || surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
-            <p className="text-md text-gray-700 mb-2">{cleanTranslation(surahDetails.arti_surat)}</p>
+            <p className="text-md text-gray-700 mb-2">
+              {surahDetails.arti || surahDetails.arti_surat || ''}
+            </p>
           )}
           <p className="text-sm text-gray-600">
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
@@ -130,11 +127,8 @@ const QuranContent = ({
         <div className="space-y-6">
           {quranContent.map((ayat) => (
             <AyatItem 
-              key={`${ayat.no_surat}-${ayat.no_ayat}`} 
-              ayat={{
-                ...ayat,
-                tafsir: cleanTranslation(ayat.tafsir)
-              }}
+              key={`${ayat.nomor_surah}-${ayat.nomor_ayat}`} 
+              ayat={ayat}
               selectedSurah={selectedSurah}
               fontSizeClass={fontSizeClass}
               showTranslation={showTranslation}
