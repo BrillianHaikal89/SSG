@@ -1,29 +1,76 @@
 /* Quran Styling */
 
 
+/* Font imports */
+
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
+
+/* Loading and error states */
+
+.loadingAnimation,
+.notFoundAnimation,
+.errorAnimation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 80vh;
+}
+
+.notFoundAnimation,
+.errorAnimation {
+    display: none;
+}
+
+.loadingAnimation lottie-player,
+.notFoundAnimation lottie-player,
+.errorAnimation lottie-player {
+    width: 20rem;
+    height: 20rem;
+}
+
+.loadingAnimation .text,
+.notFoundAnimation .text,
+.errorAnimation .text {
+    margin-top: 2rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.6rem;
+    color: #5d5d5d;
+}
+
+#mainApp {
+    display: none;
+}
+
+
 /* Arabic text styles */
 
 .arab {
-    font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif;
+    font-family: 'Amiri Quran', 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
     line-height: 2;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     margin-bottom: 0.75rem;
     text-align: right;
+    font-weight: normal;
+    word-spacing: -2px;
 }
 
 
 /* Font sizes for Arabic text */
 
 .arab.text-xl {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 
 .arab.text-2xl {
-    font-size: 2rem;
+    font-size: 2.2rem;
 }
 
 .arab.text-3xl {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
 }
 
 
@@ -34,7 +81,7 @@
     line-height: 1.6;
     margin-top: 0.75rem;
     margin-bottom: 1rem;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 
@@ -78,17 +125,90 @@
 
 /* Ayat container */
 
-.ayat-item {
+.ayat-item,
+.ayahItem {
     padding: 1rem;
     border-bottom: 1px solid #e2e8f0;
+    scroll-margin: 5rem;
 }
 
-.ayat-item:last-child {
+.ayat-item:last-child,
+.ayahItem:last-child {
     border-bottom: none;
 }
 
-.ayat-item:hover {
+.ayat-item:hover,
+.ayahItem:hover {
     background-color: #f7fafc;
+}
+
+.ayahItem.active {
+    background-color: #f4fafe;
+}
+
+
+/* Ayah content styling */
+
+.ayahItem .arabic {
+    text-align: right;
+    margin-bottom: 1.8rem;
+    font-family: 'Amiri Quran', 'Amiri', serif;
+    font-size: 1.8rem;
+    line-height: 4.25rem;
+}
+
+.ayahItem .read {
+    margin-bottom: 0.8rem;
+    color: #1b83e4;
+    font-family: 'Nunito', sans-serif;
+}
+
+.ayahItem .translation {
+    color: #5d5d5d;
+    font-family: 'Nunito', sans-serif;
+}
+
+
+/* Top container for ayah info */
+
+.ayahItem .topContainer {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Nunito', sans-serif;
+}
+
+.ayahItem .topContainer .surahAndAyahInfo {
+    display: none;
+}
+
+.ayahItem .topContainer button {
+    display: flex;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem;
+    clip-path: circle();
+    background: #008fc4;
+    color: white;
+}
+
+.ayahItem .topContainer button span {
+    font-size: 1.2rem;
+}
+
+.ayahItem .topContainer .ayahNumber {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    clip-path: circle();
+    font-size: 0.85rem;
+    border-radius: 50%;
+    border: 1px solid #008fc4;
+    color: #008fc4;
 }
 
 
@@ -259,11 +379,168 @@
 }
 
 
+/* Navbar styling */
+
+#navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: white;
+    padding: 0.8rem;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    display: grid;
+    z-index: 99;
+    font-weight: 500;
+    font-family: 'Nunito', sans-serif;
+}
+
+#navbar .surahName {
+    color: #008FC4;
+    text-align: center;
+    font-weight: bold;
+}
+
+#navbar .backButton {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    left: 1.2rem;
+    top: 0.65rem;
+    background: transparent;
+    border: none;
+    clip-path: circle();
+    cursor: pointer;
+}
+
+#navbar .backButton:hover {
+    background: #cecece;
+}
+
+
+/* Content area */
+
+#content {
+    max-width: 1024px;
+    padding: 2.5rem 0;
+    margin: auto;
+    margin-top: 4.5rem;
+    /* Adjusted for fixed navbar */
+}
+
+
+/* Audio player styling */
+
+#audioPanel {
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: white;
+    padding: 0.5rem;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.audioPlayer {
+    display: flex;
+    width: 100%;
+    max-width: 1024px;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 1rem;
+}
+
+.audioPlayer audio {
+    display: none;
+    width: 100%;
+}
+
+.audioPlayer .playPauseButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: #1b83e4;
+    color: white;
+    clip-path: circle();
+    border: none;
+    cursor: pointer;
+}
+
+.audioPlayer .playPauseButton:hover,
+.audioPlayer .playPauseButton:focus {
+    background-color: #499ce9;
+}
+
+.audioPlayer .audioTime {
+    color: #5d5d5d;
+    flex-shrink: 0;
+    font-family: 'Nunito', sans-serif;
+}
+
+.audioPlayer .slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 0.5rem;
+    background-color: #bebebe;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.audioPlayer .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    cursor: pointer;
+    transform: translateY(-0.2rem);
+    width: 1rem;
+    height: 1rem;
+    clip-path: circle();
+    background: #1b83e4;
+}
+
+.audioPlayer .slider::-moz-range-thumb {
+    cursor: pointer;
+    width: 1rem;
+    height: 1rem;
+    clip-path: circle();
+    background: #1b83e4;
+}
+
+.audioPlayer .slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.5rem;
+    background-color: #bebebe;
+    border-radius: 0.8rem;
+    cursor: pointer;
+}
+
+.audioPlayer .slider:focus::-webkit-slider-runnable-track {
+    background: #a7a7a7;
+}
+
+.audioPlayer .slider::-moz-range-track {
+    width: 100%;
+    height: 0.5rem;
+    background-color: #bebebe;
+    border-radius: 0.8rem;
+    cursor: pointer;
+}
+
+
 /* Responsive adjustments */
 
 @media (max-width: 640px) {
-    .arab.text-xl {
-        font-size: 1.25rem;
+    .arab.text-xl,
+    .ayahItem .arabic {
+        font-size: 1.5rem;
+        line-height: 3.5rem;
     }
     .arab.text-2xl {
         font-size: 1.75rem;
@@ -271,7 +548,8 @@
     .arab.text-3xl {
         font-size: 2.25rem;
     }
-    .ayat-item {
+    .ayat-item,
+    .ayahItem {
         padding: 0.75rem;
     }
     .ayat-number {
@@ -282,48 +560,9 @@
     }
 }
 
-
-/* Arabic text styles */
-
-.arab {
-    font-family: 'Amiri Quran', 'Traditional Arabic', 'Scheherazade New', serif;
-    line-height: 2;
-    letter-spacing: 0;
-    margin-bottom: 0.75rem;
-    text-align: right;
-    font-weight: normal;
-    word-spacing: -2px;
-}
-
-
-/* Font sizes for Arabic text */
-
-.arab.text-xl {
-    font-size: 1.8rem;
-}
-
-.arab.text-2xl {
-    font-size: 2.2rem;
-}
-
-.arab.text-3xl {
-    font-size: 2.8rem;
-}
-
-
-/* Arabic font */
-
-@font-face {
-    font-family: 'Amiri Quran';
-    src: url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
-    font-display: swap;
-}
-
-.font-arabic {
-    font-family: 'Amiri Quran', serif;
-    line-height: 2.5;
-    text-align: right;
-    font-size: 1.8rem;
-    letter-spacing: 0;
-    word-spacing: -2px;
+@media screen and (min-width: 640px) {
+    .ayahItem .arabic {
+        font-size: 2.1rem;
+        line-height: 5rem;
+    }
 }
