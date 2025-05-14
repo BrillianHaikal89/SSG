@@ -327,3 +327,62 @@
     letter-spacing: 0;
     word-spacing: -2px;
 }
+
+
+/* Background styling */
+
+body {
+    background-color: #e8f5e9;
+    /* Warna hijau muda */
+}
+
+
+/* Container styling */
+
+.container {
+    background-color: #c8e6c9;
+    /* Warna hijau sedikit lebih gelap */
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 800px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Ayat container */
+
+.ayat-item {
+    background-color: #e8f5e9;
+    /* Warna hijau muda */
+    padding: 1rem;
+    border-bottom: 1px solid #a5d6a7;
+    /* Warna border hijau */
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+
+/* Control panel styling */
+
+.control-panel {
+    background-color: #a5d6a7;
+    /* Warna hijau medium */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+
+/* Tajwid Guide styling */
+
+.tajwid-guide {
+    background-color: #e8f5e9;
+    /* Warna hijau muda */
+    border: 1px solid #a5d6a7;
+    /* Warna border hijau */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
