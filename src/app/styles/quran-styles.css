@@ -16,6 +16,8 @@
     text-align: right;
     font-weight: normal;
     word-spacing: -2px;
+    color: #000;
+    /* Memastikan warna teks hitam */
 }
 
 
@@ -31,6 +33,24 @@
 
 .arab.text-3xl {
     font-size: 2.5rem;
+}
+
+
+/* Tajwid highlighting - Pastikan tidak ada warna merah */
+
+[class^="tajwid-"] {
+    color: inherit !important;
+    /* Mengikuti warna parent */
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    cursor: help;
+    position: relative;
+}
+
+[class^="tajwid-"]:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    text-decoration: underline;
+    /* Memberikan indikator hover tanpa mengubah warna */
 }
 
 
@@ -96,19 +116,6 @@
 
 .ayat-item:hover {
     background-color: #f7fafc;
-}
-
-
-/* Tajwid highlighting */
-
-[class^="tajwid-"] {
-    transition: background-color 0.2s ease;
-    cursor: help;
-    position: relative;
-}
-
-[class^="tajwid-"]:hover {
-    background-color: rgba(0, 0, 0, 0.05);
 }
 
 
