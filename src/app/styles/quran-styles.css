@@ -1,106 +1,165 @@
-/* Quran Styling */
+/* Quran Font CSS - Optimized for All Platforms */
 
 @font-face {
     font-family: 'Uthmanic HAFS';
-    src: local('KFGQPC Uthmanic Script HAFS'), url('https://fonts.qurancomplex.gov.sa/wp-content/uploads/2020/07/KFGQPC-Uthmanic-Script-HAFS.woff2') format('woff2'), url('https://fonts.qurancomplex.gov.sa/wp-content/uploads/2020/07/KFGQPC-Uthmanic-Script-HAFS.woff') format('woff');
+    src: local('KFGQPC Uthmanic Script HAFS'), local('UthmanicHafs'), url('https://fonts.qurancomplex.gov.sa/wp-content/uploads/2020/07/KFGQPC-Uthmanic-Script-HAFS.woff2') format('woff2'), url('https://fonts.qurancomplex.gov.sa/wp-content/uploads/2020/07/KFGQPC-Uthmanic-Script-HAFS.woff') format('woff'), url('https://fonts.qurancomplex.gov.sa/wp-content/uploads/2020/07/KFGQPC-Uthmanic-Script-HAFS.ttf') format('truetype');
     font-display: swap;
-    font-weight: normal;
+    font-weight: 400;
     font-style: normal;
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
 
-/* Arabic text styles */
+/* Enhanced Arabic Text Styling */
 
 .arab {
-    font-family: 'Uthmanic HAFS', -apple-system;
-    /* Fallback untuk Apple */
-    line-height: 2.2;
-    letter-spacing: 0;
-    margin-bottom: 0.75rem;
+    font-family: 'Uthmanic HAFS', 'SF Arabic', -apple-system, sans-serif;
+    font-size: 2rem;
+    line-height: 2.5;
     text-align: right;
+    direction: rtl;
     font-weight: normal;
-    word-spacing: -3px;
+    letter-spacing: 0;
+    word-spacing: -4px;
+    margin: 0 0 1rem 0;
+    padding: 0;
+    /* Optimal rendering */
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
-    /* Optimasi untuk Safari */
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'calt' 1, 'liga' 1, 'kern' 0;
 }
 
 
-/* Font sizes for Arabic text */
+/* Quranic Text Size Hierarchy */
+
+.arab.text-xs {
+    font-size: 1.5rem;
+    line-height: 2;
+}
+
+.arab.text-sm {
+    font-size: 1.75rem;
+    line-height: 2.25;
+}
+
+.arab.text-md {
+    font-size: 2rem;
+    line-height: 2.5;
+}
+
+.arab.text-lg {
+    font-size: 2.5rem;
+    line-height: 3;
+}
 
 .arab.text-xl {
-    font-size: 1.9rem;
-}
-
-.arab.text-2xl {
-    font-size: 2.4rem;
-}
-
-.arab.text-3xl {
     font-size: 3rem;
+    line-height: 3.5;
 }
 
 
-/* Translation text styling */
+/* Special Quranic Text Styling */
 
-.translation {
-    color: #4a5568;
-    line-height: 1.6;
-    margin-top: 0.75rem;
-    margin-bottom: 1rem;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+.arab .tajwid {
+    position: relative;
+    color: #2d3748;
+}
+
+.arab .tajwid:hover {
+    color: #1a365d;
+    text-shadow: 0 0 1px rgba(26, 54, 93, 0.3);
 }
 
 
-/* Font sizes for translation text */
-
-.translation.text-xs {
-    font-size: 0.75rem;
-    line-height: 1.5;
-}
-
-.translation.text-sm {
-    font-size: 0.875rem;
-    line-height: 1.6;
-}
-
-.translation.text-base {
-    font-size: 1rem;
-    line-height: 1.7;
-}
-
-
-/* Ayat number styling */
+/* Enhanced Ayat Number Styling */
 
 .ayat-number {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 2rem;
-    height: 2rem;
-    background-color: #f0f4f8;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
     color: #2d3748;
     border-radius: 50%;
-    font-weight: bold;
-    font-size: 0.875rem;
-    margin-right: 0.75rem;
-    margin-top: 0.25rem;
-    flex-shrink: 0;
-    border: 1px solid #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    /* Kompatibel Apple */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 0 0.75rem 0 0.25rem;
+    border: 1px solid #cbd5e0;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    vertical-align: middle;
 }
 
 
-/* Responsive adjustments */
+/* Perfecting the Layout */
 
-@media (max-width: 640px) {
-    .arab.text-xl {
-        font-size: 1.6rem;
+.ayat-container {
+    display: flex;
+    align-items: flex-start;
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(203, 213, 224, 0.5);
+    transition: background-color 0.2s ease;
+}
+
+.ayat-container:hover {
+    background-color: rgba(240, 247, 255, 0.5);
+}
+
+
+/* Platform-Specific Optimizations */
+
+@supports (-webkit-touch-callout: none) {
+    /* iOS-specific adjustments */
+    .arab {
+        word-spacing: -3px;
+        line-height: 2.3;
     }
-    .arab.text-2xl {
+}
+
+@media (-webkit-min-device-pixel-ratio: 2) {
+    /* High-DPI displays */
+    .arab {
+        -webkit-font-smoothing: subpixel-antialiased;
+    }
+}
+
+
+/* Responsive Breakpoints */
+
+@media (max-width: 768px) {
+    .arab {
+        font-size: 1.75rem;
+        line-height: 2.25;
+    }
+    .arab.text-xs {
+        font-size: 1.25rem;
+    }
+    .arab.text-sm {
+        font-size: 1.5rem;
+    }
+    .arab.text-md {
+        font-size: 1.75rem;
+    }
+    .arab.text-lg {
         font-size: 2rem;
     }
-    .arab.text-3xl {
-        font-size: 2.5rem;
+    .arab.text-xl {
+        font-size: 2.25rem;
+    }
+    .ayat-number {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .arab {
+        word-spacing: -2px;
+    }
+    .ayat-container {
+        padding: 1rem;
     }
 }
