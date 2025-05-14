@@ -10,10 +10,24 @@ import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
 import '../../app/styles/quran-styles.css'; // Import the custom CSS
 
+// Import the Quran font
+import localFont from 'next/font/local';
+
+const quranFont = localFont({
+  src: [
+    {
+      path: '../../public/fonts/AmiriQuran-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-quran'
+});
+
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [fontSizeClass, setFontSizeClass] = useState('medium'); // One size control for all text
+  const [fontSizeClass, setFontSizeClass] = useState('medium');
   const [showTranslation, setShowTranslation] = useState(true);
   const { user } = useAuthStore();
   
@@ -30,7 +44,6 @@ const QuranDashboard = () => {
     currentJuz,
     showScrollTop,
     
-    // Methods
     fetchAyat,
     generateAyatOptions,
     handleSurahChange,
@@ -42,34 +55,27 @@ const QuranDashboard = () => {
     scrollToTop,
     setShowScrollTop,
     
-    // Continue functionality
     isAtEndOfContent,
     getNextContent,
     handleContinueToNext
   } = useQuran();
   
-  // Handle client-side rendering and responsive layout
   useEffect(() => {
     setIsClient(true);
     
-    // Check if mobile view based on screen width
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
     
-    // Run on mount
     checkIsMobile();
     
-    // Set up event listener for window resize
     window.addEventListener('resize', checkIsMobile);
     
-    // Set up scroll listener for back-to-top button
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
     window.addEventListener('scroll', handleScroll);
     
-    // Load font settings from localStorage if available
     const savedFontSize = localStorage.getItem('quranFontSize');
     if (savedFontSize) {
       setFontSizeClass(savedFontSize);
@@ -80,14 +86,12 @@ const QuranDashboard = () => {
       setShowTranslation(savedShowTranslation === 'true');
     }
     
-    // Clean up
     return () => {
       window.removeEventListener('resize', checkIsMobile);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [setShowScrollTop]);
   
-  // Save font settings to localStorage when they change
   useEffect(() => {
     if (isClient) {
       localStorage.setItem('quranFontSize', fontSizeClass);
@@ -95,7 +99,6 @@ const QuranDashboard = () => {
     }
   }, [fontSizeClass, showTranslation, isClient]);
   
-  // Handle font size change
   const handleFontSizeChange = (size) => {
     setFontSizeClass(size);
   };
@@ -112,7 +115,7 @@ const QuranDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-blue-50">
+    <div className={`flex flex-col min-h-screen bg-blue-50 ${quranFont.variable} font-sans`}>
       {/* Header */}
       <Header />
 

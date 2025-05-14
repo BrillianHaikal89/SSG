@@ -15,13 +15,13 @@ const AyatItem = ({
   const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
-        return 'text-xl';
+        return 'text-3xl leading-relaxed';
       case 'medium':
-        return 'text-2xl';
+        return 'text-4xl leading-relaxed';
       case 'large':
-        return 'text-3xl';
+        return 'text-5xl leading-relaxed';
       default:
-        return 'text-2xl';
+        return 'text-4xl leading-relaxed';
     }
   };
 
@@ -39,27 +39,32 @@ const AyatItem = ({
   };
 
   const renderArabicWithTajwid = (arabicText) => {
+    // Enhanced tajwid rules with more accurate patterns
     const tajwidRules = [
       // Nun Sukun & Tanwin Rules
-      { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
-      { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
-      { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
-      { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
+      { regex: /ن(?=[ًٌٍْ][ءهعحغخ])/g, rule: 'izhar', color: '#673AB7' },
+      { regex: /ن(?=[ًٌٍْ][ي])/g, rule: 'idgham-bila-ghunnah', color: '#3F51B5' },
+      { regex: /ن(?=[ًٌٍْ][رملون])/g, rule: 'idgham-maal-ghunnah', color: '#1E88E5' },
+      { regex: /ن(?=[ًٌٍْ][ب])/g, rule: 'iqlab', color: '#8BC34A' },
+      { regex: /ن(?=[ًٌٍْ][تثجدفقسضطظك])/g, rule: 'ikhfa', color: '#FF5722' },
       
       // Mim Sukun Rules
-      { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
-      { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
-      { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
+      { regex: /م(?=[ْ][م])/g, rule: 'idgham-syafawi', color: '#00BCD4' },
+      { regex: /م(?=[ْ][ب])/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
+      { regex: /م(?=[ْ][^مب])/g, rule: 'izhar-syafawi', color: '#607D8B' },
       
       // Mad Rules
-      { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
-      { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
-      { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
-      { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
+      { regex: /[اى](?=[ء])/g, rule: 'mad-iwad', color: '#4CAF50' },
+      { regex: /[اى](?=[^ء])/g, rule: 'mad-thabii', color: '#4CAF50' },
+      { regex: /[ي](?=[^ء])/g, rule: 'mad-thabii', color: '#4CAF50' },
+      { regex: /[و](?=[^ء])/g, rule: 'mad-thabii', color: '#4CAF50' },
+      { regex: /[َاَيُوْ]ٓ/g, rule: 'mad-lazim', color: '#009688' },
+      { regex: /[َاَيُوْ]ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
+      { regex: /[َاَيُوْ]~/g, rule: 'mad-lin', color: '#03A9F4' },
       
       // Other Rules
-      { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
-      { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
+      { regex: /[قطبجد](?=[ْ])/g, rule: 'qalqalah', color: '#FFC107' },
+      { regex: /اللّٰه|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
       { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
       { regex: /ـ۠/g, rule: 'ghunnah', color: '#F44336' },
       { regex: /ْ/g, rule: 'sukun', color: '#9C27B0' },
@@ -67,38 +72,33 @@ const AyatItem = ({
       { regex: /ۜ|ۛ|ۚ|ۖ|ۗ|ۙ|ۘ/g, rule: 'waqf', color: '#795548' },
     ];
 
-    const processedMap = new Map();
     let decoratedText = arabicText;
-    let hasMatches = false;
     
-    tajwidRules.forEach(({ regex, rule, color }) => {
+    // Process rules in reverse order to handle more specific rules first
+    for (let i = tajwidRules.length - 1; i >= 0; i--) {
+      const { regex, rule, color } = tajwidRules[i];
       decoratedText = decoratedText.replace(regex, (match) => {
-        if (processedMap.has(match + rule)) {
-          return processedMap.get(match + rule);
-        }
-        
-        hasMatches = true;
-        const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
-        processedMap.set(match + rule, span);
-        return span;
+        return `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
       });
-    });
+    }
 
     return decoratedText;
   };
 
   const getTajwidRuleName = (rule) => {
     const ruleNames = {
-      'izhar': 'Izhar',
-      'idgham': 'Idgham',
+      'izhar': 'Izhar Halqi',
+      'idgham-bila-ghunnah': 'Idgham Bila Ghunnah',
+      'idgham-maal-ghunnah': 'Idgham Maal Ghunnah',
       'iqlab': 'Iqlab',
-      'ikhfa': 'Ikhfa',
+      'ikhfa': 'Ikhfa Haqiqi',
       'idgham-syafawi': 'Idgham Syafawi',
       'ikhfa-syafawi': 'Ikhfa Syafawi',
       'izhar-syafawi': 'Izhar Syafawi',
-      'mad-thabii': 'Mad Thabii',
+      'mad-thabii': 'Mad Thabi\'i',
+      'mad-iwad': 'Mad Iwad',
       'mad-lazim': 'Mad Lazim',
-      'mad-arid': 'Mad Arid',
+      'mad-arid': 'Mad Arid Lissukun',
       'mad-lin': 'Mad Lin',
       'qalqalah': 'Qalqalah',
       'lafadz-allah': 'Lafadz Allah',
@@ -151,9 +151,9 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item">
+    <div className="ayat-item mb-6">
       <div className="flex items-start">
-        <span className="ayat-number">
+        <span className="ayat-number bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 text-sm font-medium">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -164,21 +164,21 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
+            className={`arab font-quran ${getArabicFontSizeClass(fontSizeClass)} text-right mb-2`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
           {ayat.tafsir && showTranslation && (
-            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
+            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)} text-gray-700`}>
               {ayat.tafsir}
             </p>
           )}
           
-          <div className="mt-2">
+          <div className="mt-3">
             <button 
               onClick={saveBookmark}
-              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm transition-colors"
             >
               {bookmark ? (
                 <>
