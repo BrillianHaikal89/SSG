@@ -10,19 +10,7 @@ import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
 import '../../app/styles/quran-styles.css'; // Import the custom CSS
 
-// Import the Quran font
-import localFont from 'next/font/local';
 
-const quranFont = localFont({
-  src: [
-    {
-      path: '../../public/fonts/AmiriQuran-Regular.ttf',
-      weight: '400',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-quran'
-});
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
