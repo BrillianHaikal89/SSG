@@ -315,7 +315,7 @@
 
 @font-face {
     font-family: 'Mushaf Quran';
-    src: url('../../../public/fonts/UthmanicHafs1Ver18.woff2') format('woff2'), url('../../../public/fonts/p7.woff') format('woff');
+    src: url('../../../public/fonts/sura_names.woff2') format('woff2'), url('../../../public/fonts/p7.woff') format('woff');
     font-display: swap;
     font-weight: normal;
     font-style: normal;
