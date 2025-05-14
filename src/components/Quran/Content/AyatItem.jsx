@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
@@ -6,23 +6,68 @@ const AyatItem = ({
   ayat, 
   selectedSurah, 
   fontSizeClass = 'medium',
-  showTranslation = true,
-  isPlaying,
-  isCurrentPlaying,
-  onPlay,
-  onStop
+  showTranslation = true 
 }) => {
   const [bookmark, setBookmark] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState(null);
   const { user } = useAuthStore();
 
+  // Clean up audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.removeEventListener('ended', handleAudioEnd);
+      }
+    };
+  }, [audio]);
+
+  const handleAudioEnd = () => {
+    setIsPlaying(false);
+  };
+
   const toggleAudio = () => {
-    if (isCurrentPlaying) {
-      onStop();
+    if (audio) {
+      // If same audio is playing, pause it
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        // If different audio, create new instance
+        playAudio();
+      }
     } else {
-      onPlay(ayat);
+      // First time playing
+      playAudio();
     }
   };
 
+  const playAudio = () => {
+    // Stop any currently playing audio
+    if (audio) {
+      audio.pause();
+      audio.removeEventListener('ended', handleAudioEnd);
+    }
+
+    // Create new audio instance
+    const newAudio = new Audio(
+      `https://verses.quran.com/AbdulBaset/Mujawwad/mp3/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
+    );
+    
+    newAudio.addEventListener('ended', handleAudioEnd);
+    newAudio.play()
+      .then(() => {
+        setAudio(newAudio);
+        setIsPlaying(true);
+      })
+      .catch(error => {
+        console.error('Error playing audio:', error);
+        toast.error('Gagal memutar audio');
+      });
+  };
+
+  // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
@@ -51,17 +96,24 @@ const AyatItem = ({
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
+      // Nun Sukun & Tanwin Rules
       { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
       { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
       { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
       { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
+      
+      // Mim Sukun Rules
       { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
       { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
       { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
+      
+      // Mad Rules
       { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
       { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
       { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
       { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
+      
+      // Other Rules
       { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
       { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
       { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
@@ -73,6 +125,7 @@ const AyatItem = ({
 
     const processedMap = new Map();
     let decoratedText = arabicText;
+    let hasMatches = false;
     
     tajwidRules.forEach(({ regex, rule, color }) => {
       decoratedText = decoratedText.replace(regex, (match) => {
@@ -80,6 +133,7 @@ const AyatItem = ({
           return processedMap.get(match + rule);
         }
         
+        hasMatches = true;
         const span = `<span class="tajwid-${rule}" style="color:${color}" title="${getTajwidRuleName(rule)}">${match}</span>`;
         processedMap.set(match + rule, span);
         return span;
@@ -153,7 +207,7 @@ const AyatItem = ({
   };
 
   return (
-    <div className={`ayat-item ${isCurrentPlaying ? 'bg-blue-50' : ''}`}>
+    <div className="ayat-item">
       <div className="flex items-start">
         <span className="ayat-number">
           {ayat.no_ayat}
@@ -166,7 +220,7 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)} font-amiri`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
@@ -180,9 +234,9 @@ const AyatItem = ({
           <div className="mt-2 flex gap-2">
             <button 
               onClick={toggleAudio}
-              className={`flex items-center gap-1 px-2 py-1 ${isCurrentPlaying ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded text-sm`}
+              className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
             >
-              {isCurrentPlaying ? (
+              {isPlaying ? (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />

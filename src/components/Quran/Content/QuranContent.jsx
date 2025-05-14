@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
@@ -20,89 +20,13 @@ const QuranContent = ({
   fontSizeClass,
   handleFontSizeChange,
   showTranslation,
-  setShowTranslation,
-  reciter,
-  handleReciterChange,
-  setCurrentAudio,
-  currentAudio
+  setShowTranslation
 }) => {
-  const [currentPlayingAyat, setCurrentPlayingAyat] = useState(null);
-
-  // Reciter options with working audio sources
-  const reciters = [
-    { 
-      id: 'AbdulBaset', 
-      name: 'Abdul Basit (Mujawwad)',
-      baseUrl: 'https://download.quranicaudio.com/quran/abdul_baset_mujawwad/'
-    },
-    { 
-      id: 'Husary', 
-      name: 'Mahmoud Khalil Al-Husary',
-      baseUrl: 'https://download.quranicaudio.com/quran/husary_mujawwad/'
-    },
-    { 
-      id: 'Minshawi', 
-      name: 'Mohamed Siddiq El-Minshawi',
-      baseUrl: 'https://download.quranicaudio.com/quran/minshawi_mujawwad/'
-    },
-    { 
-      id: 'Alafasy', 
-      name: 'Mishary Rashid Alafasy',
-      baseUrl: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/'
-    },
-    { 
-      id: 'Hudhaify', 
-      name: 'Ali Abdur-Rahman al-Huthaify',
-      baseUrl: 'https://download.quranicaudio.com/quran/hudhaify_64kbps/'
-    }
-  ];
-
+  // Function to remove footnotes from translation
   const cleanTranslation = (text) => {
     if (!text) return text;
     return text.replace(/<sup>\[\d+]<\/sup>/g, '');
   };
-
-  const playAyat = (ayat) => {
-    stopAudio();
-    setCurrentPlayingAyat(ayat);
-    
-    const selectedReciter = reciters.find(r => r.id === reciter);
-    if (!selectedReciter) return;
-    
-    const surahNumber = String(ayat.no_surat).padStart(3, '0');
-    const ayatNumber = String(ayat.no_ayat).padStart(3, '0');
-    const audioUrl = `${selectedReciter.baseUrl}${surahNumber}${ayatNumber}.mp3`;
-    
-    const audio = new Audio(audioUrl);
-    
-    audio.addEventListener('ended', () => {
-      setCurrentPlayingAyat(null);
-    });
-    
-    audio.play()
-      .then(() => {
-        setCurrentAudio(audio);
-      })
-      .catch(error => {
-        console.error('Error playing audio:', error);
-      });
-  };
-
-  const stopAudio = () => {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      currentAudio.removeEventListener('ended', () => {});
-      setCurrentAudio(null);
-    }
-    setCurrentPlayingAyat(null);
-  };
-
-  useEffect(() => {
-    return () => {
-      stopAudio();
-    };
-  }, [selectedSurah]);
 
   if (error) {
     return (
@@ -122,6 +46,7 @@ const QuranContent = ({
     
     return (
       <div className="bg-white rounded-lg shadow-md p-4">
+        {/* Surah header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold mb-2">
             {surahDetails?.nm_surat || ''}
@@ -134,25 +59,7 @@ const QuranContent = ({
           </p>
         </div>
         
-        <div className="mb-6 p-4 bg-blue-50 rounded-md">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">Audio:</h3>
-          
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Qari:</span>
-              <select
-                value={reciter}
-                onChange={(e) => handleReciterChange(e.target.value)}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm"
-              >
-                {reciters.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-        
+        {/* Font size controls */}
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Pengaturan Tampilan:</h3>
           
@@ -216,8 +123,10 @@ const QuranContent = ({
           <p className="text-xs text-gray-500">Pengaturan ini akan berlaku untuk semua ayat. Perubahan akan disimpan untuk kunjungan berikutnya.</p>
         </div>
         
+        {/* Tajwid guide */}
         <TajwidGuide />
         
+        {/* Ayat list with Tajwid highlighting */}
         <div className="space-y-6">
           {quranContent.map((ayat) => (
             <AyatItem 
@@ -229,14 +138,11 @@ const QuranContent = ({
               selectedSurah={selectedSurah}
               fontSizeClass={fontSizeClass}
               showTranslation={showTranslation}
-              isPlaying={currentPlayingAyat?.no_ayat === ayat.no_ayat}
-              isCurrentPlaying={currentPlayingAyat?.no_ayat === ayat.no_ayat}
-              onPlay={playAyat}
-              onStop={stopAudio}
             />
           ))}
         </div>
         
+        {/* Next Content Button */}
         {showNextButton && nextContent && (
           <NextContentButton
             currentType={nextContent.type}
