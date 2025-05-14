@@ -4,7 +4,7 @@
 /* Arabic text styles */
 
 .arab {
-    font-family: 'Mushaf Quran';
+    font-family: 'Mushaf Quran', 'Traditional Arabic', serif;
     line-height: 2;
     letter-spacing: 0;
     margin-bottom: 0.75rem;
@@ -282,13 +282,4 @@
         font-size: 0.75rem;
         margin-right: 0.5rem;
     }
-}
-
-
-/* Arabic font import */
-
-@font-face {
-    font-family: 'Mushaf Quran';
-    src: url('path-to-your-mushaf-quran-font.woff2') format('woff2'), url('path-to-your-mushaf-quran-font.woff') format('woff');
-    font-display: swap;
 }
