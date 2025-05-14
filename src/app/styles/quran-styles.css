@@ -1,13 +1,28 @@
 /* Quran Styling */
 
 
+/* Load Mushaf Quran / LPMQ IsepMisbah font */
+
+@font-face {
+    font-family: 'Mushaf Quran';
+    src: url('https://cdn.rawgit.com/mustafa0x/quran-fonts/master/fonts/mushaf/mushaf-regular.woff2') format('woff2'), url('https://cdn.rawgit.com/mustafa0x/quran-fonts/master/fonts/mushaf/mushaf-regular.woff') format('woff');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'LPMQ IsepMisbah';
+    src: url('https://www.almuhannad.net/fonts/LPMQ/lpmq.eot');
+    src: url('https://www.almuhannad.net/fonts/LPMQ/lpmq.eot?#iefix') format('embedded-opentype'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff2') format('woff2'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff') format('woff'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.ttf') format('truetype');
+    font-display: swap;
+}
+
+
 /* Arabic text styles */
 
 .arab {
-    /* First try loading from local files, then from potential CDN URLs */
-    font-family: 'LPMQ IsepMisbah', 'Mushaf Quran', 'Amiri Quran', 'Scheherazade New', serif;
+    font-family: 'LPMQ IsepMisbah', 'Mushaf Quran', serif;
     line-height: 2;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     margin-bottom: 0.75rem;
     text-align: right;
     font-weight: normal;
@@ -18,15 +33,15 @@
 /* Font sizes for Arabic text */
 
 .arab.text-xl {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 
 .arab.text-2xl {
-    font-size: 2rem;
+    font-size: 2.2rem;
 }
 
 .arab.text-3xl {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
 }
 
 
@@ -266,13 +281,13 @@
 
 @media (max-width: 640px) {
     .arab.text-xl {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
     }
     .arab.text-2xl {
-        font-size: 1.75rem;
+        font-size: 1.9rem;
     }
     .arab.text-3xl {
-        font-size: 2.25rem;
+        font-size: 2.3rem;
     }
     .ayat-item {
         padding: 0.75rem;
@@ -284,26 +299,3 @@
         margin-right: 0.5rem;
     }
 }
-
-
-/* If you want to use local font files, you'll need to:
-1. Add the font files to your project (e.g., in public/fonts/)
-2. Uncomment and adjust the following @font-face rules:
-*/
-
-
-/*
-@font-face {
-    font-family: 'LPMQ IsepMisbah';
-    src: url('/fonts/LPMQ-IsepMisbah.woff2') format('woff2'),
-         url('/fonts/LPMQ-IsepMisbah.woff') format('woff');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Mushaf Quran';
-    src: url('/fonts/Mushaf-Quran.woff2') format('woff2'),
-         url('/fonts/Mushaf-Quran.woff') format('woff');
-    font-display: swap;
-}
-*/
