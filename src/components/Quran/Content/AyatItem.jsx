@@ -27,16 +27,16 @@ const AyatItem = ({
 
   const getTranslationFontSizeClass = (size) => {
     switch (size) {
-    case 'small':
-      return 'text-2xl leading-relaxed';
-    case 'medium':
-      return 'text-3xl leading-relaxed';
-    case 'large':
-      return 'text-4xl leading-relaxed';
-    default:
-      return 'text-3xl leading-relaxed';
-  }
-};
+      case 'small':
+        return 'text-xs';
+      case 'medium':
+        return 'text-sm';
+      case 'large':
+        return 'text-base';
+      default:
+        return 'text-sm';
+    }
+  };
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
