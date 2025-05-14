@@ -283,6 +283,34 @@
 }
 
 
+/* Arabic text styles */
+
+.arab {
+    font-family: 'Amiri Quran', 'Traditional Arabic', 'Scheherazade New', serif;
+    line-height: 2;
+    letter-spacing: 0;
+    margin-bottom: 0.75rem;
+    text-align: right;
+    font-weight: normal;
+    word-spacing: -2px;
+}
+
+
+/* Font sizes for Arabic text */
+
+.arab.text-xl {
+    font-size: 1.8rem;
+}
+
+.arab.text-2xl {
+    font-size: 2.2rem;
+}
+
+.arab.text-3xl {
+    font-size: 2.8rem;
+}
+
+
 /* Arabic font */
 
 @font-face {
@@ -295,5 +323,7 @@
     font-family: 'Amiri Quran', serif;
     line-height: 2.5;
     text-align: right;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    letter-spacing: 0;
+    word-spacing: -2px;
 }
