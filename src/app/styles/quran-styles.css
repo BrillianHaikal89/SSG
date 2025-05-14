@@ -332,57 +332,71 @@
 /* Background styling */
 
 body {
+    background-color: #ffffff;
+    /* Latar belakang utama putih */
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+
+/* Container untuk teks Arab */
+
+.arab-container {
     background-color: #e8f5e9;
     /* Warna hijau muda */
+    padding: 2rem;
+    width: 100%;
+    margin: 0 auto;
 }
 
 
-/* Container styling */
+/* Arabic text styles */
 
-.container {
-    background-color: #c8e6c9;
-    /* Warna hijau sedikit lebih gelap */
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px auto;
-    max-width: 800px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.arab {
+    font-family: 'Amiri Quran', 'Traditional Arabic', 'Scheherazade New', serif;
+    line-height: 2;
+    letter-spacing: 0;
+    margin-bottom: 0.75rem;
+    text-align: right;
+    font-weight: normal;
+    word-spacing: -2px;
+    background-color: #e8f5e9;
+    /* Warna hijau untuk background teks Arab saja */
+    display: inline-block;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
 }
 
 
-/* Ayat container */
+/* Container ayat */
 
 .ayat-item {
-    background-color: #e8f5e9;
-    /* Warna hijau muda */
-    padding: 1rem;
-    border-bottom: 1px solid #a5d6a7;
-    /* Warna border hijau */
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-
-/* Control panel styling */
-
-.control-panel {
-    background-color: #a5d6a7;
-    /* Warna hijau medium */
-    border-radius: 0.5rem;
-    padding: 1rem;
+    background-color: transparent;
+    padding: 0;
+    border-bottom: none;
     margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 
-/* Tajwid Guide styling */
+/* Warna untuk elemen lainnya tetap default */
 
+.translation,
+.control-panel,
 .tajwid-guide {
-    background-color: #e8f5e9;
-    /* Warna hijau muda */
-    border: 1px solid #a5d6a7;
-    /* Warna border hijau */
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+    background-color: #ffffff;
+    /* Latar belakang putih */
+}
+
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+    .arab-container {
+        padding: 1rem;
+    }
+    .arab {
+        padding: 0.75rem;
+    }
 }
