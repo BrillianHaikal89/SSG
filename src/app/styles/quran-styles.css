@@ -1,11 +1,19 @@
 /* Quran Styling */
 
 
+/* Load LPMQ IsepMisbah font */
+
+@font-face {
+    font-family: 'LPMQ IsepMisbah';
+    src: url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff2') format('woff2'), url('https://www.almuhannad.net/fonts/LPMQ/lpmq.woff') format('woff');
+    font-display: swap;
+}
+
+
 /* Arabic text styles */
 
 .arab {
-    font-family: inherit;
-    /* Menggunakan font yang sudah ditentukan di database */
+    font-family: 'LPMQ IsepMisbah', 'Traditional Arabic', 'Scheherazade New', 'Amiri', serif;
     line-height: 2;
     letter-spacing: 0;
     margin-bottom: 0.75rem;
