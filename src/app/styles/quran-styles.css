@@ -311,16 +311,18 @@
 }
 
 
-/* Arabic font */
+/* Arabic font for Quranic text */
 
 @font-face {
-    font-family: 'Amiri Quran';
-    src: url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
+    font-family: 'Mushaf Quran';
+    src: url('../../../public/fonts/UthmanicHafs1Ver18.woff2') format('woff2'), url('../../../public/fonts/p7.woff') format('woff');
     font-display: swap;
+    font-weight: normal;
+    font-style: normal;
 }
 
 .font-arabic {
-    font-family: 'Amiri Quran', serif;
+    font-family: 'Mushaf Quran', 'Amiri Quran', serif;
     line-height: 2.5;
     text-align: right;
     font-size: 1.8rem;
