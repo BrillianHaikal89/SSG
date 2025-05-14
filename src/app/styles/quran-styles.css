@@ -1,23 +1,14 @@
 /* Quran Styling */
 
 
-/* Font imports */
-
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
-
 /* Arabic text styles */
 
 .arab {
-    font-family: 'Amiri Quran', 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+    font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif;
     line-height: 2;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     margin-bottom: 0.75rem;
     text-align: right;
-    font-weight: normal;
-    word-spacing: -2px;
-    color: #000;
-    /* Memastikan warna teks hitam */
 }
 
 
@@ -33,24 +24,6 @@
 
 .arab.text-3xl {
     font-size: 2.5rem;
-}
-
-
-/* Tajwid highlighting - Pastikan tidak ada warna merah */
-
-[class^="tajwid-"] {
-    color: inherit !important;
-    /* Mengikuti warna parent */
-    background-color: transparent;
-    transition: background-color 0.2s ease;
-    cursor: help;
-    position: relative;
-}
-
-[class^="tajwid-"]:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    text-decoration: underline;
-    /* Memberikan indikator hover tanpa mengubah warna */
 }
 
 
@@ -116,6 +89,19 @@
 
 .ayat-item:hover {
     background-color: #f7fafc;
+}
+
+
+/* Tajwid highlighting */
+
+[class^="tajwid-"] {
+    transition: background-color 0.2s ease;
+    cursor: help;
+    position: relative;
+}
+
+[class^="tajwid-"]:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 
@@ -294,4 +280,50 @@
         font-size: 0.75rem;
         margin-right: 0.5rem;
     }
+}
+
+
+/* Arabic text styles */
+
+.arab {
+    font-family: 'Amiri Quran', 'Traditional Arabic', 'Scheherazade New', serif;
+    line-height: 2;
+    letter-spacing: 0;
+    margin-bottom: 0.75rem;
+    text-align: right;
+    font-weight: normal;
+    word-spacing: -2px;
+}
+
+
+/* Font sizes for Arabic text */
+
+.arab.text-xl {
+    font-size: 1.8rem;
+}
+
+.arab.text-2xl {
+    font-size: 2.2rem;
+}
+
+.arab.text-3xl {
+    font-size: 2.8rem;
+}
+
+
+/* Arabic font */
+
+@font-face {
+    font-family: 'Amiri Quran';
+    src: url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
+    font-display: swap;
+}
+
+.font-arabic {
+    font-family: 'Amiri Quran', serif;
+    line-height: 2.5;
+    text-align: right;
+    font-size: 1.8rem;
+    letter-spacing: 0;
+    word-spacing: -2px;
 }
