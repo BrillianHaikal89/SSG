@@ -8,14 +8,15 @@ import DesktopControls from './Controls/DesktopControls';
 import QuranContent from './Content/QuranContent';
 import useQuran from '../../hooks/useQuran';
 import useAuthStore from '../../stores/authStore';
-import '../../app/styles/quran-styles.css'; // Import the custom CSS
+import '../../app/styles/quran-styles.css';
 
 const QuranDashboard = () => {
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [fontSizeClass, setFontSizeClass] = useState('medium'); // One size control for all text
+  const [fontSizeClass, setFontSizeClass] = useState('medium');
   const [showTranslation, setShowTranslation] = useState(true);
   const [currentAudio, setCurrentAudio] = useState(null);
+  const [reciter, setReciter] = useState('AbdulBaset'); // Default reciter
   const { user } = useAuthStore();
   
   const {
@@ -49,28 +50,22 @@ const QuranDashboard = () => {
     handleContinueToNext
   } = useQuran();
   
-  // Handle client-side rendering and responsive layout
   useEffect(() => {
     setIsClient(true);
     
-    // Check if mobile view based on screen width
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
     
-    // Run on mount
     checkIsMobile();
     
-    // Set up event listener for window resize
     window.addEventListener('resize', checkIsMobile);
     
-    // Set up scroll listener for back-to-top button
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
     window.addEventListener('scroll', handleScroll);
     
-    // Load font settings from localStorage if available
     const savedFontSize = localStorage.getItem('quranFontSize');
     if (savedFontSize) {
       setFontSizeClass(savedFontSize);
@@ -80,29 +75,35 @@ const QuranDashboard = () => {
     if (savedShowTranslation !== null) {
       setShowTranslation(savedShowTranslation === 'true');
     }
+
+    const savedReciter = localStorage.getItem('quranReciter');
+    if (savedReciter) {
+      setReciter(savedReciter);
+    }
     
-    // Clean up
     return () => {
       window.removeEventListener('resize', checkIsMobile);
       window.removeEventListener('scroll', handleScroll);
-      // Clean up any playing audio
       if (currentAudio) {
         currentAudio.pause();
       }
     };
   }, [setShowScrollTop, currentAudio]);
   
-  // Save font settings to localStorage when they change
   useEffect(() => {
     if (isClient) {
       localStorage.setItem('quranFontSize', fontSizeClass);
       localStorage.setItem('quranShowTranslation', showTranslation.toString());
+      localStorage.setItem('quranReciter', reciter);
     }
-  }, [fontSizeClass, showTranslation, isClient]);
+  }, [fontSizeClass, showTranslation, reciter, isClient]);
   
-  // Handle font size change
   const handleFontSizeChange = (size) => {
     setFontSizeClass(size);
+  };
+
+  const handleReciterChange = (newReciter) => {
+    setReciter(newReciter);
   };
   
   if (!isClient) {
@@ -117,7 +118,7 @@ const QuranDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-blue-50">
+    <div className="flex flex-col min-h-screen bg-blue-50 font-amiri">
       {/* Header */}
       <Header />
 
@@ -176,6 +177,10 @@ const QuranDashboard = () => {
           handleFontSizeChange={handleFontSizeChange}
           showTranslation={showTranslation}
           setShowTranslation={setShowTranslation}
+          reciter={reciter}
+          handleReciterChange={handleReciterChange}
+          setCurrentAudio={setCurrentAudio}
+          currentAudio={currentAudio}
         />
       </div>
 

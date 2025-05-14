@@ -6,65 +6,22 @@ const AyatItem = ({
   ayat, 
   selectedSurah, 
   fontSizeClass = 'medium',
-  showTranslation = true 
+  showTranslation = true,
+  reciter = 'AbdulBaset',
+  isPlaying,
+  onPlay,
+  onStop,
+  isCurrentPlaying
 }) => {
   const [bookmark, setBookmark] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState(null);
   const { user } = useAuthStore();
 
-  // Clean up audio when component unmounts
-  useEffect(() => {
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.removeEventListener('ended', handleAudioEnd);
-      }
-    };
-  }, [audio]);
-
-  const handleAudioEnd = () => {
-    setIsPlaying(false);
-  };
-
   const toggleAudio = () => {
-    if (audio) {
-      // If same audio is playing, pause it
-      if (isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
-      } else {
-        // If different audio, create new instance
-        playAudio();
-      }
+    if (isCurrentPlaying) {
+      onStop();
     } else {
-      // First time playing
-      playAudio();
+      onPlay(ayat);
     }
-  };
-
-  const playAudio = () => {
-    // Stop any currently playing audio
-    if (audio) {
-      audio.pause();
-      audio.removeEventListener('ended', handleAudioEnd);
-    }
-
-    // Create new audio instance
-    const newAudio = new Audio(
-      `https://verses.quran.com/AbdulBaset/Mujawwad/mp3/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
-    );
-    
-    newAudio.addEventListener('ended', handleAudioEnd);
-    newAudio.play()
-      .then(() => {
-        setAudio(newAudio);
-        setIsPlaying(true);
-      })
-      .catch(error => {
-        console.error('Error playing audio:', error);
-        toast.error('Gagal memutar audio');
-      });
   };
 
   // Get appropriate CSS classes based on font size
@@ -207,7 +164,7 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item">
+    <div className={`ayat-item ${isCurrentPlaying ? 'bg-blue-50' : ''}`}>
       <div className="flex items-start">
         <span className="ayat-number">
           {ayat.no_ayat}
@@ -220,7 +177,7 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)} font-amiri`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
@@ -234,9 +191,9 @@ const AyatItem = ({
           <div className="mt-2 flex gap-2">
             <button 
               onClick={toggleAudio}
-              className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+              className={`flex items-center gap-1 px-2 py-1 ${isCurrentPlaying ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded text-sm`}
             >
-              {isPlaying ? (
+              {isCurrentPlaying ? (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />

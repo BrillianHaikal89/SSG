@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
@@ -20,13 +20,92 @@ const QuranContent = ({
   fontSizeClass,
   handleFontSizeChange,
   showTranslation,
-  setShowTranslation
+  setShowTranslation,
+  reciter,
+  handleReciterChange,
+  setCurrentAudio,
+  currentAudio
 }) => {
+  const [currentPlayingAyat, setCurrentPlayingAyat] = useState(null);
+  const [playbackQueue, setPlaybackQueue] = useState([]);
+  const [isPlayingSurah, setIsPlayingSurah] = useState(false);
+
   // Function to remove footnotes from translation
   const cleanTranslation = (text) => {
     if (!text) return text;
     return text.replace(/<sup>\[\d+]<\/sup>/g, '');
   };
+
+  // Reciter options
+  const reciters = [
+    { id: 'AbdulBaset', name: 'Abdul Basit (Mujawwad)' },
+    { id: 'Husary', name: 'Mahmoud Khalil Al-Husary' },
+    { id: 'Minshawi', name: 'Mohamed Siddiq El-Minshawi' },
+    { id: 'Alafasy', name: 'Mishary Rashid Alafasy' },
+    { id: 'Hudhaify', name: 'Ali Abdur-Rahman al-Huthaify' }
+  ];
+
+  const playAyat = (ayat) => {
+    stopAudio();
+    setCurrentPlayingAyat(ayat);
+    
+    const audio = new Audio(
+      `https://verses.quran.com/${reciter}/Mujawwad/mp3/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
+    );
+    
+    audio.addEventListener('ended', () => {
+      setCurrentPlayingAyat(null);
+      playNextInQueue();
+    });
+    
+    audio.play()
+      .then(() => {
+        setCurrentAudio(audio);
+      })
+      .catch(error => {
+        console.error('Error playing audio:', error);
+      });
+  };
+
+  const playSurah = () => {
+    if (!quranContent || quranContent.length === 0) return;
+    
+    setIsPlayingSurah(true);
+    setPlaybackQueue(quranContent);
+    playAyat(quranContent[0]);
+  };
+
+  const playNextInQueue = () => {
+    if (playbackQueue.length > 0) {
+      const nextQueue = [...playbackQueue];
+      nextQueue.shift(); // Remove the first item
+      setPlaybackQueue(nextQueue);
+      
+      if (nextQueue.length > 0) {
+        playAyat(nextQueue[0]);
+      } else {
+        setIsPlayingSurah(false);
+      }
+    }
+  };
+
+  const stopAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio.removeEventListener('ended', () => {});
+      setCurrentAudio(null);
+    }
+    setCurrentPlayingAyat(null);
+    setPlaybackQueue([]);
+    setIsPlayingSurah(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopAudio();
+    };
+  }, [selectedSurah]);
 
   if (error) {
     return (
@@ -57,6 +136,47 @@ const QuranContent = ({
           <p className="text-sm text-gray-600">
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
           </p>
+        </div>
+        
+        {/* Audio controls */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-md">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">Audio:</h3>
+          
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Qari:</span>
+              <select
+                value={reciter}
+                onChange={(e) => handleReciterChange(e.target.value)}
+                className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+              >
+                {reciters.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <button
+              onClick={isPlayingSurah ? stopAudio : playSurah}
+              className={`px-4 py-2 rounded-md text-white text-sm ${isPlayingSurah ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+            >
+              {isPlayingSurah ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  Hentikan Surah
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Putar Seluruh Surah
+                </>
+              )}
+            </button>
+          </div>
         </div>
         
         {/* Font size controls */}
@@ -138,6 +258,11 @@ const QuranContent = ({
               selectedSurah={selectedSurah}
               fontSizeClass={fontSizeClass}
               showTranslation={showTranslation}
+              reciter={reciter}
+              isPlaying={currentPlayingAyat?.no_ayat === ayat.no_ayat}
+              isCurrentPlaying={currentPlayingAyat?.no_ayat === ayat.no_ayat}
+              onPlay={playAyat}
+              onStop={stopAudio}
             />
           ))}
         </div>
