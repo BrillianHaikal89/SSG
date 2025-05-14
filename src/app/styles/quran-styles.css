@@ -329,82 +329,58 @@
 }
 
 
-/* Background styling */
+/* ===== BACKGROUND HIJAU UNTUK ARAB + TERJEMAHAN ===== */
 
 body {
-    background-color: #ffffff;
-    /* Latar belakang utama putih */
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
+    background-color: #f8f9fa;
+    /* Warna netral untuk body */
 }
 
 
-/* Container utama untuk konten Quran */
+/* Container utama */
 
-.quran-content {
+.quran-container {
     background-color: #e8f5e9;
-    /* Warna hijau muda untuk seluruh bagian ayat */
-    padding: 2rem;
-    width: 100%;
-    margin: 0 auto;
-    border-radius: 0 0 10px 10px;
-    /* Membulatkan sudut bawah saja */
+    /* Hijau muda untuk seluruh konten */
+    min-height: 100vh;
+    padding: 20px;
+    margin-top: 0;
+    /* Pastikan tidak ada gap dengan header */
 }
 
 
-/* Header/Control Panel styling */
+/* Header tetap putih */
 
 .control-panel {
-    background-color: #ffffff;
-    /* Warna putih untuk header */
-    padding: 1rem 2rem;
-    width: 100%;
+    background-color: white;
+    padding: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 
-/* Arabic text styles */
+/* Teks Arab */
 
 .arab {
-    font-family: 'Amiri Quran', serif;
-    line-height: 2;
-    text-align: right;
-    font-size: 1.8rem;
-    padding: 0.5rem 0;
+    background-color: transparent;
+    /* Mengikuti warna container */
+    padding: 10px 0;
 }
 
 
-/* Translation text styling */
+/* Terjemahan */
 
 .translation {
-    background-color: #d4edda;
-    /* Warna hijau lebih terang untuk terjemahan */
-    padding: 1rem;
-    border-radius: 5px;
-    margin-top: 0.5rem;
-    font-family: system-ui, sans-serif;
-    color: #155724;
-    /* Warna teks gelap untuk kontras */
+    background-color: transparent;
+    /* Mengikuti warna container */
+    padding: 10px 0;
+    border-top: 1px solid #c8e6c9;
+    /* Garis pemisah hijau */
 }
 
 
 /* Ayat container */
 
 .ayat-item {
-    padding: 1rem 0;
-    border-bottom: 1px solid #a5d6a7;
-    /* Garis pemisah hijau */
-}
-
-
-/* Responsive design */
-
-@media (max-width: 768px) {
-    .quran-content {
-        padding: 1rem;
-    }
-    .arab {
-        font-size: 1.5rem;
-    }
+    background-color: transparent;
+    margin-bottom: 15px;
 }
