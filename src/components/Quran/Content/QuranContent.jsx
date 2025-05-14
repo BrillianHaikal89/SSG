@@ -1,3 +1,4 @@
+// QuranContent.jsx (perubahan utama)
 import React from 'react';
 import AyatItem from './AyatItem';
 import TajwidGuide from './TajwidGuide';
@@ -22,7 +23,6 @@ const QuranContent = ({
   showTranslation,
   setShowTranslation
 }) => {
-  // Function to remove footnotes from translation
   const cleanTranslation = (text) => {
     if (!text) return text;
     return text.replace(/<sup>\[\d+]<\/sup>/g, '');
@@ -48,7 +48,7 @@ const QuranContent = ({
       <div className="bg-white rounded-lg shadow-md p-4">
         {/* Surah header */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 className="text-2xl font-bold mb-2 font-arabic">
             {surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
@@ -127,7 +127,7 @@ const QuranContent = ({
         <TajwidGuide />
         
         {/* Ayat list with Tajwid highlighting */}
-        <div className="space-y-6">
+        <div className="space-y-6 font-arabic">
           {quranContent.map((ayat) => (
             <AyatItem 
               key={`${ayat.no_surat}-${ayat.no_ayat}`} 

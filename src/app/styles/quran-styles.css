@@ -281,3 +281,40 @@
         margin-right: 0.5rem;
     }
 }
+
+
+/* app/styles/quran-styles.css */
+
+@font-face {
+    font-family: 'Amiri';
+    src: url('/fonts/Amiri-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.font-arabic {
+    font-family: 'Amiri', serif;
+    line-height: 2.5;
+}
+
+.arab {
+    font-family: 'Amiri', serif;
+    text-align: right;
+    line-height: 2.5;
+    letter-spacing: 0;
+}
+
+.ayat-number {
+    background-color: #e6f0ff;
+    color: #2c5cc5;
+    font-family: 'Amiri', serif;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+    margin-top: 0.25rem;
+}
