@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
 
@@ -9,7 +9,63 @@ const AyatItem = ({
   showTranslation = true 
 }) => {
   const [bookmark, setBookmark] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState(null);
   const { user } = useAuthStore();
+
+  // Clean up audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.removeEventListener('ended', handleAudioEnd);
+      }
+    };
+  }, [audio]);
+
+  const handleAudioEnd = () => {
+    setIsPlaying(false);
+  };
+
+  const toggleAudio = () => {
+    if (audio) {
+      // If same audio is playing, pause it
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        // If different audio, create new instance
+        playAudio();
+      }
+    } else {
+      // First time playing
+      playAudio();
+    }
+  };
+
+  const playAudio = () => {
+    // Stop any currently playing audio
+    if (audio) {
+      audio.pause();
+      audio.removeEventListener('ended', handleAudioEnd);
+    }
+
+    // Create new audio instance
+    const newAudio = new Audio(
+      `https://verses.quran.com/AbdulBaset/Mujawwad/mp3/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
+    );
+    
+    newAudio.addEventListener('ended', handleAudioEnd);
+    newAudio.play()
+      .then(() => {
+        setAudio(newAudio);
+        setIsPlaying(true);
+      })
+      .catch(error => {
+        console.error('Error playing audio:', error);
+        toast.error('Gagal memutar audio');
+      });
+  };
 
   // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
@@ -175,7 +231,28 @@ const AyatItem = ({
             </p>
           )}
           
-          <div className="mt-2">
+          <div className="mt-2 flex gap-2">
+            <button 
+              onClick={toggleAudio}
+              className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+            >
+              {isPlaying ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />
+                  </svg>
+                  <span>Berhenti</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                  <span>Dengarkan</span>
+                </>
+              )}
+            </button>
+            
             <button 
               onClick={saveBookmark}
               className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"

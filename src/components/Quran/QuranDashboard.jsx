@@ -15,6 +15,7 @@ const QuranDashboard = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [fontSizeClass, setFontSizeClass] = useState('medium'); // One size control for all text
   const [showTranslation, setShowTranslation] = useState(true);
+  const [currentAudio, setCurrentAudio] = useState(null);
   const { user } = useAuthStore();
   
   const {
@@ -84,8 +85,12 @@ const QuranDashboard = () => {
     return () => {
       window.removeEventListener('resize', checkIsMobile);
       window.removeEventListener('scroll', handleScroll);
+      // Clean up any playing audio
+      if (currentAudio) {
+        currentAudio.pause();
+      }
     };
-  }, [setShowScrollTop]);
+  }, [setShowScrollTop, currentAudio]);
   
   // Save font settings to localStorage when they change
   useEffect(() => {
