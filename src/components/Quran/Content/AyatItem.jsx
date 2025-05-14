@@ -1,47 +1,7 @@
-import React, { useState, useEffect, useContext, createContext } from 'react';
+import React, { useState } from 'react';
+import { useAudio } from '../../../contexts/AudioContext';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
-
-// Buat context untuk mengelola audio global
-const AudioContext = createContext();
-
-export const AudioProvider = ({ children }) => {
-  const [currentAudio, setCurrentAudio] = useState(null);
-  
-  const playAudio = (newAudio) => {
-    // Hentikan audio yang sedang diputar jika ada
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.removeEventListener('ended', handleAudioEnd);
-    }
-    
-    // Set audio baru sebagai currentAudio
-    setCurrentAudio(newAudio);
-    return newAudio;
-  };
-  
-  const stopAudio = () => {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.removeEventListener('ended', handleAudioEnd);
-      setCurrentAudio(null);
-    }
-  };
-  
-  const handleAudioEnd = () => {
-    setCurrentAudio(null);
-  };
-  
-  return (
-    <AudioContext.Provider value={{ currentAudio, playAudio, stopAudio }}>
-      {children}
-    </AudioContext.Provider>
-  );
-};
-
-export const useAudio = () => {
-  return useContext(AudioContext);
-};
 
 const AyatItem = ({ 
   ayat, 
@@ -52,7 +12,7 @@ const AyatItem = ({
   const [bookmark, setBookmark] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const { currentAudio, playAudio: playGlobalAudio, stopAudio } = useAudio();
+  const { playAudio: playGlobalAudio, stopAudio } = useAudio();
   const { user } = useAuthStore();
 
   const handleAudioEnd = () => {
@@ -79,7 +39,6 @@ const AyatItem = ({
     const surahNumber = String(ayat.no_surat).padStart(3, '0');
     const ayahNumber = String(ayat.no_ayat).padStart(3, '0');
 
-    // List of available audio sources with Al-Afasy recitation
     const audioSources = [
       `https://verses.quran.com/Alafasy/mp3/${surahNumber}${ayahNumber}.mp3`,
       `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${surahNumber}${ayahNumber}.mp3`,
@@ -92,7 +51,6 @@ const AyatItem = ({
 
     const tryNextSource = () => {
       if (currentSourceIndex >= audioSources.length) {
-        // All sources failed
         console.error('All audio sources failed:', audioError);
         toast.error('Tidak dapat memutar audio saat ini');
         setIsLoadingAudio(false);
@@ -101,25 +59,15 @@ const AyatItem = ({
 
       const newAudio = new Audio(audioSources[currentSourceIndex]);
       
-      // Remove previous event listeners if any
-      newAudio.removeEventListener('error', handleAudioError);
-      newAudio.removeEventListener('canplaythrough', handleCanPlay);
-      
       newAudio.addEventListener('error', handleAudioError);
-      newAudio.addEventListener('canplaythrough', handleCanPlay);
-      newAudio.addEventListener('ended', () => {
-        handleAudioEnd();
-        stopAudio();
-      });
+      newAudio.addEventListener('canplaythrough', () => handleCanPlay(newAudio));
+      newAudio.addEventListener('ended', handleAudioEnd);
 
-      // Start loading the audio
       newAudio.load();
       
-      function handleCanPlay() {
-        // Gunakan global audio player
-        const audioToPlay = playGlobalAudio(newAudio);
-        
-        audioToPlay.play()
+      function handleCanPlay(audio) {
+        playGlobalAudio(audio)
+          .play()
           .then(() => {
             setIsPlaying(true);
             setIsLoadingAudio(false);
@@ -138,11 +86,9 @@ const AyatItem = ({
       }
     };
 
-    // Start trying sources
     tryNextSource();
   };
 
-  // Get appropriate CSS classes based on font size
   const getArabicFontSizeClass = (size) => {
     switch (size) {
       case 'small':
@@ -171,24 +117,17 @@ const AyatItem = ({
 
   const renderArabicWithTajwid = (arabicText) => {
     const tajwidRules = [
-      // Nun Sukun & Tanwin Rules
       { regex: /نْ[ء]/g, rule: 'izhar', color: '#673AB7' },
       { regex: /نْ[يرملون]/g, rule: 'idgham', color: '#3F51B5' },
       { regex: /نْ[ب]/g, rule: 'iqlab', color: '#8BC34A' },
       { regex: /نْ[^ءيرملونب]/g, rule: 'ikhfa', color: '#FF5722' },
-      
-      // Mim Sukun Rules
       { regex: /مْ[م]/g, rule: 'idgham-syafawi', color: '#00BCD4' },
       { regex: /مْ[ب]/g, rule: 'ikhfa-syafawi', color: '#9E9E9E' },
       { regex: /مْ[^مب]/g, rule: 'izhar-syafawi', color: '#607D8B' },
-      
-      // Mad Rules
       { regex: /َا|ِي|ُو/g, rule: 'mad-thabii', color: '#4CAF50' },
       { regex: /ٓ/g, rule: 'mad-lazim', color: '#009688' },
       { regex: /ٰ/g, rule: 'mad-arid', color: '#CDDC39' },
       { regex: /ـَى/g, rule: 'mad-lin', color: '#03A9F4' },
-      
-      // Other Rules
       { regex: /[قطبجد]ْ/g, rule: 'qalqalah', color: '#FFC107' },
       { regex: /اللّٰهِ|اللّه|الله/g, rule: 'lafadz-allah', color: '#E91E63' },
       { regex: /ّ/g, rule: 'tashdid', color: '#FF9800' },
