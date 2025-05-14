@@ -4,7 +4,8 @@
 /* Arabic text styles */
 
 .arab {
-    font-family: 'LPMQ IsepMisbah', 'Mushaf Quran';
+    /* First try loading from local files, then from potential CDN URLs */
+    font-family: 'LPMQ IsepMisbah', 'Mushaf Quran', 'Amiri Quran', 'Scheherazade New', serif;
     line-height: 2;
     letter-spacing: 0.01em;
     margin-bottom: 0.75rem;
@@ -285,16 +286,24 @@
 }
 
 
-/* Arabic font import */
+/* If you want to use local font files, you'll need to:
+1. Add the font files to your project (e.g., in public/fonts/)
+2. Uncomment and adjust the following @font-face rules:
+*/
 
+
+/*
 @font-face {
     font-family: 'LPMQ IsepMisbah';
-    src: url('path-to-lpmq-isepmisbah.woff2') format('woff2'), url('path-to-lpmq-isepmisbah.woff') format('woff');
+    src: url('/fonts/LPMQ-IsepMisbah.woff2') format('woff2'),
+         url('/fonts/LPMQ-IsepMisbah.woff') format('woff');
     font-display: swap;
 }
 
 @font-face {
     font-family: 'Mushaf Quran';
-    src: url('path-to-mushaf-quran.woff2') format('woff2'), url('path-to-mushaf-quran.woff') format('woff');
+    src: url('/fonts/Mushaf-Quran.woff2') format('woff2'),
+         url('/fonts/Mushaf-Quran.woff') format('woff');
     font-display: swap;
 }
+*/
