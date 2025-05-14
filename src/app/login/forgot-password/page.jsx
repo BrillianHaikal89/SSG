@@ -4,80 +4,115 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import useAuthStore from '../../stores/authStore';
+import toast from 'react-hot-toast';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function ForgotPasswordPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   
   // State management
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
   const [step, setStep] = useState(1); // Step 1: Enter phone number, Step 2: Enter OTP, Step 3: New password
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
-  // Load Cloudflare Turnstile script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-  
+  const [countdown, setCountdown] = useState(0);
+  const [userId, setUserId] = useState(null);
+
   // Handle phone number submission
-  function handlePhoneSubmit(e) {
+  async function handlePhoneSubmit(e) {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call to send OTP
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_URL}/users/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          nomor_hp: phoneNumber.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mengirim OTP');
+      }
+
+      setUserId(data.userId);
+      setStep(2);
+      startCountdown(120); // 2 minutes countdown
+      toast.success('Kode OTP telah dikirim ke nomor HP Anda');
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Terjadi kesalahan saat mengirim OTP');
+    } finally {
       setIsSubmitting(false);
-      setSubmitStatus('success');
-      setStep(2); // Move to OTP verification
-    }, 1500);
+    }
   }
-  
+
   // Handle OTP input
   function handleOtpChange(index, value) {
-    // Only accept numbers
     if (value && !/^\d+$/.test(value)) return;
     
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
     
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
   }
-  
+
   // Handle OTP verification
-  function handleOtpSubmit(e) {
+  async function handleOtpSubmit(e) {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call to verify OTP
-    setTimeout(() => {
+    try {
+      const otpCode = otp.join('');
+      
+      const response = await fetch(`${API_URL}/users/verify-forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          userId,
+          otp: otpCode
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Verifikasi OTP gagal');
+      }
+
+      setStep(3);
+      toast.success('OTP berhasil diverifikasi, silakan buat password baru');
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Terjadi kesalahan saat verifikasi OTP');
+    } finally {
       setIsSubmitting(false);
-      setSubmitStatus('success');
-      setStep(3); // Move to password reset
-    }, 1500);
+    }
   }
-  
+
   // Handle password reset
-  function handlePasswordReset(e) {
+  async function handlePasswordReset(e) {
     e.preventDefault();
     
-    // Validate passwords
     if (newPassword.length < 8) {
       setPasswordError('Kata sandi harus minimal 8 karakter');
       return;
@@ -91,18 +126,85 @@ function ForgotPasswordPage() {
     setIsSubmitting(true);
     setPasswordError('');
     
-    // Simulate API call to reset password
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitStatus('success');
-      
-      // Redirect to login page after success
+    try {
+      const response = await fetch(`${API_URL}/users/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          userId,
+          newPassword: newPassword.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal reset password');
+      }
+
+      toast.success('Password berhasil direset!');
       setTimeout(() => {
         router.push('/login');
-      }, 2000);
-    }, 1500);
+      }, 1500);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Terjadi kesalahan saat reset password');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
-  
+
+  // Resend OTP function
+  async function handleResendOtp() {
+    try {
+      const response = await fetch(`${API_URL}/users/resend-forgot-password-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          userId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mengirim ulang OTP');
+      }
+
+      startCountdown(120); // Reset to 2 minutes
+      toast.success('Kode OTP baru telah dikirim');
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Gagal mengirim ulang OTP');
+    }
+  }
+
+  // Countdown timer functions
+  function startCountdown(seconds) {
+    setCountdown(seconds);
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
   return (
     <div className="flex h-screen">
       {/* Form Side */}
@@ -142,11 +244,6 @@ function ForgotPasswordPage() {
                 />
               </div>
               
-              {/* Cloudflare Turnstile */}
-              <div className="mb-6">
-                <div className="cf-turnstile" data-sitekey="0x4AAAAAABBBnsl2yEqRVvMU"></div>
-              </div>
-              
               <div>
                 <button
                   type="submit"
@@ -180,17 +277,17 @@ function ForgotPasswordPage() {
                   ))}
                 </div>
                 <p className="mt-3 text-sm text-gray-500 text-center">
-                  Tidak menerima kode?{" "}
-                  <button 
-                    type="button"
-                    className="text-blue-800 font-medium"
-                    onClick={() => {
-                      // Resend OTP logic here
-                      alert('Kode OTP baru telah dikirim!');
-                    }}
-                  >
-                    Kirim ulang
-                  </button>
+                  {countdown > 0 ? (
+                    `Kirim ulang dalam ${formatTime(countdown)}`
+                  ) : (
+                    <button 
+                      type="button"
+                      className="text-blue-800 font-medium"
+                      onClick={handleResendOtp}
+                    >
+                      Kirim ulang OTP
+                    </button>
+                  )}
                 </p>
               </div>
               
@@ -225,6 +322,7 @@ function ForgotPasswordPage() {
                   name="newPassword"
                   type="password"
                   required
+                  minLength={8}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800"
@@ -241,6 +339,7 @@ function ForgotPasswordPage() {
                   name="confirmPassword"
                   type="password"
                   required
+                  minLength={8}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-800 focus:border-blue-800"
@@ -269,12 +368,6 @@ function ForgotPasswordPage() {
                   {isSubmitting ? 'Memproses...' : 'Reset Kata Sandi'}
                 </button>
               </div>
-              
-              {submitStatus === 'success' && (
-                <div className="mt-4 p-3 bg-green-50 text-green-800 rounded-md text-sm">
-                  Kata sandi berhasil diperbarui! Mengarahkan ke halaman login...
-                </div>
-              )}
             </form>
           )}
           
