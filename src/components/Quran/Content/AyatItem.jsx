@@ -11,6 +11,7 @@ const AyatItem = ({
   const [bookmark, setBookmark] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const { user } = useAuthStore();
 
   // Clean up audio when component unmounts
@@ -25,46 +26,94 @@ const AyatItem = ({
 
   const handleAudioEnd = () => {
     setIsPlaying(false);
+    setIsLoadingAudio(false);
   };
 
   const toggleAudio = () => {
+    if (isLoadingAudio) return;
+    
     if (audio) {
-      // If same audio is playing, pause it
       if (isPlaying) {
         audio.pause();
         setIsPlaying(false);
+        setIsLoadingAudio(false);
       } else {
-        // If different audio, create new instance
         playAudio();
       }
     } else {
-      // First time playing
       playAudio();
     }
   };
 
   const playAudio = () => {
+    setIsLoadingAudio(true);
+    
     // Stop any currently playing audio
     if (audio) {
       audio.pause();
       audio.removeEventListener('ended', handleAudioEnd);
     }
 
-    // Create new audio instance with Mishary Rasyid Al-Afasy audio
-    const newAudio = new Audio(
-      `https://server8.mp3quran.net/afs/${String(ayat.no_surat).padStart(3, '0')}${String(ayat.no_ayat).padStart(3, '0')}.mp3`
-    );
-    
-    newAudio.addEventListener('ended', handleAudioEnd);
-    newAudio.play()
-      .then(() => {
-        setAudio(newAudio);
-        setIsPlaying(true);
-      })
-      .catch(error => {
-        console.error('Error playing audio:', error);
-        toast.error('Gagal memutar audio');
-      });
+    // Format surah and ayah numbers with leading zeros
+    const surahNumber = String(ayat.no_surat).padStart(3, '0');
+    const ayahNumber = String(ayat.no_ayat).padStart(3, '0');
+
+    // List of available audio sources with Al-Afasy recitation
+    const audioSources = [
+      `https://verses.quran.com/Alafasy/mp3/${surahNumber}${ayahNumber}.mp3`,
+      `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${surahNumber}${ayahNumber}.mp3`,
+      `https://server.mp3quran.net/afs/${surahNumber}${ayahNumber}.mp3`,
+      `https://everyayah.com/data/Alafasy_128kbps/${surahNumber}${ayahNumber}.mp3`
+    ];
+
+    let currentSourceIndex = 0;
+    let audioError = null;
+
+    const tryNextSource = () => {
+      if (currentSourceIndex >= audioSources.length) {
+        // All sources failed
+        console.error('All audio sources failed:', audioError);
+        toast.error('Tidak dapat memutar audio saat ini');
+        setIsLoadingAudio(false);
+        return;
+      }
+
+      const newAudio = new Audio(audioSources[currentSourceIndex]);
+      
+      // Remove previous event listeners if any
+      newAudio.removeEventListener('error', handleAudioError);
+      newAudio.removeEventListener('canplaythrough', handleCanPlay);
+      
+      newAudio.addEventListener('error', handleAudioError);
+      newAudio.addEventListener('canplaythrough', handleCanPlay);
+      newAudio.addEventListener('ended', handleAudioEnd);
+
+      // Start loading the audio
+      newAudio.load();
+      
+      function handleCanPlay() {
+        newAudio.play()
+          .then(() => {
+            setAudio(newAudio);
+            setIsPlaying(true);
+            setIsLoadingAudio(false);
+          })
+          .catch(error => {
+            audioError = error;
+            currentSourceIndex++;
+            tryNextSource();
+          });
+      }
+
+      function handleAudioError(e) {
+        audioError = e;
+        currentSourceIndex++;
+        tryNextSource();
+      }
+    };
+
+    // Start trying sources
+    tryNextSource();
   };
 
   // Get appropriate CSS classes based on font size
@@ -207,9 +256,9 @@ const AyatItem = ({
   };
 
   return (
-    <div className="ayat-item">
+    <div className="ayat-item bg-white rounded-lg p-4 shadow-sm mb-4">
       <div className="flex items-start">
-        <span className="ayat-number">
+        <span className="ayat-number bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-1 text-sm">
           {ayat.no_ayat}
         </span>
         <div className="flex-1">
@@ -220,33 +269,47 @@ const AyatItem = ({
           )}
           
           <div 
-            className={`arab ${getArabicFontSizeClass(fontSizeClass)}`} 
+            className={`arab ${getArabicFontSizeClass(fontSizeClass)} leading-loose mb-3`} 
             dir="rtl" 
             dangerouslySetInnerHTML={{ __html: renderArabicWithTajwid(ayat.arab) }}
           />
           
           {ayat.tafsir && showTranslation && (
-            <p className={`translation mt-2 ${getTranslationFontSizeClass(fontSizeClass)}`}>
+            <p className={`translation mt-2 text-gray-700 ${getTranslationFontSizeClass(fontSizeClass)}`}>
               {ayat.tafsir}
             </p>
           )}
           
-          <div className="mt-2 flex gap-2">
+          <div className="mt-4 flex gap-2">
             <button 
               onClick={toggleAudio}
-              className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+              disabled={isLoadingAudio}
+              className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isLoadingAudio 
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                  : isPlaying 
+                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+              }`}
             >
-              {isPlaying ? (
+              {isLoadingAudio ? (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Memuat...</span>
+                </>
+              ) : isPlaying ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <span>Berhenti</span>
                 </>
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
                   <span>Dengarkan</span>
                 </>
@@ -255,19 +318,23 @@ const AyatItem = ({
             
             <button 
               onClick={saveBookmark}
-              className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                bookmark 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
             >
               {bookmark ? (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
                   </svg>
                   <span>Tersimpan</span>
                 </>
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
                   <span>Simpan</span>
                 </>
