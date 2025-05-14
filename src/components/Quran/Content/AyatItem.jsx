@@ -1,6 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import useAuthStore from '../../../stores/authStore';
 import toast from 'react-hot-toast';
+
+// Buat context untuk mengelola audio global
+const AudioContext = createContext();
+
+export const AudioProvider = ({ children }) => {
+  const [currentAudio, setCurrentAudio] = useState(null);
+  
+  const playAudio = (newAudio) => {
+    // Hentikan audio yang sedang diputar jika ada
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.removeEventListener('ended', handleAudioEnd);
+    }
+    
+    // Set audio baru sebagai currentAudio
+    setCurrentAudio(newAudio);
+    return newAudio;
+  };
+  
+  const stopAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.removeEventListener('ended', handleAudioEnd);
+      setCurrentAudio(null);
+    }
+  };
+  
+  const handleAudioEnd = () => {
+    setCurrentAudio(null);
+  };
+  
+  return (
+    <AudioContext.Provider value={{ currentAudio, playAudio, stopAudio }}>
+      {children}
+    </AudioContext.Provider>
+  );
+};
+
+export const useAudio = () => {
+  return useContext(AudioContext);
+};
 
 const AyatItem = ({ 
   ayat, 
@@ -10,19 +51,9 @@ const AyatItem = ({
 }) => {
   const [bookmark, setBookmark] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const { currentAudio, playAudio: playGlobalAudio, stopAudio } = useAudio();
   const { user } = useAuthStore();
-
-  // Clean up audio when component unmounts
-  useEffect(() => {
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.removeEventListener('ended', handleAudioEnd);
-      }
-    };
-  }, [audio]);
 
   const handleAudioEnd = () => {
     setIsPlaying(false);
@@ -32,14 +63,10 @@ const AyatItem = ({
   const toggleAudio = () => {
     if (isLoadingAudio) return;
     
-    if (audio) {
-      if (isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
-        setIsLoadingAudio(false);
-      } else {
-        playAudio();
-      }
+    if (isPlaying) {
+      stopAudio();
+      setIsPlaying(false);
+      setIsLoadingAudio(false);
     } else {
       playAudio();
     }
@@ -48,12 +75,6 @@ const AyatItem = ({
   const playAudio = () => {
     setIsLoadingAudio(true);
     
-    // Stop any currently playing audio
-    if (audio) {
-      audio.pause();
-      audio.removeEventListener('ended', handleAudioEnd);
-    }
-
     // Format surah and ayah numbers with leading zeros
     const surahNumber = String(ayat.no_surat).padStart(3, '0');
     const ayahNumber = String(ayat.no_ayat).padStart(3, '0');
@@ -86,15 +107,20 @@ const AyatItem = ({
       
       newAudio.addEventListener('error', handleAudioError);
       newAudio.addEventListener('canplaythrough', handleCanPlay);
-      newAudio.addEventListener('ended', handleAudioEnd);
+      newAudio.addEventListener('ended', () => {
+        handleAudioEnd();
+        stopAudio();
+      });
 
       // Start loading the audio
       newAudio.load();
       
       function handleCanPlay() {
-        newAudio.play()
+        // Gunakan global audio player
+        const audioToPlay = playGlobalAudio(newAudio);
+        
+        audioToPlay.play()
           .then(() => {
-            setAudio(newAudio);
             setIsPlaying(true);
             setIsLoadingAudio(false);
           })
