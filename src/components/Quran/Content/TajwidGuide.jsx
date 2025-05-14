@@ -1,7 +1,6 @@
 import React from 'react';
 
 const TajwidGuide = () => {
-  // Tajwid rules organized by categories exactly as in the screenshot
   const tajwidCategories = [
     {
       name: "Nun Sukun & Tanwin Rules:",
@@ -44,7 +43,7 @@ const TajwidGuide = () => {
   ];
 
   return (
-    <div className="tajwid-guide mb-6 p-4 bg-blue-50 rounded-md">
+    <div className="tajwid-guide">
       <h3 className="text-lg font-semibold text-blue-900 mb-3">Panduan Tajwid:</h3>
       
       <div className="space-y-4">
@@ -53,8 +52,8 @@ const TajwidGuide = () => {
             <h4 className="text-base font-medium text-gray-700 mb-2">{category.name}</h4>
             <div className="flex flex-wrap gap-6">
               {category.rules.map(rule => (
-                <div key={rule.name} className="flex items-center">
-                  <span className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: rule.color }}></span>
+                <div key={rule.name} className="tajwid-rule">
+                  <span className="tajwid-color" style={{ backgroundColor: rule.color }}></span>
                   <span className="text-sm">{rule.name}</span>
                 </div>
               ))}

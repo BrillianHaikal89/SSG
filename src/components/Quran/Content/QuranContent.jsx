@@ -4,6 +4,7 @@ import TajwidGuide from './TajwidGuide';
 import ContentLoader from '../LoadingStates/ContentLoader';
 import EmptyState from '../LoadingStates/EmptyState';
 import NextContentButton from './NextContentButton';
+import '../../app/styles/quran-styles.css';
 
 const QuranContent = ({
   loading,
@@ -22,7 +23,6 @@ const QuranContent = ({
   showTranslation,
   setShowTranslation
 }) => {
-  // Function to remove footnotes from translation
   const cleanTranslation = (text) => {
     if (!text) return text;
     return text.replace(/<sup>\[\d+]<\/sup>/g, '');
@@ -45,16 +45,16 @@ const QuranContent = ({
     const nextContent = showNextButton ? getNextContent() : null;
     
     return (
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-6">
         {/* Surah header */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">
+        <div className="surah-header">
+          <h2 className="surah-title">
             {surahDetails?.nm_surat || ''}
           </h2>
           {surahDetails && (
-            <p className="text-md text-gray-700 mb-2">{cleanTranslation(surahDetails.arti_surat)}</p>
+            <p className="surah-translation">{cleanTranslation(surahDetails.arti_surat)}</p>
           )}
-          <p className="text-sm text-gray-600">
+          <p className="surah-meta">
             Juz {currentJuz || '-'} • Halaman {currentHal || '-'}
           </p>
         </div>
@@ -127,7 +127,7 @@ const QuranContent = ({
         <TajwidGuide />
         
         {/* Ayat list with Tajwid highlighting */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {quranContent.map((ayat) => (
             <AyatItem 
               key={`${ayat.no_surat}-${ayat.no_ayat}`} 
