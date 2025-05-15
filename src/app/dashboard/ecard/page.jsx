@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 export default function ECard() {
   const { user, loading, error, qrcode, fetchUserQRCode } = useAuthStore();
   const [isPrinting, setIsPrinting] = useState(false);
-  const [activeCard, setActiveCard] = useState('front');
+  const [activeCard, setActiveCard] = useState('both'); // Default to show both cards
   const printRef = useRef(null);
 
   useEffect(() => {
@@ -21,40 +21,63 @@ export default function ECard() {
     window.history.back();
   };
 
+  // Improved print function that uses the browser's print functionality
   const handlePrint = (side) => {
     setActiveCard(side);
     setIsPrinting(true);
     
+    // Add a small delay to allow the state to update
     setTimeout(() => {
-      const printWindow = window.open('', '_blank');
-      const cardHTML = printRef.current.querySelector(`#${side}-card`).outerHTML;
+      // Create a hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '85mm';
+      iframe.style.height = '54mm';
+      document.body.appendChild(iframe);
       
-      printWindow.document.write(`
+      // Write the HTML content to the iframe
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const cardElement = document.getElementById(`${side}-card`).cloneNode(true);
+      
+      doc.write(`
         <!DOCTYPE html>
         <html>
           <head>
             <title>Kartu Peserta SSG</title>
             <style>
               @page {
-                size: 85mm 54mm;
+                size: 85mm 54mm landscape;
                 margin: 0;
               }
-              body {
+              html, body {
                 margin: 0;
                 padding: 0;
+                width: 85mm;
+                height: 54mm;
+                overflow: hidden;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                color-adjust: exact !important;
               }
+              * {
+                box-sizing: border-box;
+              }
+              /* Front card styles */
               .front-card {
                 width: 85mm;
                 height: 54mm;
-                margin: 0;
-                padding: 0;
                 display: flex;
                 overflow: hidden;
+                background-color: #1d4ed8 !important;
               }
               /* QR Code section (left) */
-              .front-card > div:first-child {
+              .front-card > div {
+                display: flex;
+                height: 100%;
+              }
+              .front-card > div > div:first-child {
                 width: 40%;
                 background-color: #1e3a8a !important;
                 display: flex;
@@ -64,53 +87,99 @@ export default function ECard() {
                 padding: 0.75rem;
               }
               /* Info section (right) */
-              .front-card > div:last-child {
+              .front-card > div > div:last-child {
                 width: 60%;
                 background-color: #1d4ed8 !important;
-                padding: 1rem;
+                padding: 1rem 0.75rem;
               }
               .qrcode-container {
-                background-color: white;
+                background-color: white !important;
                 padding: 0.5rem;
                 border-radius: 0.375rem;
                 margin-bottom: 0.5rem;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
               }
-              .qrcode-image {
-                max-width: 100%;
-                height: auto;
+              .bg-blue-800 {
+                background-color: #1e40af !important;
               }
               /* Back card styles */
               .back-card {
                 width: 85mm;
                 height: 54mm;
-                margin: 0;
-                padding: 0;
-                background-color: white;
+                background-color: white !important;
                 display: flex;
                 flex-direction: column;
+              }
+              .back-card ol {
+                margin-left: 1.5rem;
+                padding-left: 0;
+              }
+              .bg-blue-50 {
+                background-color: #eff6ff !important;
+              }
+              .border-blue-100 {
+                border-color: #dbeafe !important;
+              }
+              .text-blue-800 {
+                color: #1e40af !important;
+              }
+              .text-blue-900 {
+                color: #1e3a8a !important;
+              }
+              .text-gray-800 {
+                color: #1f2937 !important;
+              }
+              .text-white {
+                color: white !important;
+              }
+              .border-gray-200 {
+                border-color: #e5e7eb !important;
+              }
+              .border-gray-100 {
+                border-color: #f3f4f6 !important;
               }
             </style>
           </head>
           <body>
-            ${cardHTML}
-            <script>
-              window.onload = function() {
-                setTimeout(function() {
-                  window.print();
-                  window.close();
-                }, 500);
-              }
-            </script>
           </body>
         </html>
       `);
       
-      printWindow.document.close();
+      // Remove any Framer Motion attributes and classes that could interfere with printing
+      cardElement.removeAttribute('style');
+      cardElement.querySelectorAll('[style]').forEach(el => el.removeAttribute('style'));
       
-      setTimeout(() => {
-        setIsPrinting(false);
-      }, 1000);
+      // Remove any unnecessary classes that might interfere with print styling
+      cardElement.classList.remove('rounded-xl', 'shadow-xl', 'border');
+      
+      // Append the card to the body
+      doc.body.appendChild(cardElement);
+      
+      // Add print script
+      const script = doc.createElement('script');
+      script.textContent = `
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+            window.close();
+          }, 500);
+        }
+      `;
+      doc.body.appendChild(script);
+      
+      // Force the iframe to be fully loaded
+      iframe.onload = function() {
+        // Start print process
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        
+        // Remove the iframe after printing 
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          setIsPrinting(false);
+          setActiveCard('both'); // Reset to show both cards
+        }, 1000);
+      };
     }, 300);
   };
 
@@ -171,6 +240,37 @@ export default function ECard() {
 
   return (
     <div className="min-h-screen bg-gray-100" ref={printRef}>
+      {/* Global print styles */}
+      <Head>
+        <style type="text/css" media="print">{`
+          @page {
+            size: 85mm 54mm landscape;
+            margin: 0;
+          }
+          body * {
+            visibility: hidden;
+          }
+          #front-card,
+          #back-card,
+          #front-card *,
+          #back-card * {
+            visibility: visible !important;
+          }
+          #front-card,
+          #back-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 85mm;
+            height: 54mm;
+            margin: 0;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+        `}</style>
+      </Head>
+
       {/* Header hanya ditampilkan saat tidak print */}
       <header className="bg-blue-900 text-white shadow-lg print:hidden">
         <div className="container mx-auto px-4 py-4 relative">
@@ -220,7 +320,7 @@ export default function ECard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className={`front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-[85mm] print:h-[54mm] border border-blue-500 ${activeCard === 'back' ? 'print:hidden' : ''}`}
+                className={`front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-[85mm] print:h-[54mm] border border-blue-500 ${activeCard === 'back' ? 'hidden md:flex' : ''}`}
               >
                 <div className="flex h-full">
                   {/* Left side with QR code */}
@@ -287,7 +387,7 @@ export default function ECard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className={`back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-[85mm] print:h-[54mm] border border-gray-200 ${activeCard === 'front' ? 'print:hidden' : ''}`}
+                className={`back-card bg-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-[85mm] print:h-[54mm] border border-gray-200 ${activeCard === 'front' ? 'hidden md:flex' : ''}`}
               >
                 <div className="flex h-full flex-col">
                   <div className="flex items-center justify-between px-4 pt-2 pb-1 border-b border-gray-100">
@@ -341,6 +441,23 @@ export default function ECard() {
               gunakan tombol "Cetak Depan" atau "Cetak Belakang" di bawah.
             </p>
           </div>
+          
+          {/* Added additional print tips */}
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-lg mb-8 print:hidden shadow-sm">
+            <h3 className="font-medium flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Tips Mencetak:
+            </h3>
+            <ul className="text-sm mt-2 pl-7 list-disc space-y-1">
+              <li>Gunakan kertas tebal/karton 210-300gsm</li>
+              <li>Pastikan pengaturan printer tanpa margin (borderless)</li>
+              <li>Pilih ukuran kartu kredit atau custom 85mm × 54mm</li>
+              <li>Orientasi landscape (horizontal)</li>
+              <li>Cetak dalam mode warna (color)</li>
+            </ul>
+          </div>
 
           {/* Buttons - hide when printing */}
           <div className="flex flex-col sm:flex-row justify-center gap-3 print:hidden">
@@ -393,40 +510,6 @@ export default function ECard() {
           </div>
         </div>
       </main>
-
-      {/* Extra print styles to ensure colors print properly */}
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #front-card,
-          #back-card,
-          #front-card *,
-          #back-card * {
-            visibility: visible !important;
-          }
-          #front-card,
-          #back-card {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 85mm;
-            height: 54mm;
-            margin: 0;
-            page-break-after: always;
-            border: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-          }
-          .front-card > div:first-child {
-            background-color: #1e3a8a !important;
-          }
-          .front-card > div:last-child {
-            background-color: #1d4ed8 !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
