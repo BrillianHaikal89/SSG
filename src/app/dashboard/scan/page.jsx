@@ -1,4 +1,3 @@
-// app/scan-qrcode/page.jsx
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,6 +28,11 @@ export default function QrCodeScanner() {
     hijriMonth: 0,
     hijriYear: 0
   });
+  const [attendanceStatus, setAttendanceStatus] = useState('hadir'); // Default status
+  const [lateReason, setLateReason] = useState('');
+  const [permissionReason, setPermissionReason] = useState('');
+  const [showLateForm, setShowLateForm] = useState(false);
+  const [showPermissionForm, setShowPermissionForm] = useState(false);
   
   // Scanner reference
   const scannerRef = useRef(null);
@@ -155,6 +159,18 @@ export default function QrCodeScanner() {
       console.error('Error formatting date:', error);
       return '';
     }
+  };
+
+  // Check if current time is after 16:00 (4 PM)
+  const isAfterFourPM = () => {
+    const now = new Date();
+    return now.getHours() >= 16;
+  };
+
+  // Check if it's weekend (Saturday or Sunday)
+  const isWeekend = () => {
+    const now = new Date();
+    return now.getDay() === 6 || now.getDay() === 0; // 6 = Saturday, 0 = Sunday
   };
 
   // ===== Effects =====
@@ -360,6 +376,38 @@ export default function QrCodeScanner() {
   const onScanSuccess = (decodedText) => {
     setScannedCode(decodedText);
     stopScanner();
+    
+    // Determine attendance status based on rules
+    const now = new Date();
+    const hours = now.getHours();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    // Rule 1: If QR code hasn't been scanned yet = hadir
+    // (This would be checked on the server side, we'll assume it's new for this example)
+    
+    // Rule 2: If scanned within 1 hour = show late form
+    if (hours > 8) { // Assuming 8 AM is the cutoff
+      setShowLateForm(true);
+      setAttendanceStatus('terlambat');
+      return;
+    }
+    
+    // Rule 3: If it's weekend (Saturday or Sunday) and not scanned in 2 days = alfa
+    // (This would be checked on the server side)
+    
+    // Rule 4: If scanned on Sunday before 4 PM after being scanned on Saturday = show permission form
+    if (dayOfWeek === 0 && !isAfterFourPM()) {
+      setShowPermissionForm(true);
+      setAttendanceStatus('ijin');
+      return;
+    }
+    
+    // Rule 5: If education is completed on Sunday at 4 PM = auto hadir
+    if (dayOfWeek === 0 && isAfterFourPM()) {
+      setAttendanceStatus('hadir');
+    }
+    
+    // Default case: submit attendance
     submitAttendance(decodedText);
   };
 
@@ -380,6 +428,10 @@ export default function QrCodeScanner() {
   const startScanner = () => {
     setScannedCode(null);
     setScanResult(null);
+    setShowLateForm(false);
+    setShowPermissionForm(false);
+    setLateReason('');
+    setPermissionReason('');
     setScanning(true);
 
     // Short delay to ensure DOM is fully ready
@@ -541,12 +593,19 @@ export default function QrCodeScanner() {
     setScanResult(null);
 
     try {
+      const payload = {
+        qrcode_text: qrcodeText,
+        status: attendanceStatus,
+        ...(lateReason && { late_reason: lateReason }),
+        ...(permissionReason && { permission_reason: permissionReason })
+      };
+
       const response = await fetch(`${API_URL}/users/presensi`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ qrcode_text: qrcodeText }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -576,10 +635,32 @@ export default function QrCodeScanner() {
     }
   };
 
+  // Handle late submission
+  const handleLateSubmit = () => {
+    if (!lateReason) {
+      toast.error('Harap masukkan alasan keterlambatan');
+      return;
+    }
+    submitAttendance(scannedCode);
+  };
+
+  // Handle permission submission
+  const handlePermissionSubmit = () => {
+    if (!permissionReason) {
+      toast.error('Harap masukkan alasan ijin');
+      return;
+    }
+    submitAttendance(scannedCode);
+  };
+
   // Reset form to scan again
   const resetForm = () => {
     setScannedCode(null);
     setScanResult(null);
+    setShowLateForm(false);
+    setShowPermissionForm(false);
+    setLateReason('');
+    setPermissionReason('');
     startScanner();
   };
 
@@ -649,7 +730,7 @@ export default function QrCodeScanner() {
         </div>
 
         {/* Scanned Code Display (Processing) */}
-        {scannedCode && !scanResult && (
+        {scannedCode && !scanResult && !showLateForm && !showPermissionForm && (
           <div className="p-6">
             <div className="text-center mb-6">
               {submitting ? (
@@ -679,6 +760,90 @@ export default function QrCodeScanner() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Late Form */}
+        {showLateForm && (
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                <Clock size={52} className="text-yellow-500" />
+              </div>
+              <h3 className="text-xl font-medium mt-4 text-yellow-700">Anda Terlambat</h3>
+              <p className="text-yellow-600 mt-2">Silakan berikan alasan keterlambatan Anda</p>
+              
+              <div className="mt-4">
+                <textarea
+                  value={lateReason}
+                  onChange={(e) => setLateReason(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Masukkan alasan terlambat..."
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() => {
+                    setShowLateForm(false);
+                    setAttendanceStatus('hadir');
+                    submitAttendance(scannedCode);
+                  }}
+                  className="px-5 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200"
+                >
+                  Tetap Hadir
+                </button>
+                <button
+                  onClick={handleLateSubmit}
+                  className="px-5 py-3 bg-gradient-to-r from-yellow-600 to-yellow-800 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                >
+                  Simpan Keterlambatan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Permission Form */}
+        {showPermissionForm && (
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
+                <Calendar size={52} className="text-purple-500" />
+              </div>
+              <h3 className="text-xl font-medium mt-4 text-purple-700">Ijin Tidak Hadir</h3>
+              <p className="text-purple-600 mt-2">Silakan berikan alasan ijin Anda</p>
+              
+              <div className="mt-4">
+                <textarea
+                  value={permissionReason}
+                  onChange={(e) => setPermissionReason(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Masukkan alasan ijin..."
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() => {
+                    setShowPermissionForm(false);
+                    setAttendanceStatus('hadir');
+                    submitAttendance(scannedCode);
+                  }}
+                  className="px-5 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200"
+                >
+                  Tetap Hadir
+                </button>
+                <button
+                  onClick={handlePermissionSubmit}
+                  className="px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                >
+                  Simpan Ijin
+                </button>
+              </div>
             </div>
           </div>
         )}
