@@ -20,50 +20,87 @@ export default function ECard() {
     window.history.back();
   };
 
-  const handlePrint = (cardSide) => {
-    setActiveCard(cardSide);
+  const handlePrint = () => {
     setIsPrinting(true);
     
-    // Gunakan setTimeout untuk memastikan state terupdate sebelum mencetak
+    const printWindow = window.open('', '_blank');
+    const frontCardHTML = printRef.current.querySelector('#front-card').outerHTML;
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Kartu Peserta SSG</title>
+          <style>
+            @page {
+              size: 85mm 54mm;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .print-card {
+              width: 85mm;
+              height: 54mm;
+              display: flex;
+              font-family: Arial, sans-serif;
+            }
+            .qr-section {
+              width: 40%;
+              background-color: #1e3a8a;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              padding: 5px;
+            }
+            .info-section {
+              width: 60%;
+              background-color: #1d4ed8;
+              color: white;
+              padding: 10px;
+              display: flex;
+              flex-direction: column;
+            }
+            .qr-container {
+              background: white;
+              padding: 8px;
+              border-radius: 4px;
+              margin-bottom: 5px;
+            }
+            .logo {
+              display: flex;
+              align-items: center;
+              margin-bottom: 15px;
+            }
+            .badge {
+              background-color: #1e40af;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 12px;
+              margin-bottom: 5px;
+              display: inline-block;
+            }
+          </style>
+        </head>
+        <body>
+          ${frontCardHTML}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
     setTimeout(() => {
-      const printContent = printRef.current;
-      const printWindow = window.open('', '_blank');
-      
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Cetak Kartu Peserta</title>
-            <style>
-              @page {
-                size: 85mm 54mm;
-                margin: 0;
-              }
-              body {
-                margin: 0;
-                padding: 0;
-              }
-            </style>
-          </head>
-          <body>
-            ${cardSide === 'front' 
-              ? printRef.current.querySelector('#front-card').outerHTML 
-              : printRef.current.querySelector('#back-card').outerHTML}
-          </body>
-        </html>
-      `);
-      
-      printWindow.document.close();
-      printWindow.focus();
-      
-      // Beri sedikit delay sebelum print
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-        setIsPrinting(false);
-      }, 300);
+      printWindow.print();
+      printWindow.close();
+      setIsPrinting(false);
     }, 300);
   };
+
 
   if (loading) {
     return (
