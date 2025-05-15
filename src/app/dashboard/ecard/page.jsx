@@ -23,165 +23,87 @@ export default function ECard() {
 
   // Improved print function that uses the browser's print functionality
   const handlePrint = (side) => {
-    setActiveCard(side);
-    setIsPrinting(true);
+  setActiveCard(side);
+  setIsPrinting(true);
+  
+  setTimeout(() => {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '85mm';
+    iframe.style.height = '54mm';
+    document.body.appendChild(iframe);
     
-    // Add a small delay to allow the state to update
-    setTimeout(() => {
-      // Create a hidden iframe for printing
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.top = '-9999px';
-      iframe.style.left = '-9999px';
-      iframe.style.width = '85mm';
-      iframe.style.height = '54mm';
-      document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    const cardElement = document.getElementById(`${side}-card`).cloneNode(true);
+    
+    // Hapus semua atribut motion dan class yang tidak perlu
+    cardElement.removeAttribute('style');
+    cardElement.removeAttribute('initial');
+    cardElement.removeAttribute('animate');
+    cardElement.removeAttribute('transition');
+    cardElement.classList.remove('rounded-xl', 'shadow-xl', 'border');
+    
+    // Tambahkan style khusus untuk print
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Kartu Peserta SSG</title>
+          <style>
+            @page {
+              size: 85mm 54mm landscape;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              width: 85mm;
+              height: 54mm;
+              overflow: hidden;
+            }
+            .front-card, .back-card {
+              width: 100% !important;
+              height: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+            }
+          </style>
+        </head>
+        <body>
+        </body>
+      </html>
+    `);
+    
+    doc.body.appendChild(cardElement);
+    
+    const script = doc.createElement('script');
+    script.textContent = `
+      window.onload = function() {
+        setTimeout(function() {
+          window.print();
+          window.close();
+        }, 100);
+      }
+    `;
+    doc.body.appendChild(script);
+    
+    iframe.onload = function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
       
-      // Write the HTML content to the iframe
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      const cardElement = document.getElementById(`${side}-card`).cloneNode(true);
-      
-      doc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Kartu Peserta SSG</title>
-            <style>
-              @page {
-                size: 85mm 54mm landscape;
-                margin: 0;
-              }
-              html, body {
-                margin: 0;
-                padding: 0;
-                width: 85mm;
-                height: 54mm;
-                overflow: hidden;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
-              * {
-                box-sizing: border-box;
-              }
-              /* Front card styles */
-              .front-card {
-                width: 85mm;
-                height: 54mm;
-                display: flex;
-                overflow: hidden;
-                background-color: #1d4ed8 !important;
-              }
-              /* QR Code section (left) */
-              .front-card > div {
-                display: flex;
-                height: 100%;
-              }
-              .front-card > div > div:first-child {
-                width: 40%;
-                background-color: #1e3a8a !important;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                padding: 0.75rem;
-              }
-              /* Info section (right) */
-              .front-card > div > div:last-child {
-                width: 60%;
-                background-color: #1d4ed8 !important;
-                padding: 1rem 0.75rem;
-              }
-              .qrcode-container {
-                background-color: white !important;
-                padding: 0.5rem;
-                border-radius: 0.375rem;
-                margin-bottom: 0.5rem;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-              }
-              .bg-blue-800 {
-                background-color: #1e40af !important;
-              }
-              /* Back card styles */
-              .back-card {
-                width: 85mm;
-                height: 54mm;
-                background-color: white !important;
-                display: flex;
-                flex-direction: column;
-              }
-              .back-card ol {
-                margin-left: 1.5rem;
-                padding-left: 0;
-              }
-              .bg-blue-50 {
-                background-color: #eff6ff !important;
-              }
-              .border-blue-100 {
-                border-color: #dbeafe !important;
-              }
-              .text-blue-800 {
-                color: #1e40af !important;
-              }
-              .text-blue-900 {
-                color: #1e3a8a !important;
-              }
-              .text-gray-800 {
-                color: #1f2937 !important;
-              }
-              .text-white {
-                color: white !important;
-              }
-              .border-gray-200 {
-                border-color: #e5e7eb !important;
-              }
-              .border-gray-100 {
-                border-color: #f3f4f6 !important;
-              }
-            </style>
-          </head>
-          <body>
-          </body>
-        </html>
-      `);
-      
-      // Remove any Framer Motion attributes and classes that could interfere with printing
-      cardElement.removeAttribute('style');
-      cardElement.querySelectorAll('[style]').forEach(el => el.removeAttribute('style'));
-      
-      // Remove any unnecessary classes that might interfere with print styling
-      cardElement.classList.remove('rounded-xl', 'shadow-xl', 'border');
-      
-      // Append the card to the body
-      doc.body.appendChild(cardElement);
-      
-      // Add print script
-      const script = doc.createElement('script');
-      script.textContent = `
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-            window.close();
-          }, 500);
-        }
-      `;
-      doc.body.appendChild(script);
-      
-      // Force the iframe to be fully loaded
-      iframe.onload = function() {
-        // Start print process
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        
-        // Remove the iframe after printing 
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          setIsPrinting(false);
-          setActiveCard('both'); // Reset to show both cards
-        }, 1000);
-      };
-    }, 300);
-  };
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        setIsPrinting(false);
+        setActiveCard('both');
+      }, 1000);
+    };
+  }, 100);
+};
 
   if (loading) {
     return (
@@ -320,7 +242,7 @@ export default function ECard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className={`front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-[85mm] print:h-[54mm] border border-blue-500 ${activeCard === 'back' ? 'hidden md:flex' : ''}`}
+                className={`front-card bg-blue-700 text-white rounded-xl overflow-hidden shadow-xl w-full md:w-[400px] md:h-[250px] aspect-[1.58/1] flex flex-col print:rounded-none print:shadow-none print:w-[85mm] print:h-[54mm] border border-blue-500 ${activeCard === 'back' ? 'hidden md:flex print:block' : ''}`}
               >
                 <div className="flex h-full">
                   {/* Left side with QR code */}
@@ -509,7 +431,35 @@ export default function ECard() {
             </button>
           </div>
         </div>
+        
       </main>
+      <style jsx global>{`
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #front-card,
+    #back-card,
+    #front-card *,
+    #back-card * {
+      visibility: visible !important;
+    }
+    #front-card,
+    #back-card {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 85mm !important;
+      height: 54mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+  }
+`}</style>
     </div>
+    
   );
 }
