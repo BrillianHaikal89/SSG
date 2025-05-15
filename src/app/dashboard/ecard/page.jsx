@@ -23,11 +23,45 @@ export default function ECard() {
   const handlePrint = (cardSide) => {
     setActiveCard(cardSide);
     setIsPrinting(true);
+    
+    // Gunakan setTimeout untuk memastikan state terupdate sebelum mencetak
     setTimeout(() => {
-      window.print();
+      const printContent = printRef.current;
+      const printWindow = window.open('', '_blank');
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Cetak Kartu Peserta</title>
+            <style>
+              @page {
+                size: 85mm 54mm;
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+              }
+            </style>
+          </head>
+          <body>
+            ${cardSide === 'front' 
+              ? printRef.current.querySelector('#front-card').outerHTML 
+              : printRef.current.querySelector('#back-card').outerHTML}
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      printWindow.focus();
+      
+      // Beri sedikit delay sebelum print
       setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
         setIsPrinting(false);
-      }, 500);
+      }, 300);
     }, 300);
   };
 
@@ -312,161 +346,26 @@ export default function ECard() {
       </main>
 
       {/* Print-specific styles */}
-      <style jsx global>{`
+      <style jsx>{`
         @media print {
-          @page {
-            size: 85mm 54mm landscape;
-            margin: 0mm;
-            padding: 0mm;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            background: white;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
-          /* Hide everything except the card being printed */
           body * {
             visibility: hidden;
+          }
+          #front-card,
+          #back-card,
+          #front-card *,
+          #back-card * {
+            visibility: visible;
+          }
+          #front-card,
+          #back-card {
             position: absolute;
-            left: -9999px;
-          }
-          
-          /* Show selected card container */
-          .cards-container,
-          .cards-container * {
-            position: static;
-            visibility: hidden;
-          }
-          
-          /* Front card specific styling */
-          .front-card {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 85mm !important;
-            height: 54mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            overflow: hidden !important;
-            background-color: #1d4ed8 !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            -webkit-print-color-adjust: exact !important;
-            display: ${activeCard === 'front' ? 'flex !important' : 'none !important'};
-            visibility: ${activeCard === 'front' ? 'visible !important' : 'hidden !important'};
-          }
-          
-          /* Back card specific styling */
-          .back-card {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 85mm !important;
-            height: 54mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            overflow: hidden !important;
-            background-color: white !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            -webkit-print-color-adjust: exact !important;
-            display: ${activeCard === 'back' ? 'flex !important' : 'none !important'};
-            visibility: ${activeCard === 'back' ? 'visible !important' : 'hidden !important'};
-          }
-          
-          /* Make sure all children of the active card are visible */
-          .front-card * {
-            visibility: ${activeCard === 'front' ? 'visible !important' : 'hidden !important'};
-            display: ${activeCard === 'front' ? 'initial !important' : 'none !important'};
-            position: initial !important;
-          }
-          
-          .back-card * {
-            visibility: ${activeCard === 'back' ? 'visible !important' : 'hidden !important'};
-            display: ${activeCard === 'back' ? 'initial !important' : 'none !important'};
-            position: initial !important;
-          }
-          
-          /* Keep flex layouts intact */
-          .front-card > div,
-          .back-card > div,
-          .front-card .flex,
-          .back-card .flex {
-            display: flex !important;
-          }
-          
-          .front-card .flex-col,
-          .back-card .flex-col {
-            flex-direction: column !important;
-          }
-          
-          /* Make sure QR code displays properly */
-          .front-card .qrcode-container {
-            background-color: white !important;
-            padding: 8px !important;
-            margin-bottom: 8px !important;
-            border-radius: 4px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-          }
-          
-          .front-card .qrcode-image {
-            width: 100% !important;
-            height: auto !important;
-            max-width: 90px !important;
-            display: block !important;
-          }
-          
-          /* Fix background colors in print */
-          .front-card .bg-blue-900 {
-            background-color: #1e3a8a !important;
-          }
-          
-          .front-card .bg-blue-800 {
-            background-color: #1e40af !important;
-          }
-          
-          .back-card .bg-blue-50 {
-            background-color: #eff6ff !important;
-          }
-          
-          /* Fix list styling in back card */
-          .back-card ol {
-            display: block !important;
-            list-style-type: decimal !important;
-            padding-left: 16px !important;
-          }
-          
-          .back-card li {
-            display: list-item !important;
-            color: #1f2937 !important;
-          }
-          
-          /* Fix layout */
-          .h-full {
-            height: 100% !important;
-          }
-          
-          .flex-grow {
-            flex-grow: 1 !important;
-          }
-          
-          .w-2\/5 {
-            width: 40% !important;
-          }
-          
-          .w-3\/5 {
-            width: 60% !important;
+            left: 0;
+            top: 0;
+            width: 85mm;
+            height: 54mm;
+            margin: 0;
+            page-break-after: always;
           }
         }
       `}</style>
