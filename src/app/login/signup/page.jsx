@@ -38,6 +38,12 @@ const SignupPage = () => {
   const [kota, setKota] = useState('');
   const [provinsi, setProvinsi] = useState('');
   
+  // Location options for dropdown (when multiple locations found)
+  const [locationOptionsStep1, setLocationOptionsStep1] = useState([]);
+  const [locationOptionsStep2, setLocationOptionsStep2] = useState([]);
+  const [showLocationDropdownStep1, setShowLocationDropdownStep1] = useState(false);
+  const [showLocationDropdownStep2, setShowLocationDropdownStep2] = useState(false);
+  
   // Address & Contact Data (Step 2)
   const [isSameAddress, setIsSameAddress] = useState(false);
   const [alamatDomisili, setAlamatDomisili] = useState('');
@@ -90,6 +96,8 @@ const SignupPage = () => {
       setters.setKecamatan('');
       setters.setKota('');
       setters.setProvinsi('');
+      setters.setLocationOptions([]);
+      setters.setShowLocationDropdown(false);
       return;
     }
     
@@ -108,20 +116,65 @@ const SignupPage = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Fill form with received data
-        setters.setKelurahan(data.kelurahan || "");
-        setters.setKecamatan(data.kecamatan || "");
-        setters.setKota(data.kota || "");
-        setters.setProvinsi(data.provinsi || "");
-        
-        // Clear any previous error
-        setFormErrors(prev => {
-          const newErrors = {...prev};
-          delete newErrors[setters.errorKey];
-          return newErrors;
-        });
+        // Handle multiple location case
+        if (Array.isArray(data) && data.length > 0) {
+          // If multiple locations, show dropdown
+          if (data.length > 1) {
+            setters.setLocationOptions(data);
+            setters.setShowLocationDropdown(true);
+            
+            // Clear previously selected location
+            setters.setKelurahan('');
+            setters.setKecamatan('');
+            setters.setKota('');
+            setters.setProvinsi('');
+            
+            // Clear any previous error
+            setFormErrors(prev => {
+              const newErrors = {...prev};
+              delete newErrors[setters.errorKey];
+              return newErrors;
+            });
+          } else {
+            // If only one location, fill automatically
+            const location = data[0];
+            setters.setLocationOptions([]);
+            setters.setShowLocationDropdown(false);
+            
+            setters.setKelurahan(location.kelurahan || "");
+            setters.setKecamatan(location.kecamatan || "");
+            setters.setKota(location.kota || "");
+            setters.setProvinsi(location.provinsi || "");
+            
+            // Clear any previous error
+            setFormErrors(prev => {
+              const newErrors = {...prev};
+              delete newErrors[setters.errorKey];
+              return newErrors;
+            });
+          }
+        } else {
+          // Handle single location as object
+          setters.setLocationOptions([]);
+          setters.setShowLocationDropdown(false);
+          
+          setters.setKelurahan(data.kelurahan || "");
+          setters.setKecamatan(data.kecamatan || "");
+          setters.setKota(data.kota || "");
+          setters.setProvinsi(data.provinsi || "");
+          
+          // Clear any previous error
+          setFormErrors(prev => {
+            const newErrors = {...prev};
+            delete newErrors[setters.errorKey];
+            return newErrors;
+          });
+        }
       } else {
         console.error(`Server responded with status: ${response.status}`);
+        setters.setLocationOptions([]);
+        setters.setShowLocationDropdown(false);
+        
         setFormErrors(prev => ({
           ...prev,
           [setters.errorKey]: "Data kode pos tidak ditemukan. Harap isi alamat secara manual."
@@ -129,6 +182,9 @@ const SignupPage = () => {
       }
     } catch (error) {
       console.error('Error fetching postal code data:', error);
+      setters.setLocationOptions([]);
+      setters.setShowLocationDropdown(false);
+      
       setFormErrors(prev => ({
         ...prev,
         [setters.errorKey]: "Gagal terhubung ke server. Silakan isi alamat secara manual."
@@ -136,6 +192,15 @@ const SignupPage = () => {
     } finally {
       setIsLoadingData(false);
     }
+  };
+  
+  // Handle location selection from dropdown
+  const handleLocationSelect = (location, setters) => {
+    setters.setKelurahan(location.kelurahan || "");
+    setters.setKecamatan(location.kecamatan || "");
+    setters.setKota(location.kota || "");
+    setters.setProvinsi(location.provinsi || "");
+    setters.setShowLocationDropdown(false);
   };
   
   // Handle postal code change for Step 1
@@ -148,6 +213,8 @@ const SignupPage = () => {
       setKecamatan,
       setKota,
       setProvinsi,
+      setLocationOptions: setLocationOptionsStep1,
+      setShowLocationDropdown: setShowLocationDropdownStep1,
       errorKey: 'kodePos'
     });
   };
@@ -164,6 +231,8 @@ const SignupPage = () => {
       setKecamatan: setKecamatanStep2,
       setKota: setKotaStep2,
       setProvinsi: setProvinsiStep2,
+      setLocationOptions: setLocationOptionsStep2,
+      setShowLocationDropdown: setShowLocationDropdownStep2,
       errorKey: 'kodePosStep2'
     });
   };
@@ -273,14 +342,14 @@ const SignupPage = () => {
         });
         
         const responseData = await response.json();
-        console.log("respondata", responseData.message)
+        console.log("respondata", responseData.message);
+        
         if (response.ok) {
           // Registration successful
-          // alert('Pendaftaran berhasil! Silakan masuk dengan akun baru Anda.');
-          toast.success("pendaftaran telah berhasil");
+          toast.success("Pendaftaran telah berhasil");
           router.push('/login');
         } else {
-          toast.error("gagal daftar ",responseData);
+          toast.error("Gagal daftar " + responseData.message);
           // Handle registration errors
           if (response.status === 400 && responseData.message && responseData.message.includes('NIK sudah terdaftar')) {
             setSignupStep(1);
@@ -324,6 +393,17 @@ const SignupPage = () => {
               setName, setNik, setBirthPlace, setBirthDate, setGender, setBloodType,
               setAddress, setRt, setRw, setKodePos, setKelurahan, setKecamatan, setKota, setProvinsi
             }}
+            locationData={{
+              locationOptions: locationOptionsStep1,
+              showLocationDropdown: showLocationDropdownStep1,
+              handleLocationSelect: (location) => handleLocationSelect(location, {
+                setKelurahan,
+                setKecamatan,
+                setKota,
+                setProvinsi,
+                setShowLocationDropdown: setShowLocationDropdownStep1
+              })
+            }}
             formErrors={formErrors}
             formSubmitted={formSubmitted}
             isLoadingData={isLoadingData}
@@ -343,6 +423,17 @@ const SignupPage = () => {
               setKelurahanStep2, setKecamatanStep2, setKotaStep2, setProvinsiStep2,
               setEmail, setNomorHp, setKataSandi, setKonfirmasiKataSandi, setPersetujuanSyarat,
               setIsSameAddress
+            }}
+            locationData={{
+              locationOptions: locationOptionsStep2,
+              showLocationDropdown: showLocationDropdownStep2,
+              handleLocationSelect: (location) => handleLocationSelect(location, {
+                setKelurahan: setKelurahanStep2,
+                setKecamatan: setKecamatanStep2,
+                setKota: setKotaStep2,
+                setProvinsi: setProvinsiStep2,
+                setShowLocationDropdown: setShowLocationDropdownStep2
+              })
             }}
             passwordVisibility={{
               showPassword, setShowPassword,
