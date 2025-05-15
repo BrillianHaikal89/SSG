@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { Camera, CheckCircle, XCircle, RefreshCw, Clock, Calendar } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, RefreshCw, Clock, Calendar, AlertCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -28,11 +28,12 @@ export default function QrCodeScanner() {
     hijriMonth: 0,
     hijriYear: 0
   });
-  const [attendanceStatus, setAttendanceStatus] = useState('hadir'); // Default status
+  const [attendanceStatus, setAttendanceStatus] = useState('hadir');
   const [lateReason, setLateReason] = useState('');
   const [permissionReason, setPermissionReason] = useState('');
   const [showLateForm, setShowLateForm] = useState(false);
   const [showPermissionForm, setShowPermissionForm] = useState(false);
+  const [isOutsideValidHours, setIsOutsideValidHours] = useState(false);
   
   // Scanner reference
   const scannerRef = useRef(null);
@@ -45,14 +46,13 @@ export default function QrCodeScanner() {
       const date = new Date(gregorianDate);
       
       const day = date.getDate();
-      const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+      const month = date.getMonth() + 1;
       const year = date.getFullYear();
       
       let hDay = 1;
-      let hMonthIndex = 10; // Default to Dzulka'dah
-      const hYear = 1446; // Default to 1446 for 2025
+      let hMonthIndex = 10;
+      const hYear = 1446;
       
-      // Handle specific mappings for May 2025
       if (year === 2025 && month === 5) {
         const mayMapping = {
           1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8, 7: 9, 8: 10,
@@ -64,12 +64,10 @@ export default function QrCodeScanner() {
         
         hDay = mayMapping[day] || day;
         
-        // Transition to Dzulhijjah at the end of May
         if (day >= 29) {
-          hMonthIndex = 11; // Dzulhijjah
+          hMonthIndex = 11;
         }
       }
-      // Handle specific mappings for April 2025
       else if (year === 2025 && month === 4) {
         const aprilMapping = {
           1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8, 7: 9, 8: 10,
@@ -82,12 +80,11 @@ export default function QrCodeScanner() {
         hDay = aprilMapping[day] || day;
         
         if (day >= 29) {
-          hMonthIndex = 10; // Dzulka'dah
+          hMonthIndex = 10;
         } else {
-          hMonthIndex = 9; // Syawal
+          hMonthIndex = 9;
         }
       }
-      // Handle June 2025
       else if (year === 2025 && month === 6) {
         const juneMapping = {
           1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10,
@@ -100,15 +97,13 @@ export default function QrCodeScanner() {
         hDay = juneMapping[day] || day;
         
         if (day >= 28) {
-          hMonthIndex = 0; // Muharram
-          hYear = 1447; // New Hijri year starts
+          hMonthIndex = 0;
+          hYear = 1447;
         } else {
-          hMonthIndex = 11; // Dzulhijjah
+          hMonthIndex = 11;
         }
       }
-      // For other months, use a simple approximation
       else {
-        // Simple fallback - not as accurate but provides a reasonable estimate
         const offset = day % 30;
         hDay = offset + 1;
       }
@@ -170,7 +165,59 @@ export default function QrCodeScanner() {
   // Check if it's weekend (Saturday or Sunday)
   const isWeekend = () => {
     const now = new Date();
-    return now.getDay() === 6 || now.getDay() === 0; // 6 = Saturday, 0 = Sunday
+    return now.getDay() === 6 || now.getDay() === 0;
+  };
+
+  // Check if it's Saturday
+  const isSaturday = () => {
+    const now = new Date();
+    return now.getDay() === 6;
+  };
+
+  // Check if it's Sunday
+  const isSunday = () => {
+    const now = new Date();
+    return now.getDay() === 0;
+  };
+
+  // Check if current time is within valid hours (Saturday 16:00-17:00 or Sunday before 16:00)
+  const checkValidHours = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const dayOfWeek = now.getDay();
+
+    // Monday to Friday - not allowed
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      setIsOutsideValidHours(true);
+      return false;
+    }
+
+    // Saturday - only allowed between 16:00-17:00
+    if (dayOfWeek === 6) {
+      if (hours === 16 || (hours === 17 && minutes === 0)) {
+        setIsOutsideValidHours(false);
+        return true;
+      } else {
+        setIsOutsideValidHours(true);
+        return false;
+      }
+    }
+
+    // Sunday - allowed before 16:00
+    if (dayOfWeek === 0) {
+      if (hours < 16 || (hours === 16 && minutes === 0)) {
+        setIsOutsideValidHours(false);
+        return true;
+      } else {
+        setIsOutsideValidHours(true);
+        return false;
+      }
+    }
+
+    // Default case (shouldn't happen)
+    setIsOutsideValidHours(true);
+    return false;
   };
 
   // ===== Effects =====
@@ -200,6 +247,9 @@ export default function QrCodeScanner() {
         hijriMonth: hijriDate.month,
         hijriYear: hijriDate.year
       });
+
+      // Check valid hours
+      checkValidHours();
     };
 
     // Update immediately and then every second
@@ -374,41 +424,43 @@ export default function QrCodeScanner() {
   
   // Handle successful QR scan
   const onScanSuccess = (decodedText) => {
+    if (isOutsideValidHours) {
+      toast.error("Tidak dapat melakukan scan di luar waktu yang ditentukan");
+      stopScanner();
+      return;
+    }
+
     setScannedCode(decodedText);
     stopScanner();
     
-    // Determine attendance status based on rules
     const now = new Date();
     const hours = now.getHours();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const minutes = now.getMinutes();
+    const dayOfWeek = now.getDay();
     
-    // Rule 1: If QR code hasn't been scanned yet = hadir
-    // (This would be checked on the server side, we'll assume it's new for this example)
-    
-    // Rule 2: If scanned within 1 hour = show late form
-    if (hours > 8) { // Assuming 8 AM is the cutoff
+    // Saturday between 16:00-17:00
+    if (isSaturday() && hours === 16) {
+      // First scan on Saturday = hadir
+      setAttendanceStatus('hadir');
+      submitAttendance(decodedText);
+    } 
+    // Saturday between 16:00-17:00 but after first hour (17:00)
+    else if (isSaturday() && hours === 17 && minutes === 0) {
+      // Late scan on Saturday = terlambat
       setShowLateForm(true);
       setAttendanceStatus('terlambat');
-      return;
     }
-    
-    // Rule 3: If it's weekend (Saturday or Sunday) and not scanned in 2 days = alfa
-    // (This would be checked on the server side)
-    
-    // Rule 4: If scanned on Sunday before 4 PM after being scanned on Saturday = show permission form
-    if (dayOfWeek === 0 && !isAfterFourPM()) {
+    // Sunday before 16:00
+    else if (isSunday() && (hours < 16 || (hours === 16 && minutes === 0))) {
+      // Scan on Sunday = ijin pulang
       setShowPermissionForm(true);
-      setAttendanceStatus('ijin');
-      return;
+      setAttendanceStatus('ijin pulang');
     }
-    
-    // Rule 5: If education is completed on Sunday at 4 PM = auto hadir
-    if (dayOfWeek === 0 && isAfterFourPM()) {
+    // Default case (shouldn't happen if checks are correct)
+    else {
       setAttendanceStatus('hadir');
+      submitAttendance(decodedText);
     }
-    
-    // Default case: submit attendance
-    submitAttendance(decodedText);
   };
 
   // Stop QR scanner
@@ -426,6 +478,11 @@ export default function QrCodeScanner() {
 
   // Start QR scanner
   const startScanner = () => {
+    if (isOutsideValidHours) {
+      toast.error("Fitur scan hanya tersedia pada Sabtu pukul 16.00-17.00 dan Ahad sebelum 16.00");
+      return;
+    }
+
     setScannedCode(null);
     setScanResult(null);
     setShowLateForm(false);
@@ -697,17 +754,37 @@ export default function QrCodeScanner() {
 
       {/* QR Scanner Section */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        {/* Warning for invalid days/hours */}
+        {isOutsideValidHours && (
+          <div className="p-6 text-center bg-red-50 border-b border-red-100">
+            <div className="flex items-center justify-center text-red-600 mb-3">
+              <AlertCircle size={24} className="mr-2" />
+              <span className="font-medium">Fitur scan tidak tersedia</span>
+            </div>
+            <p className="text-sm text-red-500">
+              Fitur ini hanya tersedia pada Sabtu pukul 16.00-17.00 untuk absen masuk dan Ahad sebelum 16.00 untuk ijin pulang.
+            </p>
+          </div>
+        )}
+
         {/* Initial Button State */}
         {!scanning && !scannedCode && !scanResult && (
           <div className="p-6 text-center">
             <button
               onClick={startScanner}
-              className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-4 rounded-lg hover:shadow-lg hover:scale-105 transform transition-all duration-200 flex items-center mx-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              disabled={isOutsideValidHours}
+              className={`bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-4 rounded-lg hover:shadow-lg hover:scale-105 transform transition-all duration-200 flex items-center mx-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
+                isOutsideValidHours ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               <Camera size={24} className="mr-3" />
               <span className="text-lg font-medium">Bismillah Scan QR Code</span>
             </button>
-            <p className="mt-3 text-sm text-gray-500">Klik tombol di atas untuk membuka kamera</p>
+            <p className="mt-3 text-sm text-gray-500">
+              {isOutsideValidHours 
+                ? "Scan hanya tersedia pada waktu yang ditentukan" 
+                : "Klik tombol di atas untuk membuka kamera"}
+            </p>
           </div>
         )}
 
@@ -813,15 +890,15 @@ export default function QrCodeScanner() {
               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
                 <Calendar size={52} className="text-purple-500" />
               </div>
-              <h3 className="text-xl font-medium mt-4 text-purple-700">Ijin Tidak Hadir</h3>
-              <p className="text-purple-600 mt-2">Silakan berikan alasan ijin Anda</p>
+              <h3 className="text-xl font-medium mt-4 text-purple-700">Ijin Pulang</h3>
+              <p className="text-purple-600 mt-2">Silakan berikan alasan ijin pulang Anda</p>
               
               <div className="mt-4">
                 <textarea
                   value={permissionReason}
                   onChange={(e) => setPermissionReason(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Masukkan alasan ijin..."
+                  placeholder="Masukkan alasan ijin pulang..."
                   rows={3}
                 />
               </div>
@@ -841,7 +918,7 @@ export default function QrCodeScanner() {
                   onClick={handlePermissionSubmit}
                   className="px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:shadow-lg transition-all duration-200"
                 >
-                  Simpan Ijin
+                  Simpan Ijin Pulang
                 </button>
               </div>
             </div>
