@@ -246,67 +246,129 @@ export default function UsersManagement() {
   // Handle page change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Export users to CSV
-  const exportToCSV = () => {
-    // Create CSV content
-    const headers = [
-      'Nama Lengkap', 'NIK', 'Tempat Lahir', 'Tanggal Lahir', 'Jenis Kelamin',
-      'Alamat', 'RT', 'RW', 'Kode Pos', 'Kelurahan/Desa', 'Kecamatan',
-      'Kabupaten/Kota', 'Provinsi', 'Nomor HP', 'Golongan Darah',
-      'Domisili Alamat', 'Domisili RT', 'Domisili RW', 'Domisili Kode Pos',
-      'Domisili Kelurahan/Desa', 'Domisili Kecamatan', 'Domisili Kabupaten/Kota',
-      'Domisili Provinsi', 'Status Aktivasi', 'Dokumen Lengkap'
+  // Export users to CSV with proper formatting
+const exportToCSV = () => {
+  // Create CSV headers
+  const headers = [
+    'No',
+    'Nama Lengkap', 
+    'NIK', 
+    'Tempat Lahir', 
+    'Tanggal Lahir', 
+    'Jenis Kelamin',
+    'Alamat', 
+    'RT', 
+    'RW', 
+    'Kode Pos', 
+    'Kelurahan/Desa', 
+    'Kecamatan',
+    'Kabupaten/Kota', 
+    'Provinsi', 
+    'Nomor HP', 
+    'Golongan Darah',
+    'Domisili Alamat', 
+    'Domisili RT', 
+    'Domisili RW', 
+    'Domisili Kode Pos',
+    'Domisili Kelurahan/Desa', 
+    'Domisili Kecamatan', 
+    'Domisili Kabupaten/Kota',
+    'Domisili Provinsi', 
+    'Status Aktivasi', 
+    'Dokumen Lengkap',
+    'Dokumen KTP',
+    'Dokumen Pas Foto',
+    'Dokumen Surat Izin',
+    'Dokumen Surat Kesehatan',
+    'Dokumen Bukti Pembayaran',
+    'Dokumen Tanda Tangan'
+  ];
+  
+  // Process data for CSV
+  const csvRows = filteredUsers.map((user, index) => {
+    const flagStatus = getUserFlagStatus(user);
+    const activationStatus = flagStatus === 'active' ? 'Aktif' : 
+                          flagStatus === 'inactive' ? 'Tidak Aktif' : 'Belum Memperbaharui Dokumen';
+    const documentsComplete = hasAllDocuments(user.id) ? 'Lengkap' : 'Belum Lengkap';
+    
+    // Get all user files
+    const userFiles = getUserFiles(user.id);
+    
+    // Create a map of file types to their Google Drive links
+    const fileLinks = {};
+    userFiles.forEach(file => {
+      fileLinks[file.file_type] = `https://drive.google.com/file/d/${file.google_drive_file_id}/view`;
+    });
+    
+    // Format date properly
+    const formattedDate = user.tanggal_lahir ? 
+      new Date(user.tanggal_lahir).toISOString().split('T')[0] : '';
+    
+    // Escape fields that might contain commas or special characters
+    const escapeCsv = (field) => {
+      if (!field) return '';
+      // Convert to string if it's not
+      const str = String(field);
+      // Escape quotes and wrap in quotes if contains comma or newline
+      if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+    
+    return [
+      index + 1, // No
+      escapeCsv(user.nama_lengkap),
+      escapeCsv(user.nik),
+      escapeCsv(user.tempat_lahir),
+      formattedDate,
+      formatGender(user.jenis_kelamin),
+      escapeCsv(user.alamat),
+      escapeCsv(user.rt),
+      escapeCsv(user.rw),
+      escapeCsv(user.kode_pos),
+      escapeCsv(user.kelurahan_desa),
+      escapeCsv(user.kecamatan),
+      escapeCsv(user.kabupaten_kota),
+      escapeCsv(user.provinsi),
+      escapeCsv(user.nomor_hp),
+      escapeCsv(user.golongan_darah),
+      escapeCsv(user.domisili_alamat || 'Sama dengan KTP'),
+      escapeCsv(user.domisili_rt),
+      escapeCsv(user.domisili_rw),
+      escapeCsv(user.domisili_kode_pos),
+      escapeCsv(user.domisili_kelurahan_desa),
+      escapeCsv(user.domisili_kecamatan),
+      escapeCsv(user.domisili_kabupaten_kota),
+      escapeCsv(user.domisili_provinsi),
+      activationStatus,
+      documentsComplete,
+      fileLinks.ktp || 'Tidak Ada',
+      fileLinks.pas_foto || 'Tidak Ada',
+      fileLinks.surat_izin || 'Tidak Ada',
+      fileLinks.surat_kesehatan || 'Tidak Ada',
+      fileLinks.bukti_pembayaran || 'Tidak Ada',
+      fileLinks.tertanda || 'Tidak Ada'
     ];
-    
-    const csvContent = [
-      headers.join(','),
-      ...filteredUsers.map(user => {
-        const flagStatus = getUserFlagStatus(user);
-        const activationStatus = flagStatus === 'active' ? 'Aktif' : 
-                                flagStatus === 'inactive' ? 'Tidak Aktif' : 'Belum Memperbaharui Dokumen';
-        const documentsComplete = hasAllDocuments(user.id) ? 'Lengkap' : 'Belum Lengkap';
-        
-        return [
-          user.nama_lengkap || '',
-          user.nik || '',
-          user.tempat_lahir || '',
-          user.tanggal_lahir ? new Date(user.tanggal_lahir).toISOString().split('T')[0] : '',
-          user.jenis_kelamin || '',
-          `"${user.alamat || ''}"`, // Quotes to handle commas in address
-          user.rt || '',
-          user.rw || '',
-          user.kode_pos || '',
-          user.kelurahan_desa || '',
-          user.kecamatan || '',
-          user.kabupaten_kota || '',
-          user.provinsi || '',
-          user.nomor_hp || '',
-          user.golongan_darah || '',
-          `"${user.domisili_alamat || ''}"`,
-          user.domisili_rt || '',
-          user.domisili_rw || '',
-          user.domisili_kode_pos || '',
-          user.domisili_kelurahan_desa || '',
-          user.domisili_kecamatan || '',
-          user.domisili_kabupaten_kota || '',
-          user.domisili_provinsi || '',
-          activationStatus,
-          documentsComplete
-        ].join(',');
-      })
-    ].join('\n');
-    
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'data_pengguna.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  });
+  
+  // Combine headers and rows
+  const csvContent = [
+    headers.join(','),
+    ...csvRows.map(row => row.join(','))
+  ].join('\n');
+  
+  // Create download link with proper BOM for Excel
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `data_pengguna_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
   // Function to get file icon based on file extension
   const getFileIcon = (fileName) => {
