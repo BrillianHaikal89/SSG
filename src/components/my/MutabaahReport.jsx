@@ -111,7 +111,7 @@ const MutabaahReport = ({ user, onClose }) => {
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
       csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah";
       
-      // Only add Haid column if user is female
+      // Only add haid column if user is female
       if (user?.gender === 0) {
         csvContent += ",Status Haid";
       }
@@ -125,7 +125,7 @@ const MutabaahReport = ({ user, onClose }) => {
         csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
         csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah}`;
         
-        // Only add Haid data if user is female
+        // Only add haid data if user is female
         if (user?.gender === 0) {
           csvContent += `,${data.haid}`;
         }
@@ -287,9 +287,6 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
-  // Check user gender
-  const isFemale = user?.gender === 0;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -362,8 +359,7 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahajud</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dhuha</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shaum</th>
-                          {/* Only show Haid column if user is female */}
-                          {isFemale && (
+                          {user?.gender === 0 && (
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                           )}
                         </tr>
@@ -379,7 +375,7 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
-                              {isFemale && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
+                              {user?.gender === 0 && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
@@ -402,8 +398,7 @@ const MutabaahReport = ({ user, onClose }) => {
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
-                            {/* Only show Haid column if user is female */}
-                            {isFemale && (
+                            {user?.gender === 0 && (
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                 {isValueActive(data.haid) ? (
                                   <span className="text-red-600">✗</span>
@@ -451,8 +446,7 @@ const MutabaahReport = ({ user, onClose }) => {
                           {stats.shaumDays}/{allUserData.length}
                         </div>
                       </div>
-                      {/* Only show Haid stats if user is female */}
-                      {isFemale && (
+                      {user?.gender === 0 && (
                         <div className="bg-red-50 p-4 rounded-lg">
                           <div className="text-sm text-red-800">Haid (Hari)</div>
                           <div className="text-2xl font-bold text-red-600">
