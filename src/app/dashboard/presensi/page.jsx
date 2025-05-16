@@ -434,28 +434,35 @@ const Presensi = () => {
 
   // Group actual attendance data by date
   const groupAttendanceByDate = () => {
-    const grouped = {};
+  const grouped = {};
+  
+  actualAttendance.forEach(record => {
+    const date = new Date(record.waktu_presensi).toLocaleDateString('id-ID');
     
-    actualAttendance.forEach(record => {
-      const date = new Date(record.waktu_presensi).toLocaleDateString('id-ID');
-      
-      if (!grouped[date]) {
-        grouped[date] = {
-          date,
-          masuk: null,
-          keluar: null
-        };
-      }
-      
-      if (record.jenis === 'masuk') {
-        grouped[date].masuk = record;
-      } else if (record.jenis === 'keluar') {
-        grouped[date].keluar = record;
-      }
-    });
+    if (!grouped[date]) {
+      grouped[date] = {
+        date,
+        masuk: null,
+        keluar: null,
+        keterangan: null // Tambahkan field keterangan
+      };
+    }
     
-    return Object.values(grouped);
-  };
+    if (record.jenis === 'masuk') {
+      grouped[date].masuk = record;
+      // Ambil keterangan dari record masuk jika ada
+      grouped[date].keterangan = record.keterangan || null;
+    } else if (record.jenis === 'keluar') {
+      grouped[date].keluar = record;
+      // Jika keterangan ada di record keluar, timpa yang sebelumnya
+      if (record.keterangan) {
+        grouped[date].keterangan = record.keterangan;
+      }
+    }
+  });
+  
+  return Object.values(grouped);
+};
   
   const groupedAttendance = groupAttendanceByDate();
 
@@ -512,47 +519,55 @@ const Presensi = () => {
         <h3 className="text-lg font-medium mb-3">Riwayat Presensi:</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200">
-            <thead>
-              <tr className="bg-blue-500 text-white">
-                <th className="py-3 px-4 border-b text-left">No</th>
-                <th className="py-3 px-4 border-b text-left">Tanggal</th>
-                <th className="py-3 px-4 border-b text-left">Masuk</th>
-                <th className="py-3 px-4 border-b text-left">Keluar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan="4" className="py-4 text-center">Loading...</td>
-                </tr>
-              ) : groupedAttendance.length > 0 ? (
-                groupedAttendance.map((item, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{index + 1}</td>
-                    <td className="py-3 px-4">{formatAttendanceDate(item.masuk?.waktu_presensi || item.keluar?.waktu_presensi)}</td>
-                    <td className="py-3 px-4">
-                      {item.masuk ? (
-                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
-                          {formatAttendanceTime(item.masuk.waktu_presensi)}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td className="py-3 px-4">
-                      {item.keluar ? (
-                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
-                          {formatAttendanceTime(item.keluar.waktu_presensi)}
-                        </span>
-                      ) : '-'}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="py-4 text-center text-gray-500">Belum ada data presensi</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+  <thead>
+    <tr className="bg-blue-500 text-white">
+      <th className="py-3 px-4 border-b text-left">No</th>
+      <th className="py-3 px-4 border-b text-left">Tanggal</th>
+      <th className="py-3 px-4 border-b text-left">Masuk</th>
+      <th className="py-3 px-4 border-b text-left">Keluar</th>
+      <th className="py-3 px-4 border-b text-left">Keterangan</th> {/* Kolom baru */}
+    </tr>
+  </thead>
+  <tbody>
+    {isLoading ? (
+      <tr>
+        <td colSpan="5" className="py-4 text-center">Loading...</td> {/* Update colSpan */}
+      </tr>
+    ) : groupedAttendance.length > 0 ? (
+      groupedAttendance.map((item, index) => (
+        <tr key={index} className="border-b hover:bg-gray-50">
+          <td className="py-3 px-4">{index + 1}</td>
+          <td className="py-3 px-4">{formatAttendanceDate(item.masuk?.waktu_presensi || item.keluar?.waktu_presensi)}</td>
+          <td className="py-3 px-4">
+            {item.masuk ? (
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                {formatAttendanceTime(item.masuk.waktu_presensi)}
+              </span>
+            ) : '-'}
+          </td>
+          <td className="py-3 px-4">
+            {item.keluar ? (
+              <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
+                {formatAttendanceTime(item.keluar.waktu_presensi)}
+              </span>
+            ) : '-'}
+          </td>
+          <td className="py-3 px-4">
+            {item.keterangan ? (
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                {item.keterangan}
+              </span>
+            ) : '-'}
+          </td>
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td colSpan="5" className="py-4 text-center text-gray-500">Belum ada data presensi</td> {/* Update colSpan */}
+      </tr>
+    )}
+  </tbody>
+        </table>
         </div>
       </div>
       
