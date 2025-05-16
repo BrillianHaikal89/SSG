@@ -226,6 +226,7 @@ const handleLogout = () => {
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}
       navigateToRundown={navigateToRundown}
+      navigateToTask={navigateToTask}
       navigateToPeserta={navigateToPeserta}
       navigateToProfile={navigateToProfile}
       navigateToECard={navigateToECard}
