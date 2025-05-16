@@ -89,7 +89,7 @@ const Presensi = () => {
   }
 }, [user]);
 
-  const fetchAttendanceData = async () => {
+  const fetchAttendanceData = async (userId) => {
       setIsLoading(true);
       try {
         const response = await fetch(`${API_URL}/users/get-presensi?user_id=${userId}`, {
