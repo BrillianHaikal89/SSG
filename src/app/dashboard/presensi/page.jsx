@@ -78,8 +78,10 @@ const Presensi = () => {
     const fetchAttendanceData = async () => {
       setIsLoading(true);
 
+      const userId = user?.userId;
+      console.log("user nya", userId);
       try {
-        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${user.userId}`, {
+        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
