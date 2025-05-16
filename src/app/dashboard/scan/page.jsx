@@ -31,8 +31,10 @@ export default function QrCodeScanner() {
   const [attendanceStatus, setAttendanceStatus] = useState('hadir');
   const [lateReason, setLateReason] = useState('');
   const [permissionReason, setPermissionReason] = useState('');
+  const [keterangan, setKeterangan] = useState(null);
   const [showLateForm, setShowLateForm] = useState(false);
   const [showPermissionForm, setShowPermissionForm] = useState(false);
+  const [showKeteranganForm, setShowKeteranganForm] = useState(false);
   const [isOutsideValidHours, setIsOutsideValidHours] = useState(false);
   
   // Scanner reference
@@ -442,7 +444,6 @@ export default function QrCodeScanner() {
     if (isSaturday() && hours === 16) {
       // First scan on Saturday = hadir
       setAttendanceStatus('hadir');
-      submitAttendance(decodedText);
     } 
     // Saturday between 16:00-17:00 but after first hour (17:00)
     else if (isSaturday() && hours === 17 && minutes === 0) {
@@ -459,7 +460,6 @@ export default function QrCodeScanner() {
     // Default case (shouldn't happen if checks are correct)
     else {
       setAttendanceStatus('hadir');
-      submitAttendance(decodedText);
     }
   };
 
@@ -487,8 +487,10 @@ export default function QrCodeScanner() {
     setScanResult(null);
     setShowLateForm(false);
     setShowPermissionForm(false);
+    setShowKeteranganForm(false);
     setLateReason('');
     setPermissionReason('');
+    setKeterangan(null);
     setScanning(true);
 
     // Short delay to ensure DOM is fully ready
@@ -653,6 +655,7 @@ export default function QrCodeScanner() {
       const payload = {
         qrcode_text: qrcodeText,
         status: attendanceStatus,
+        keterangan: keterangan,
         ...(lateReason && { late_reason: lateReason }),
         ...(permissionReason && { permission_reason: permissionReason })
       };
@@ -716,8 +719,10 @@ export default function QrCodeScanner() {
     setScanResult(null);
     setShowLateForm(false);
     setShowPermissionForm(false);
+    setShowKeteranganForm(false);
     setLateReason('');
     setPermissionReason('');
+    setKeterangan(null);
     startScanner();
   };
 
@@ -807,7 +812,7 @@ export default function QrCodeScanner() {
         </div>
 
         {/* Scanned Code Display (Processing) */}
-        {scannedCode && !scanResult && !showLateForm && !showPermissionForm && (
+        {scannedCode && !scanResult && !showLateForm && !showPermissionForm && !showKeteranganForm && (
           <div className="p-6">
             <div className="text-center mb-6">
               {submitting ? (
@@ -835,8 +840,82 @@ export default function QrCodeScanner() {
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200 max-w-xs mx-auto">
                     <p className="text-gray-600 break-all text-sm">{scannedCode}</p>
                   </div>
+                  
+                  {/* Keterangan Button (only during implementation hours) */}
+                  {(isSaturday() && currentTime >= "16:00:00" && currentTime < "17:00:00") || 
+                   (isSunday() && currentTime < "16:00:00") ? (
+                    <div className="mt-6">
+                      <button
+                        onClick={() => setShowKeteranganForm(true)}
+                        className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                      >
+                        Tambah Keterangan (Izin/Sakit)
+                      </button>
+                    </div>
+                  ) : null}
+                  
+                  <div className="mt-6">
+                    <button
+                      onClick={() => submitAttendance(scannedCode)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      {submitting ? 'Mengirim...' : 'Submit Presensi'}
+                    </button>
+                  </div>
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Keterangan Form */}
+        {showKeteranganForm && (
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-medium mb-4">Pilih Keterangan</h3>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  onClick={() => setKeterangan('izin')}
+                  className={`py-3 rounded-lg border ${keterangan === 'izin' ? 
+                    'bg-blue-100 border-blue-500 text-blue-700' : 
+                    'bg-gray-50 border-gray-300 text-gray-700'}`}
+                >
+                  Izin
+                </button>
+                <button
+                  onClick={() => setKeterangan('sakit')}
+                  className={`py-3 rounded-lg border ${keterangan === 'sakit' ? 
+                    'bg-red-100 border-red-500 text-red-700' : 
+                    'bg-gray-50 border-gray-300 text-gray-700'}`}
+                >
+                  Sakit
+                </button>
+              </div>
+              
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => {
+                    setShowKeteranganForm(false);
+                    setKeterangan(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    setShowKeteranganForm(false);
+                    if (!keterangan) {
+                      toast.error('Harap pilih keterangan');
+                      return;
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                >
+                  Simpan
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -948,6 +1027,9 @@ export default function QrCodeScanner() {
               </h3>
               <div className={`mt-3 p-4 ${scanResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'} rounded-lg mx-auto max-w-sm`}>
                 <p className="text-sm">{scanResult.message}</p>
+                {keterangan && (
+                  <p className="mt-2 text-sm">Keterangan: {keterangan === 'izin' ? 'Izin' : 'Sakit'}</p>
+                )}
               </div>
             </div>
             
