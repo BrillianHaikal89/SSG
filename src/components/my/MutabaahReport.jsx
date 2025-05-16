@@ -161,7 +161,7 @@ const MutabaahReport = ({ user, onClose }) => {
         sholawatCompleted: 0,
         mqDays: 0,
         kajianDays: 0,
-        haidDays: 0
+        haidDays: user?.gender === 0 ? 0 : undefined
       };
     }
     
@@ -180,7 +180,7 @@ const MutabaahReport = ({ user, onClose }) => {
     const sholawatCompleted = allUserData.filter(data => data.sholawat_completed).length;
     const mqDays = allUserData.filter(data => data.menyimak_mq_pagi > 0).length;
     const kajianDays = allUserData.filter(data => data.kajian_al_hikam > 0 || data.kajian_marifatullah > 0).length;
-    const haidDays = user?.gender === 0 ? allUserData.filter(data => data.haid > 0).length : 0;
+    const haidDays = user?.gender === 0 ? allUserData.filter(data => data.haid > 0).length : undefined;
     
     return { 
       avgSholatWajib, 
@@ -307,6 +307,10 @@ const MutabaahReport = ({ user, onClose }) => {
             <div className="flex justify-between mb-2">
               <span className="font-medium">Nama:</span>
               <span>{user?.name || '-'}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">Gender:</span>
+              <span>{user?.gender === 0 ? 'Perempuan' : 'Laki-laki'}</span>
             </div>
             <div className="flex justify-between mb-2">
               <span className="font-medium">Periode:</span>
