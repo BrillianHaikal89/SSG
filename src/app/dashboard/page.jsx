@@ -231,7 +231,7 @@ const handleLogout = () => {
       navigateToECard={navigateToECard}
       navigateToPresensi={navigateToPresensi}
       navigateToAlQuran={navigateToAlQuran}
-      navigateToTask={navigateToTask}
+      navigateToTugas={() => console.log('Navigate to Tugas')}
       navigateToHome={navigateToHome}
       showNotification={showNotification}
       notificationMessage={notificationMessage}
