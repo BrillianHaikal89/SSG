@@ -1,72 +1,59 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const PresensiDetail = () => {
+// Named export to avoid ESLint warning
+const getStatusStyle = (status) => {
+  switch (status) {
+    case "Hadir":
+      return "bg-green-500 text-white";
+    case "Sakit":
+      return "bg-red-500 text-white";
+    case "Izin":
+      return "bg-yellow-500 text-black";
+    case "Telat":
+      return "bg-blue-500 text-white";
+    default:
+      return "bg-gray-500 text-white";
+  }
+};
+
+const DetailPresensi = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [attendanceDetail, setAttendanceDetail] = useState(null);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load data from localStorage on component mount
   useEffect(() => {
-    const id = searchParams.get('id');
-    if (!id) {
-      router.push('/presensi');
-      return;
-    }
-
-    const savedData = localStorage.getItem('attendanceRecords');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      const foundItem = parsedData.find(item => item.id === id);
-      
-      if (foundItem) {
-        setAttendanceDetail({
-          ...foundItem,
-          session: `Sesi Ke ${parsedData.findIndex(item => item.id === id) + 1}`
-        });
-      } else {
-        router.push('/presensi');
+    try {
+      const savedData = typeof window !== 'undefined' ? localStorage.getItem('attendanceRecords') : null;
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        setAttendanceHistory(parsedData.map((item, index) => ({
+          id: item.id,
+          session: `Sesi Ke ${index + 1}`,
+          date: item.date,
+          status: item.status,
+          description: item.description,
+          time: item.time || '',
+          location: item.location || '',
+          image: item.image || ''
+        })));
       }
+    } catch (error) {
+      console.error('Error loading attendance data:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [searchParams, router]);
-
-  // Function to get the appropriate status style
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case "Hadir":
-        return "bg-green-500 text-white";
-      case "Sakit":
-        return "bg-red-500 text-white";
-      case "Izin":
-        return "bg-yellow-500 text-black";
-      case "Telat":
-        return "bg-blue-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
+  }, []);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p>Memuat data...</p>
-      </div>
-    );
-  }
-
-  if (!attendanceDetail) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-        <p>Data presensi tidak ditemukan</p>
-        <Link href="/presensi" className="mt-4 text-blue-600 underline">
-          Kembali ke daftar presensi
-        </Link>
+        <p>Memuat data presensi...</p>
       </div>
     );
   }
@@ -80,89 +67,105 @@ const PresensiDetail = () => {
             src="/icons/arrow-left.svg" 
             alt="Back" 
             width={24} 
-            height={24} 
+            height={24}
+            priority
           />
           <span className="ml-2">Kembali</span>
         </button>
         <h1 className="text-xl font-bold">Detail Presensi</h1>
-        <div className="w-8"></div> {/* Spacer untuk balance layout */}
+        <div className="w-8"></div>
       </header>
 
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 py-6 pb-20">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">{attendanceDetail.session}</h2>
-            <span className={`${getStatusStyle(attendanceDetail.status)} py-1 px-4 rounded-full text-sm`}>
-              {attendanceDetail.status}
-            </span>
+        <h1 className="text-3xl font-bold text-center mb-8">DETAIL PRESENSI</h1>
+        
+        {attendanceHistory.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500">Tidak ada data presensi</p>
+            <Link href="/presensi" className="text-blue-600 underline mt-4 inline-block">
+              Kembali ke halaman presensi
+            </Link>
           </div>
-
+        ) : (
           <div className="space-y-4">
-            <div>
-              <h3 className="text-gray-500 text-sm">Tanggal</h3>
-              <p className="text-lg">{attendanceDetail.date}</p>
-            </div>
-
-            <div>
-              <h3 className="text-gray-500 text-sm">Waktu Presensi</h3>
-              <p className="text-lg">{attendanceDetail.time || '-'}</p>
-            </div>
-
-            {attendanceDetail.location && (
-              <div>
-                <h3 className="text-gray-500 text-sm">Lokasi</h3>
-                <p className="text-lg">{attendanceDetail.location}</p>
-              </div>
-            )}
-
-            {attendanceDetail.description && (
-              <div>
-                <h3 className="text-gray-500 text-sm">Keterangan</h3>
-                <p className="text-lg whitespace-pre-line">{attendanceDetail.description}</p>
-              </div>
-            )}
-
-            {attendanceDetail.image && (
-              <div>
-                <h3 className="text-gray-500 text-sm mb-2">Bukti Presensi</h3>
-                <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-200">
-                  <Image
-                    src={attendanceDetail.image}
-                    alt="Bukti presensi"
-                    fill
-                    className="object-cover"
-                  />
+            {attendanceHistory.map((item, index) => (
+              <div 
+                key={item.id} 
+                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+                onClick={() => router.push(`/presensi/detail?id=${item.id}`)}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex-1">
+                    <div className="bg-gray-100 rounded-lg py-2 px-4">
+                      <p className="font-medium">{item.session}</p>
+                    </div>
+                    <p className="text-sm pl-4 mt-1">{item.date}</p>
+                    {item.time && <p className="text-sm pl-4">Waktu: {item.time}</p>}
+                    {item.description && (
+                      <p className="text-sm pl-4 text-gray-600 mt-1">Keterangan: {item.description}</p>
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <button 
+                      className={`${getStatusStyle(item.status)} py-2 px-6 rounded-lg text-sm`}
+                      disabled
+                    >
+                      {item.status}
+                    </button>
+                  </div>
                 </div>
+                {item.image && (
+                  <div className="mt-3">
+                    <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
+                      <Image
+                        src={item.image}
+                        alt="Bukti presensi"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        </div>
-
-        <div className="flex justify-center">
-          <Link 
-            href="/presensi" 
-            className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-          >
-            Kembali ke Daftar Presensi
-          </Link>
-        </div>
+        )}
       </div>
       
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex justify-around items-center px-4 py-2">
-        <button className="flex flex-col items-center p-2">
-          <Image src="/icons/home.svg" alt="Home" width={24} height={24} />
+        <Link href="/" className="flex flex-col items-center p-2">
+          <Image 
+            src="/icons/home.svg" 
+            alt="Home" 
+            width={24} 
+            height={24}
+            priority
+          />
           <span className="text-xs mt-1">Beranda</span>
-        </button>
-        <button className="flex flex-col items-center p-2 text-blue-600">
-          <Image src="/icons/calendar-check.svg" alt="Presensi" width={24} height={24} />
+        </Link>
+        <Link href="/presensi" className="flex flex-col items-center p-2 text-blue-600">
+          <Image 
+            src="/icons/calendar-check.svg" 
+            alt="Presensi" 
+            width={24} 
+            height={24}
+            priority
+          />
           <span className="text-xs mt-1">Presensi</span>
-        </button>
-        <button className="flex flex-col items-center p-2">
-          <Image src="/icons/user.svg" alt="Profil" width={24} height={24} />
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center p-2">
+          <Image 
+            src="/icons/user.svg" 
+            alt="Profil" 
+            width={24} 
+            height={24}
+            priority
+          />
           <span className="text-xs mt-1">Profil</span>
-        </button>
+        </Link>
       </nav>
     </div>
   );
