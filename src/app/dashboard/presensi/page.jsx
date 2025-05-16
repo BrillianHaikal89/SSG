@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import useAuthStore from '../../../stores/authStore';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const Presensi = () => {
   const [date, setDate] = useState('');
@@ -14,6 +17,15 @@ const Presensi = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [actualAttendance, setActualAttendance] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuthStore();
+  const [attendanceSummary, setAttendanceSummary] = useState({
+    hadir: 0,
+    izin: 0,
+    sakit: 0,
+    total: 0
+  });
 
   // Attendance planning summary
   const [planningSummary, setPlanningSummary] = useState({
@@ -60,6 +72,84 @@ const Presensi = () => {
     
     setDate(formattedSaturday);
   }, []);
+
+  // Fetch actual attendance data from API
+  useEffect(() => {
+    const userId = user?.id;
+    const fetchAttendanceData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch attendance data');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.data)) {
+          setActualAttendance(data.data);
+          calculateAttendanceSummary(data.data);
+        } else {
+          console.error('Invalid data format:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        setError('Gagal memuat data presensi');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAttendanceData();
+  }, []);
+
+  // Calculate attendance summary from API data
+  const calculateAttendanceSummary = (attendanceData) => {
+    // Group by date to count unique attendance days
+    const attendanceDays = new Set();
+    
+    // Count attended days (where there's both entry and exit on the same day)
+    attendanceData.forEach(record => {
+      const date = new Date(record.waktu_presensi).toLocaleDateString();
+      attendanceDays.add(date);
+    });
+    
+    // For this simple example, we'll just count days with any attendance as "hadir"
+    // In a real application, you might need more complex logic
+    setAttendanceSummary({
+      hadir: attendanceDays.size,
+      izin: 0, // These values would come from a different API endpoint or field
+      sakit: 0, // These values would come from a different API endpoint or field
+      total: 16 // Assuming fixed total, adjust based on your requirements
+    });
+  };
+
+  // Format attendance time
+  const formatAttendanceTime = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    return date.toLocaleTimeString('id-ID', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+  };
+
+  // Format attendance date
+  const formatAttendanceDate = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    return date.toLocaleDateString('id-ID', { 
+      weekday: 'long', 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric'
+    });
+  };
 
   // Get the current Saturday and Sunday dates
   const getWeekendDates = () => {
@@ -334,6 +424,33 @@ const Presensi = () => {
   const saturdayFormatted = formatDate(weekendDates.saturday.formatted);
   const sundayFormatted = formatDate(weekendDates.sunday.formatted);
 
+  // Group actual attendance data by date
+  const groupAttendanceByDate = () => {
+    const grouped = {};
+    
+    actualAttendance.forEach(record => {
+      const date = new Date(record.waktu_presensi).toLocaleDateString('id-ID');
+      
+      if (!grouped[date]) {
+        grouped[date] = {
+          date,
+          masuk: null,
+          keluar: null
+        };
+      }
+      
+      if (record.jenis === 'masuk') {
+        grouped[date].masuk = record;
+      } else if (record.jenis === 'keluar') {
+        grouped[date].keluar = record;
+      }
+    });
+    
+    return Object.values(grouped);
+  };
+  
+  const groupedAttendance = groupAttendanceByDate();
+
   return (
     <div className={`mx-auto bg-white rounded-lg shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
       <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-center py-4`}>PRESENSI</h1>
@@ -351,22 +468,22 @@ const Presensi = () => {
           <div className={isMobile ? 'text-center' : ''}>
             <h2 className="text-lg font-medium">Kehadiran</h2>
             <p className="font-bold mt-1">
-              0 DARI 16 SESI
+              {isLoading ? 'Loading...' : `${attendanceSummary.hadir} DARI ${attendanceSummary.total} SESI`}
             </p>
           </div>
           
           <div className={`${isMobile ? 'grid grid-cols-3 gap-4' : 'flex space-x-8'}`}>
             <div className="text-center">
               <p className="font-semibold">Hadir</p>
-              <p className="font-bold">0</p>
+              <p className="font-bold">{isLoading ? '-' : attendanceSummary.hadir}</p>
             </div>
             <div className="text-center">
               <p className="font-semibold">Izin</p>
-              <p className="font-bold">0</p>
+              <p className="font-bold">{isLoading ? '-' : attendanceSummary.izin}</p>
             </div>
             <div className="text-center">
               <p className="font-semibold">Sakit</p>
-              <p className="font-bold">0</p>
+              <p className="font-bold">{isLoading ? '-' : attendanceSummary.sakit}</p>
             </div>
           </div>
         </div>
@@ -379,6 +496,55 @@ const Presensi = () => {
           >
             Lihat Detail Kehadiran
           </button>
+        </div>
+      </div>
+      
+      {/* Actual Attendance Table */}
+      <div className="mb-6">
+        <h3 className="text-lg font-medium mb-3">Riwayat Presensi:</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-200">
+            <thead>
+              <tr className="bg-blue-500 text-white">
+                <th className="py-3 px-4 border-b text-left">No</th>
+                <th className="py-3 px-4 border-b text-left">Tanggal</th>
+                <th className="py-3 px-4 border-b text-left">Masuk</th>
+                <th className="py-3 px-4 border-b text-left">Keluar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="4" className="py-4 text-center">Loading...</td>
+                </tr>
+              ) : groupedAttendance.length > 0 ? (
+                groupedAttendance.map((item, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">{index + 1}</td>
+                    <td className="py-3 px-4">{formatAttendanceDate(item.masuk?.waktu_presensi || item.keluar?.waktu_presensi)}</td>
+                    <td className="py-3 px-4">
+                      {item.masuk ? (
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                          {formatAttendanceTime(item.masuk.waktu_presensi)}
+                        </span>
+                      ) : '-'}
+                    </td>
+                    <td className="py-3 px-4">
+                      {item.keluar ? (
+                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
+                          {formatAttendanceTime(item.keluar.waktu_presensi)}
+                        </span>
+                      ) : '-'}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="py-4 text-center text-gray-500">Belum ada data presensi</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
       
