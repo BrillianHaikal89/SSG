@@ -109,13 +109,7 @@ const MutabaahReport = ({ user, onClose }) => {
       // Add headers
       csvContent += "Tanggal,Sholat Wajib,Sholat Tahajud,Sholat Dhuha,Sholat Rawatib,Sholat Sunnah Lainnya,";
       csvContent += "Tilawah Quran,Terjemah Quran,Shaum Sunnah,Shodaqoh,Dzikir Pagi/Petang,";
-      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah";
-      
-      // Only add haid column if user is female
-      if (user?.gender === 0) {
-        csvContent += ",Status Haid";
-      }
-      csvContent += "\n";
+      csvContent += "Istighfar (x1000),Sholawat (x100),Menyimak MQ Pagi,Kajian Al-Hikam,Kajian Ma'rifatullah,Status Haid\n";
 
       // Add data rows
       allUserData.forEach(data => {
@@ -123,13 +117,8 @@ const MutabaahReport = ({ user, onClose }) => {
         csvContent += `${data.sholat_rawatib},${data.sholat_sunnah_lainnya},${data.tilawah_quran},`;
         csvContent += `${data.terjemah_quran},${data.shaum_sunnah},${data.shodaqoh},`;
         csvContent += `${data.dzikir_pagi_petang},${data.istighfar_1000x},${data.sholawat_100x},`;
-        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah}`;
-        
-        // Only add haid data if user is female
-        if (user?.gender === 0) {
-          csvContent += `,${data.haid}`;
-        }
-        csvContent += `\n`;
+        csvContent += `${data.menyimak_mq_pagi},${data.kajian_al_hikam},${data.kajian_marifatullah},`;
+        csvContent += `${data.haid}\n`;
       });
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -161,7 +150,7 @@ const MutabaahReport = ({ user, onClose }) => {
         sholawatCompleted: 0,
         mqDays: 0,
         kajianDays: 0,
-        haidDays: user?.gender === 0 ? 0 : undefined
+        haidDays: 0
       };
     }
     
@@ -180,7 +169,7 @@ const MutabaahReport = ({ user, onClose }) => {
     const sholawatCompleted = allUserData.filter(data => data.sholawat_completed).length;
     const mqDays = allUserData.filter(data => data.menyimak_mq_pagi > 0).length;
     const kajianDays = allUserData.filter(data => data.kajian_al_hikam > 0 || data.kajian_marifatullah > 0).length;
-    const haidDays = user?.gender === 0 ? allUserData.filter(data => data.haid > 0).length : undefined;
+    const haidDays = allUserData.filter(data => data.haid > 0).length;
     
     return { 
       avgSholatWajib, 
@@ -309,10 +298,6 @@ const MutabaahReport = ({ user, onClose }) => {
               <span>{user?.name || '-'}</span>
             </div>
             <div className="flex justify-between mb-2">
-              <span className="font-medium">Gender:</span>
-              <span>{user?.gender === 0 ? 'Perempuan' : 'Laki-laki'}</span>
-            </div>
-            <div className="flex justify-between mb-2">
               <span className="font-medium">Periode:</span>
               <div className="flex space-x-2">
                 <select 
@@ -363,9 +348,7 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahajud</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dhuha</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shaum</th>
-                          {user?.gender === 0 && (
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
-                          )}
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -379,7 +362,7 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
-                              {user?.gender === 0 && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
+                              {data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
@@ -402,15 +385,13 @@ const MutabaahReport = ({ user, onClose }) => {
                                 <span className="text-red-600">✗</span>
                               )}
                             </td>
-                            {user?.gender === 0 && (
-                              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                {isValueActive(data.haid) ? (
-                                  <span className="text-red-600">✗</span>
-                                ) : (
-                                  <span className="text-green-600">✓</span>
-                                )}
-                              </td>
-                            )}
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {isValueActive(data.haid) ? (
+                                <span className="text-red-600">✗</span>
+                              ) : (
+                                <span className="text-green-600">✓</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -450,14 +431,12 @@ const MutabaahReport = ({ user, onClose }) => {
                           {stats.shaumDays}/{allUserData.length}
                         </div>
                       </div>
-                      {user?.gender === 0 && (
-                        <div className="bg-red-50 p-4 rounded-lg">
-                          <div className="text-sm text-red-800">Haid (Hari)</div>
-                          <div className="text-2xl font-bold text-red-600">
-                            {stats.haidDays}/{allUserData.length}
-                          </div>
+                      <div className="bg-red-50 p-4 rounded-lg">
+                        <div className="text-sm text-red-800">Haid (Hari)</div>
+                        <div className="text-2xl font-bold text-red-600">
+                          {stats.haidDays}/{allUserData.length}
                         </div>
-                      )}
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
