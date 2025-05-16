@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../../stores/authStore';
-import { format, subDays, subWeeks, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, isSameDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 const HIJRI_MONTHS = [
@@ -73,8 +73,8 @@ const MutabaahReport = ({ user, onClose }) => {
     switch (timeRange) {
       case 'day':
         filtered = reportData.filter(item => 
-          isSameDay(new Date(item.date), selectedDate
-        ));
+          isSameDay(new Date(item.date), selectedDate)
+        );
         break;
       case 'week':
         const weekStart = startOfWeek(selectedWeek, { locale: id });
