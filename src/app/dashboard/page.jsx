@@ -24,6 +24,10 @@ const MySwal = withReactContent(Swal);
     router.push('/dashboard/my');
   };
 
+  const navigateToRundown = () => {
+    router.push('/dashboard/rundown');
+  };
+
   const navigateToECard = () => {
     router.push('/dashboard/ecard');
   };
@@ -217,6 +221,7 @@ const handleLogout = () => {
       navigateToScan ={navigateToScan}
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}
+      navigateToRundown={navigateToRundown}
       navigateToPeserta={navigateToPeserta}
       navigateToProfile={navigateToProfile}
       navigateToECard={navigateToECard}
