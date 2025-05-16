@@ -76,10 +76,7 @@ const Presensi = () => {
   // Fetch actual attendance data from API
   useEffect(() => {
       const userId = user?.userId;
-      console.log("user nya", userId);
-      console.log("semua user", user);
-      console.log("userku", user.fulldata.id);
-
+    
     const fetchAttendanceData = async () => {
       setIsLoading(true);
       try {
