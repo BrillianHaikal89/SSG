@@ -75,11 +75,10 @@ const Presensi = () => {
 
   // Fetch actual attendance data from API
   useEffect(() => {
-    const userId = user?.id;
     const fetchAttendanceData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${userId}`, {
+        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${user.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
