@@ -287,6 +287,9 @@ const MutabaahReport = ({ user, onClose }) => {
     }
   };
 
+  // Check if user is male (gender = 1)
+  const isMale = user?.gender === 1;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -360,7 +363,7 @@ const MutabaahReport = ({ user, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dhuha</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shaum</th>
                           {/* Only show Haid column if user is female */}
-                          {user?.gender === 0 && (
+                          {!isMale && (
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haid</th>
                           )}
                         </tr>
@@ -376,7 +379,7 @@ const MutabaahReport = ({ user, onClose }) => {
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {data.sholat_wajib}/5
-                              {user?.gender === 0 && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
+                              {!isMale && data.haid > 0 && <span className="text-red-500 ml-1">(Haid)</span>}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                               {isValueActive(data.sholat_tahajud) ? (
@@ -400,7 +403,7 @@ const MutabaahReport = ({ user, onClose }) => {
                               )}
                             </td>
                             {/* Only show Haid column if user is female */}
-                            {user?.gender === 0 && (
+                            {!isMale && (
                               <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                 {isValueActive(data.haid) ? (
                                   <span className="text-red-600">✗</span>
@@ -449,7 +452,7 @@ const MutabaahReport = ({ user, onClose }) => {
                         </div>
                       </div>
                       {/* Only show Haid stats if user is female */}
-                      {user?.gender === 0 && (
+                      {!isMale && (
                         <div className="bg-red-50 p-4 rounded-lg">
                           <div className="text-sm text-red-800">Haid (Hari)</div>
                           <div className="text-2xl font-bold text-red-600">
