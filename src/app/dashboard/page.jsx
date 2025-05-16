@@ -28,6 +28,10 @@ const MySwal = withReactContent(Swal);
     router.push('/dashboard/rundown');
   };
 
+  const navigateToTask = () => {
+    router.push('/dashboard/task');
+  };
+
   const navigateToECard = () => {
     router.push('/dashboard/ecard');
   };
@@ -227,7 +231,7 @@ const handleLogout = () => {
       navigateToECard={navigateToECard}
       navigateToPresensi={navigateToPresensi}
       navigateToAlQuran={navigateToAlQuran}
-      navigateToTugas={() => console.log('Navigate to Tugas')}
+      navigateToTask={navigateToTask}
       navigateToHome={navigateToHome}
       showNotification={showNotification}
       notificationMessage={notificationMessage}
