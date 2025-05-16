@@ -1,34 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 const Rundown = () => {
   const router = useRouter();
-  const { user, checkAuth } = useAuthStore();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    if (!checkAuth()) {
-      router.push('/login');
-    }
-  }, [router, checkAuth]);
-
-  if (!isClient) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <ProfileLayout>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col">
       {/* Animated Back Button */}
       <motion.button
         onClick={() => router.back()}
@@ -102,7 +81,7 @@ const Rundown = () => {
           Coming Soon
         </motion.div>
       </motion.div>
-    </ProfileLayout>
+    </div>
   );
 };
 
