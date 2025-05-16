@@ -75,9 +75,21 @@ const Presensi = () => {
 
   // Fetch actual attendance data from API
   useEffect(() => {
-      const userId = user?.userId;
-    
-    const fetchAttendanceData = async () => {
+    if (!user) {
+    console.log('No user found in store');
+    return; // Exit early if no user
+  }
+  
+  const userId = user.userId;
+  console.log('UserId for API call:', userId);
+  
+  // Only fetch when we have a userId
+  if (userId) {
+    fetchAttendanceData(userId);
+  }
+}, [user]);
+
+  const fetchAttendanceData = async () => {
       setIsLoading(true);
       try {
         const response = await fetch(`${API_URL}/users/get-presensi?user_id=${userId}`, {
@@ -106,10 +118,6 @@ const Presensi = () => {
         setIsLoading(false);
       }
     };
-    
-    fetchAttendanceData();
-  }, []);
-
   // Calculate attendance summary from API data
   const calculateAttendanceSummary = (attendanceData) => {
     // Group by date to count unique attendance days
