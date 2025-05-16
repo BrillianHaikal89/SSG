@@ -1,62 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// Named export to avoid ESLint warning
-const getStatusStyle = (status) => {
-  switch (status) {
-    case "Hadir":
-      return "bg-green-500 text-white";
-    case "Sakit":
-      return "bg-red-500 text-white";
-    case "Izin":
-      return "bg-yellow-500 text-black";
-    case "Telat":
-      return "bg-blue-500 text-white";
-    default:
-      return "bg-gray-500 text-white";
-  }
-};
-
 const DetailPresensi = () => {
   const router = useRouter();
-  const [attendanceHistory, setAttendanceHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    try {
-      const savedData = typeof window !== 'undefined' ? localStorage.getItem('attendanceRecords') : null;
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        setAttendanceHistory(parsedData.map((item, index) => ({
-          id: item.id,
-          session: `Sesi Ke ${index + 1}`,
-          date: item.date,
-          status: item.status,
-          description: item.description,
-          time: item.time || '',
-          location: item.location || '',
-          image: item.image || ''
-        })));
-      }
-    } catch (error) {
-      console.error('Error loading attendance data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p>Memuat data presensi...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -76,62 +26,27 @@ const DetailPresensi = () => {
         <div className="w-8"></div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-grow container mx-auto px-4 py-6 pb-20">
-        <h1 className="text-3xl font-bold text-center mb-8">DETAIL PRESENSI</h1>
-        
-        {attendanceHistory.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-500">Tidak ada data presensi</p>
-            <Link href="/presensi" className="text-blue-600 underline mt-4 inline-block">
-              Kembali ke halaman presensi
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {attendanceHistory.map((item, index) => (
-              <div 
-                key={item.id} 
-                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
-                onClick={() => router.push(`/presensi/detail?id=${item.id}`)}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex-1">
-                    <div className="bg-gray-100 rounded-lg py-2 px-4">
-                      <p className="font-medium">{item.session}</p>
-                    </div>
-                    <p className="text-sm pl-4 mt-1">{item.date}</p>
-                    {item.time && <p className="text-sm pl-4">Waktu: {item.time}</p>}
-                    {item.description && (
-                      <p className="text-sm pl-4 text-gray-600 mt-1">Keterangan: {item.description}</p>
-                    )}
-                  </div>
-                  <div className="ml-4">
-                    <button 
-                      className={`${getStatusStyle(item.status)} py-2 px-6 rounded-lg text-sm`}
-                      disabled
-                    >
-                      {item.status}
-                    </button>
-                  </div>
-                </div>
-                {item.image && (
-                  <div className="mt-3">
-                    <div className="relative w-full h-32 rounded-md overflow-hidden border border-gray-200">
-                      <Image
-                        src={item.image}
-                        alt="Bukti presensi"
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Main Content - Coming Soon Message */}
+      <div className="flex-grow flex flex-col items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <Image
+            src="/images/under-construction.svg"
+            alt="Coming Soon"
+            width={300}
+            height={300}
+            className="mx-auto mb-6"
+          />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Fitur Sedang Dalam Pengembangan</h2>
+          <p className="text-gray-600 mb-6">
+            Mohon maaf, fitur detail presensi saat ini belum tersedia. Kami sedang bekerja untuk menyediakan fitur ini secepatnya.
+          </p>
+          <button
+            onClick={() => router.push('/presensi')}
+            className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
+          >
+            Kembali ke Halaman Presensi
+          </button>
+        </div>
       </div>
       
       {/* Bottom Navigation */}
