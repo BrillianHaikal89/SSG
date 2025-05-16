@@ -10,6 +10,7 @@ const Dashboard = ({
   navigateToScan,
   handleLogout,
   navigateToMY,
+  navigateToRundown,
   navigateToProfile,
   navigateToPresensi,
   navigateToAlQuran,
@@ -81,6 +82,7 @@ const Dashboard = ({
         handleLogout={handleLogout}
         navigateToHome={navigateToHome}
         navigateToMY={navigateToMY}
+        navigateToRundown={navigateToRundown}
         navigateToAlQuran={navigateToAlQuran}
         navigateToPresensi={navigateToPresensi}
         navigateToTugas={navigateToTugas}
