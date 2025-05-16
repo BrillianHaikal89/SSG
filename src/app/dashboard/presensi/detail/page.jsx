@@ -168,4 +168,4 @@ const PresensiDetail = () => {
   );
 };
 
-export default PresensiDetail;
+export default DeatilPresensi;
