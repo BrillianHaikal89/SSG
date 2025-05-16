@@ -77,12 +77,12 @@ const Presensi = () => {
   useEffect(() => {
     const fetchAttendanceData = async () => {
       setIsLoading(true);
+
       try {
-        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${user.id}`, {
+        const response = await fetch(`${API_URL}/users/get-presensi?user_id=${user.userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
         });
         
