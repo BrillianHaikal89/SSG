@@ -14,7 +14,7 @@ const Dashboard = ({
   navigateToProfile,
   navigateToPresensi,
   navigateToAlQuran,
-  navigateToTask,
+  navigateToTugas,
   navigateToHome,
   navigateToECard,
   navigateToPeserta,
@@ -85,7 +85,7 @@ const Dashboard = ({
         navigateToRundown={navigateToRundown}
         navigateToAlQuran={navigateToAlQuran}
         navigateToPresensi={navigateToPresensi}
-        navigateToTugas={navigateToTask}
+        navigateToTugas={navigateToTugas}
         navigateToProfile={navigateToProfile}
         navigateToScan={navigateToScan}
         closeSidebar={closeSidebar}
@@ -108,9 +108,9 @@ const Dashboard = ({
         <DashboardContent 
           userData={userData}
           navigateToMY={navigateToMY}
-          navigateToRundown={navigateToRundown}
+          navigateToRundown={navigateRundown}
           navigateToPresensi={navigateToPresensi}
-          navigateToTugas={navigateToTask}
+          navigateToTugas={navigateToTugas}
           navigateToAlQuran={navigateToAlQuran}
           navigateToProfile={navigateToProfile}
           navigateToECard={navigateToECard}
