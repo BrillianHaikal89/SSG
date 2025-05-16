@@ -108,6 +108,7 @@ const Dashboard = ({
         <DashboardContent 
           userData={userData}
           navigateToMY={navigateToMY}
+          navigateToRundown={navigateToRundown}
           navigateToPresensi={navigateToPresensi}
           navigateToTugas={navigateToTugas}
           navigateToAlQuran={navigateToAlQuran}
