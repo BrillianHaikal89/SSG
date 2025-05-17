@@ -9,11 +9,9 @@ const DashboardContent = ({
   navigateToPresensi,
   navigateToTugas,
   navigateToAlQuran,
-  navigateToProfile,
   navigateToECard,
   navigateToPeserta,
-  navigateToScan,
-  navigateToLihatPresensi
+  navigateToScan
 }) => {
   const { role, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -68,28 +66,7 @@ const DashboardContent = ({
     }
   };
 
-  const fetchRecentPresensi = async () => {
-    if (role !== '3' && role !== '4') return;
-
-    try {
-      setIsLoadingPresensi(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/api/users/presensi/recent?limit=5`);
-
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data presensi');
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setRecentPresensi(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching recent presensi:', error);
-    } finally {
-      setIsLoadingPresensi(false);
-    }
-  };
+  
 
   useEffect(() => {
     checkBookmark();
@@ -275,19 +252,8 @@ const DashboardContent = ({
       ),
       onClick: navigateToScan,
       roles: ['2c', '3', '4']
-    },
-    {
-      id: 'lihat-presensi',
-      name: 'Lihat Presensi',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-        </svg>
-      ),
-      onClick: navigateToLihatPresensi,
-      roles: ['3', '4']
     }
+    
   ];
 
   // Filter quick access items based on user role
