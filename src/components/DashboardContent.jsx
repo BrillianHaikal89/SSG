@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Tambahkan useEffect
+import React, { useState, useEffect } from 'react';
 import useAuthStore from '../stores/authStore';
 
 const DashboardContent = ({ 
@@ -16,7 +16,9 @@ const DashboardContent = ({
 }) => {
   const { role, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [bookmarkData, setBookmarkData] = useState(null); // State untuk menyimpan data bookmark
+  const [bookmarkData, setBookmarkData] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
+  const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(false);
 
   const checkBookmark = async () => {
     if (!user?.userId) return;
@@ -41,9 +43,35 @@ const DashboardContent = ({
     }
   };
 
+  const fetchAnnouncements = async () => {
+    setIsLoadingAnnouncements(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/admin/get-kegiatan`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch announcements');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setAnnouncements(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      setAnnouncements([]);
+    } finally {
+      setIsLoadingAnnouncements(false);
+    }
+  };
+
   useEffect(() => {
     checkBookmark();
   }, [user?.userId]);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
 
   // Format date untuk lastRead dari updated_at
   const formatLastRead = (dateString) => {
@@ -55,6 +83,17 @@ const DashboardContent = ({
       hour: '2-digit', 
       minute: '2-digit',
       hour12: false
+    };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
+  };
+
+  // Format date for announcements
+  const formatAnnouncementDate = (dateString) => {
+    if (!dateString) return '-';
+    const options = { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric'
     };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
@@ -191,22 +230,6 @@ const DashboardContent = ({
     },
   ];
 
-  // Sample announcements
-  const announcements = [
-    {
-      id: 1,
-      title: 'Kerja Bakti Sosial',
-      description: 'Kegiatan Bakti Sosial di Masjid Agung Sumedang',
-      date: '15 Maret 2025',
-    },
-    {
-      id: 2,
-      title: 'Pengumpulan Tugas',
-      description: 'Batas pengumpulan tugas Agama paling lambat 20 Maret 2025',
-      date: '18 Maret 2025',
-    },
-  ];
-
   return (
     <main className="flex-1 overflow-y-auto py-4 px-3 sm:px-4 md:px-6 pb-20 transition-all duration-300 bg-gray-50">
       {/* Progress MY Card */}
@@ -284,13 +307,32 @@ const DashboardContent = ({
       <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
         <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
         
-        {announcements.map((announcement) => (
-          <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
-            <p className="font-medium text-sm">{announcement.title}</p>
-            <p className="text-xs text-gray-700">{announcement.description}</p>
-            <p className="text-xs text-gray-500 mt-1">{announcement.date}</p>
+        {isLoadingAnnouncements ? (
+          <div className="flex justify-center items-center p-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
           </div>
-        ))}
+        ) : announcements.length > 0 ? (
+          announcements.map((announcement) => (
+            <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
+              <p className="font-medium text-sm">{announcement.judul}</p>
+              <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
+                <span className={`px-2 py-0.5 text-xs rounded-full ${
+                  announcement.status === 'Dibuka' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {announcement.status}
+                </span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="mt-2 p-3 bg-white rounded-lg mb-2">
+            <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
+          </div>
+        )}
       </section>
 
       {/* Quick Access - Responsive grid */}
