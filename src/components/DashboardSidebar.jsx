@@ -36,7 +36,7 @@ const DashboardSidebar = ({
                 navigateToProfile();
                 closeSidebar && closeSidebar();
             },
-            roles: ['0a', '0b', '1a'] // Only show for these roles
+            roles: ['0a', '0b', '1a'] 
         },
         {
             id: 'my',
@@ -50,7 +50,7 @@ const DashboardSidebar = ({
                 navigateToMY();
                 closeSidebar && closeSidebar();
             },
-            roles: ['all'] // Show for all roles
+            roles: ['all'] 
         },
         {
             id: 'quran',
@@ -64,7 +64,7 @@ const DashboardSidebar = ({
                 navigateToAlQuran();
                 closeSidebar && closeSidebar();
             },
-            roles: ['all'] // Show for all roles
+            roles: ['all'] 
         },
         {
             id: 'presensi',
@@ -106,7 +106,7 @@ const DashboardSidebar = ({
                 navigateToTugas();
                 closeSidebar && closeSidebar();
             },
-            roles: ['1a', '2c', '3'] // Only show for these roles
+            roles: ['1a', '2c', '3'] 
         },
         {
             id: 'scanqr',
@@ -120,7 +120,7 @@ const DashboardSidebar = ({
                 navigateToScan();
                 closeSidebar && closeSidebar();
             },
-            roles: ['2c'] // Only show for this role
+            roles: ['2c'] 
         },
         {
             id: 'kegiatan',
@@ -134,7 +134,7 @@ const DashboardSidebar = ({
                 navigateToKelolaKegiatan();
                 closeSidebar && closeSidebar();
             },
-            roles: ['3'] // Only show for this role
+            roles: ['3'] 
         }
     ];
 
