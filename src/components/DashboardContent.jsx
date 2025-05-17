@@ -182,7 +182,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToPresensi,
-      roles: ['1a', '3', '2c']
+      roles: ['1a']
     },
     {
       id: 'nilai',

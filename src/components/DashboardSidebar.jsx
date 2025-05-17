@@ -77,7 +77,7 @@ const DashboardSidebar = ({
                 navigateToPresensi();
                 closeSidebar && closeSidebar();
             },
-            roles: ['1a', '3', '2c'] // Only show for these roles
+            roles: ['1a'] 
         },
         {
             id: 'lihat-presensi',
