@@ -56,7 +56,7 @@ export default function SignInPage() {
   
       // Tambahkan event listener untuk menerima pesan dari popup
       const receiveMessage = (event) => {
-        if (event.origin !== `https://aul.infonering.com`) return;
+        if (event.origin !== `https://api.siapguna.org`) return;
         
         if (event.data.token) {
           // Login berhasil, tutup popup dan proses data
