@@ -324,7 +324,7 @@ const DashboardContent = ({
         </div>
       </div>
 
-      {/* Pengumuman Section - Show for all roles except 0a */}
+      {/* Pengumuman Section - Show for all roles except 0a & 0b */}
       {(role !== '0a', '0b') && (
         <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
           <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
