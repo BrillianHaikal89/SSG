@@ -20,7 +20,7 @@ const DashboardSidebar = ({
     isMobile
 }) => {
     const { role } = useAuthStore();
-    
+
     // Base menu items that can be filtered by role
     const allMenuItems = [
         {
@@ -78,6 +78,20 @@ const DashboardSidebar = ({
                 closeSidebar && closeSidebar();
             },
             roles: ['1a', '3', '2c'] // Only show for these roles
+        },
+        {
+            id: 'lihat-presensi',
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            ),
+            label: "Lihat Presensi",
+            onClick: () => {
+                router.push('/dashboard/lihatpresensi');
+                closeSidebar && closeSidebar();
+            },
+            roles: ['3', '4'] 
         },
         {
             id: 'tugas',
@@ -167,7 +181,7 @@ const DashboardSidebar = ({
                             <span className="text-lg font-bold">SANTRI SIAP GUNA</span>
                         </div>
                     )}
-                    
+
                     {/* Mobile: Close button (X) */}
                     {isMobile && sidebarOpen && (
                         <button
@@ -180,7 +194,7 @@ const DashboardSidebar = ({
                             </svg>
                         </button>
                     )}
-                    
+
                     {/* Desktop: Toggle button */}
                     {!isMobile && (
                         <button

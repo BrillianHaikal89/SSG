@@ -52,6 +52,10 @@ const MySwal = withReactContent(Swal);
     router.push('/dashboard/presensi');
   };
 
+  const navigateToLihatPresensi = () => {
+  router.push('/dashboard/lihatpresensi');
+};
+
   const navigateToAlQuran = () => {
     router.push('/dashboard/Quran');
   };
@@ -231,6 +235,7 @@ const handleLogout = () => {
       navigateToProfile={navigateToProfile}
       navigateToECard={navigateToECard}
       navigateToPresensi={navigateToPresensi}
+      navigateToLihatPresensi={navigateToLihatPresensi}
       navigateToAlQuran={navigateToAlQuran}
       navigateToTugas={() => console.log('Navigate to Tugas')}
       navigateToHome={navigateToHome}
