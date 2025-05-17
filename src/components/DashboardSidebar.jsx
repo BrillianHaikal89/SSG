@@ -132,7 +132,7 @@ const DashboardSidebar = ({
             ),
             label: "Kelola Tugas",
             onClick: () => {
-                router.push('/dashboard/kelolatugas');
+                navigateToKelolaTugas();
                 closeSidebar && closeSidebar();
             },
             roles: ['3', '4'] 
