@@ -6,7 +6,7 @@ import DashboardHeader from '../../../components/DashboardHeader';
 import Swal from 'sweetalert2';
 
 const KelolaTugasPage = () => {
-  const { role } = useAuthStore();
+  const { role, user } = useAuthStore();
   const router = useRouter();
   const [tugasList, setTugasList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +18,9 @@ const KelolaTugasPage = () => {
   });
 
   useEffect(() => {
+    // Check if we're on the client side
+    if (typeof window === 'undefined') return;
+
     if (role !== '3' && role !== '4') {
       router.push('/dashboard');
       return;
@@ -83,14 +86,21 @@ const KelolaTugasPage = () => {
     }
   };
 
+  // Add a check for client-side rendering
+  if (typeof window === 'undefined') {
+    return null; // or return a loading state
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
         title="Kelola Tugas" 
         showBackButton={true}
         onBack={() => router.push('/dashboard')}
+        userData={user || { name: 'User' }} // Provide fallback user data
       />
 
+      {/* Rest of your component remains the same */}
       <div className="container mx-auto p-4">
         {/* Form Tambah Tugas */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -138,7 +148,6 @@ const KelolaTugasPage = () => {
                 <option value="all">Semua Pleton</option>
                 <option value="1">Pleton 1</option>
                 <option value="2">Pleton 2</option>
-                {/* Tambahkan pleton lainnya */}
               </select>
             </div>
             <button
