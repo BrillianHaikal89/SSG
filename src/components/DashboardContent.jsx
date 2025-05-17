@@ -116,8 +116,8 @@ const DashboardContent = ({
     return new Date().toLocaleDateString('id-ID', options);
   };
   
-  // Quick access menu items definition
-  const quickAccessItems = [
+  // All possible quick access items
+  const allQuickAccessItems = [
     {
       id: 'rundown',
       name: 'Rundown',
@@ -126,17 +126,19 @@ const DashboardContent = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
-      onClick: navigateToRundown, 
+      onClick: navigateToRundown,
+      roles: ['2c', '3']
     },
     {
-      id : "kegiatan",
-      name : "kelola kegiatan",
+      id: "kegiatan",
+      name: "Kelola Kegiatan",
       icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18m-7 5h7M3 17h7m-7 0a2 2 0 01-2-2V7a2 2 0 012-2m0 10a2 2 0 002-2V7a2 2 0 00-2-2m0 10h18m-7-5h7M3 12h18" />
-                </svg>
-            ),
-      onClick : navigateToKelolaKegiatan,
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18m-7 5h7M3 17h7m-7 0a2 2 0 01-2-2V7a2 2 0 012-2m0 10a2 2 0 002-2V7a2 2 0 00-2-2m0 10h18m-7-5h7M3 12h18" />
+        </svg>
+      ),
+      onClick: navigateToKelolaKegiatan,
+      roles: ['3']
     },
     {
       id: 'tugas',
@@ -147,6 +149,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToTugas,
+      roles: ['1a', '2c', '3']
     },
     {
       id: 'alquran',
@@ -157,6 +160,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToAlQuran,
+      roles: ['all']
     },
     {
       id: 'bap',
@@ -167,6 +171,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: null,
+      roles: ['1b']
     },
     {
       id: 'presensi',
@@ -177,6 +182,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToPresensi,
+      roles: ['1a', '3', '2c']
     },
     {
       id: 'nilai',
@@ -187,6 +193,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: null,
+      roles: []
     },
     {
       id: 'my',
@@ -197,6 +204,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToMY,
+      roles: ['all']
     },
     {
       id: 'ecard',
@@ -207,6 +215,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToECard,
+      roles: ['1a']
     },
     {
       id: 'peserta',
@@ -217,6 +226,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToPeserta,
+      roles: ['3']
     },
     {
       id: 'scanqr',
@@ -227,8 +237,19 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToScan,
+      roles: ['2c']
     },
   ];
+
+  // Filter quick access items based on user role
+  const getFilteredQuickAccessItems = () => {
+    return allQuickAccessItems.filter(item => {
+      if (item.roles.includes('all')) return true;
+      return item.roles.includes(role);
+    });
+  };
+
+  const quickAccessItems = getFilteredQuickAccessItems();
 
   return (
     <main className="flex-1 overflow-y-auto py-4 px-3 sm:px-4 md:px-6 pb-20 transition-all duration-300 bg-gray-50">
@@ -303,37 +324,39 @@ const DashboardContent = ({
         </div>
       </div>
 
-      {/* Pengumuman Section */}
-      <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
-        <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
-        
-        {isLoadingAnnouncements ? (
-          <div className="flex justify-center items-center p-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
-          </div>
-        ) : announcements.length > 0 ? (
-          announcements.map((announcement) => (
-            <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
-              <p className="font-medium text-sm">{announcement.judul}</p>
-              <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
-              <div className="flex justify-between items-center mt-1">
-                <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${
-                  announcement.status === 'Dibuka' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {announcement.status}
-                </span>
-              </div>
+      {/* Pengumuman Section - Show for all roles except 0a */}
+      {(role !== '0a') && (
+        <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
+          <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
+          
+          {isLoadingAnnouncements ? (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
             </div>
-          ))
-        ) : (
-          <div className="mt-2 p-3 bg-white rounded-lg mb-2">
-            <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
-          </div>
-        )}
-      </section>
+          ) : announcements.length > 0 ? (
+            announcements.map((announcement) => (
+              <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
+                <p className="font-medium text-sm">{announcement.judul}</p>
+                <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    announcement.status === 'Dibuka' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {announcement.status}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="mt-2 p-3 bg-white rounded-lg mb-2">
+              <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Quick Access - Responsive grid */}
       <section className="bg-white rounded-lg shadow-sm mb-4 p-4">
@@ -355,6 +378,7 @@ const DashboardContent = ({
         </div>
       </section>
 
+      {/* Quran Progress Section - Show for all roles */}
       <section className="bg-green-50 rounded-lg shadow-sm mb-6 p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
           <div className="flex items-center mb-3 sm:mb-0">

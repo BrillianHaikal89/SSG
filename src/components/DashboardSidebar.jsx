@@ -1,4 +1,4 @@
-// DashboardSidebar.jsx - Updated for mobile with no dark background
+// DashboardSidebar.jsx - Updated with role-based menu items
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import useAuthStore from '../stores/authStore';
@@ -9,7 +9,7 @@ const DashboardSidebar = ({
     toggleSidebar,
     handleLogout,
     navigateToHome,
-    naviagateToKelolaKegiatan,
+    navigateToKelolaKegiatan,
     navigateToAlQuran,
     navigateToPresensi,
     navigateToTugas,
@@ -21,8 +21,8 @@ const DashboardSidebar = ({
 }) => {
     const { role } = useAuthStore();
     
-    // Sidebar menu items
-    const menuItems = [
+    // Base menu items that can be filtered by role
+    const allMenuItems = [
         {
             id: 'profile',
             icon: (
@@ -34,7 +34,8 @@ const DashboardSidebar = ({
             onClick: () => {
                 navigateToProfile();
                 closeSidebar && closeSidebar();
-            }
+            },
+            roles: ['0a', '1a', '1b', '3'] // Only show for these roles
         },
         {
             id: 'my',
@@ -47,7 +48,8 @@ const DashboardSidebar = ({
             onClick: () => {
                 navigateToMY();
                 closeSidebar && closeSidebar();
-            }
+            },
+            roles: ['all'] // Show for all roles
         },
         {
             id: 'quran',
@@ -60,7 +62,8 @@ const DashboardSidebar = ({
             onClick: () => {
                 navigateToAlQuran();
                 closeSidebar && closeSidebar();
-            }
+            },
+            roles: ['all'] // Show for all roles
         },
         {
             id: 'presensi',
@@ -73,7 +76,8 @@ const DashboardSidebar = ({
             onClick: () => {
                 navigateToPresensi();
                 closeSidebar && closeSidebar();
-            }
+            },
+            roles: ['1a', '3', '2c'] // Only show for these roles
         },
         {
             id: 'tugas',
@@ -86,7 +90,8 @@ const DashboardSidebar = ({
             onClick: () => {
                 navigateToTugas();
                 closeSidebar && closeSidebar();
-            }
+            },
+            roles: ['1a', '2c', '3'] // Only show for these roles
         },
         {
             id: 'scanqr',
@@ -99,9 +104,34 @@ const DashboardSidebar = ({
             onClick: () => {
                 navigateToScan();
                 closeSidebar && closeSidebar();
-            }
+            },
+            roles: ['2c'] // Only show for this role
+        },
+        {
+            id: 'kegiatan',
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18m-7 5h7M3 17h7m-7 0a2 2 0 01-2-2V7a2 2 0 012-2m0 10a2 2 0 002-2V7a2 2 0 00-2-2m0 10h18" />
+                </svg>
+            ),
+            label: "Kelola Kegiatan",
+            onClick: () => {
+                navigateToKelolaKegiatan();
+                closeSidebar && closeSidebar();
+            },
+            roles: ['3'] // Only show for this role
         }
     ];
+
+    // Filter menu items based on user role
+    const getFilteredMenuItems = () => {
+        return allMenuItems.filter(item => {
+            if (item.roles.includes('all')) return true;
+            return item.roles.includes(role);
+        });
+    };
+
+    const menuItems = getFilteredMenuItems();
 
     // Generate appropriate classes for sidebar based on mobile/desktop and open/closed state
     const getSidebarClasses = () => {
