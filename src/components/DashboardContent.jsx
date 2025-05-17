@@ -373,6 +373,40 @@ const DashboardContent = ({
         </div>
       </div>
 
+      {/* Pengumuman Section - Show for all roles except 0a */}
+      {role !== '0a' && (
+        <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
+          <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
+          
+          {isLoadingAnnouncements ? (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
+            </div>
+          ) : announcements.length > 0 ? (
+            announcements.map((announcement) => (
+              <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
+                <p className="font-medium text-sm">{announcement.judul}</p>
+                <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    announcement.status === 'Dibuka' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {announcement.status}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="mt-2 p-3 bg-white rounded-lg mb-2">
+              <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Presensi Terbaru Section - Hanya untuk role 3 dan 4 */}
       {(role === '3' || role === '4') && (
         <section className="bg-white rounded-lg shadow-sm mb-4 p-4">
@@ -418,40 +452,6 @@ const DashboardContent = ({
           ) : (
             <div className="text-center py-4">
               <p className="text-sm text-gray-500">Belum ada data presensi</p>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Pengumuman Section - Show for all roles except 0a */}
-      {role !== '0a' && (
-        <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
-          <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
-          
-          {isLoadingAnnouncements ? (
-            <div className="flex justify-center items-center p-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
-            </div>
-          ) : announcements.length > 0 ? (
-            announcements.map((announcement) => (
-              <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
-                <p className="font-medium text-sm">{announcement.judul}</p>
-                <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
-                  <span className={`px-2 py-0.5 text-xs rounded-full ${
-                    announcement.status === 'Dibuka' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {announcement.status}
-                  </span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="mt-2 p-3 bg-white rounded-lg mb-2">
-              <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
             </div>
           )}
         </section>
