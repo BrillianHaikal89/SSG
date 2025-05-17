@@ -5,6 +5,7 @@ const DashboardContent = ({
   userData, 
   navigateToMY, 
   navigateToRundown,
+  navigateToKelolaKegiatan,
   navigateToPresensi,
   navigateToTugas,
   navigateToAlQuran,
@@ -87,6 +88,16 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToRundown, 
+    },
+    {
+      id : "kegiatan",
+      name : "kelola kegiatan",
+      icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18m-7 5h7M3 17h7m-7 0a2 2 0 01-2-2V7a2 2 0 012-2m0 10a2 2 0 002-2V7a2 2 0 00-2-2m0 10h18m-7-5h7M3 12h18" />
+                </svg>
+            ),
+      onClick : navigateToKelolaKegiatan,
     },
     {
       id: 'tugas',
