@@ -445,11 +445,12 @@ const DashboardContent = ({
                   <div className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-3 ${item.status === 'Hadir' ? 'bg-green-500' :
                       item.status === 'Izin' ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }`}></div>
+                        'bg-red-500'}`}></div>
                     <div>
                       <p className="text-sm font-medium">{item.user.name}</p>
-                      <p className="text-xs text-gray-500">{item.user.pleton || '-'}</p>
+                      {(role !== '3' && role !== '4') && (
+                        <p className="text-xs text-gray-500">{item.user.pleton || '-'}</p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">

@@ -131,7 +131,7 @@ const MySwal = withReactContent(Swal);
         ...storeUser,
         name: userName, 
         phone: userPhone,
-        level: 'Pleton 20',
+        level: userlevel,
         taskCompleted: 40,
         taskTotal: 50,
         completionRate: 70,
