@@ -24,6 +24,10 @@ const MySwal = withReactContent(Swal);
     router.push('/dashboard/my');
   };
 
+  const navigateToKelolaKegiatan = () => {
+    router.push('/dashboard/kegiatan');
+  }
+
   const navigateToRundown = () => {
     router.push('/dashboard/rundown');
   };
@@ -218,6 +222,7 @@ const handleLogout = () => {
     <Dashboard 
       userData={userData}
       loading={loading}
+      navigateToKelolaKegiatan={navigateToKelolaKegiatan}
       navigateToScan ={navigateToScan}
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}

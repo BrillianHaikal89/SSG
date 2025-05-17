@@ -8,6 +8,7 @@ const Dashboard = ({
   userData, 
   loading, 
   navigateToScan,
+  navigateToKelolaKegiatan,
   handleLogout,
   navigateToMY,
   navigateToRundown,
@@ -79,6 +80,7 @@ const Dashboard = ({
         userData={userData}
         sidebarOpen={sidebarOpen}
         toggleSidebar={toggleSidebar}
+        navigateToKelolaKegiatan={navigateToKelolaKegiatan}
         handleLogout={handleLogout}
         navigateToHome={navigateToHome}
         navigateToMY={navigateToMY}
