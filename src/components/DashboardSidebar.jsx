@@ -35,7 +35,7 @@ const DashboardSidebar = ({
                 navigateToProfile();
                 closeSidebar && closeSidebar();
             },
-            roles: ['0a', '1a', '1b', '3'] // Only show for these roles
+            roles: ['0a', '0b', '1a', '1b', '3'] // Only show for these roles
         },
         {
             id: 'my',
