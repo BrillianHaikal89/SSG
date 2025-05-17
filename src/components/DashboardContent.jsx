@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '../stores/authStore';
 
-const DashboardContent = ({ 
-  userData, 
-  navigateToMY, 
+const DashboardContent = ({
+  userData,
+  navigateToMY,
   navigateToRundown,
   navigateToKelolaKegiatan,
   navigateToPresensi,
@@ -25,12 +25,12 @@ const DashboardContent = ({
 
   const checkBookmark = async () => {
     if (!user?.userId) return;
-    
+
     setIsLoading(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/quran/bookmark?user_id=${user?.userId}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch bookmark');
       }
@@ -51,7 +51,7 @@ const DashboardContent = ({
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/admin/get-kegiatan`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch announcements');
       }
@@ -70,12 +70,12 @@ const DashboardContent = ({
 
   const fetchRecentPresensi = async () => {
     if (role !== '3' && role !== '4') return;
-    
+
     try {
       setIsLoadingPresensi(true);
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/api/users/presensi/recent?limit=5`);
-      
+
       if (!response.ok) {
         throw new Error('Gagal mengambil data presensi');
       }
@@ -100,11 +100,11 @@ const DashboardContent = ({
   // Format date untuk lastRead dari updated_at
   const formatLastRead = (dateString) => {
     if (!dateString) return '-';
-    const options = { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric', 
-      hour: '2-digit', 
+    const options = {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
       hour12: false
     };
@@ -114,9 +114,9 @@ const DashboardContent = ({
   // Format date for announcements
   const formatAnnouncementDate = (dateString) => {
     if (!dateString) return '-';
-    const options = { 
-      day: 'numeric', 
-      month: 'long', 
+    const options = {
+      day: 'numeric',
+      month: 'long',
       year: 'numeric'
     };
     return new Date(dateString).toLocaleDateString('id-ID', options);
@@ -125,10 +125,10 @@ const DashboardContent = ({
   // Format date for presensi
   const formatPresensiDate = (dateString) => {
     if (!dateString) return '-';
-    const options = { 
-      day: 'numeric', 
-      month: 'short', 
-      hour: '2-digit', 
+    const options = {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
       minute: '2-digit',
       hour12: false
     };
@@ -146,13 +146,13 @@ const DashboardContent = ({
       lastRead: formatLastRead(bookmarkData.updated_at)
     } : {})
   };
-  
+
   // Format date for display - showing current date
   const formatDate = () => {
     const options = { weekday: 'long', day: 'numeric', month: 'long' };
     return new Date().toLocaleDateString('id-ID', options);
   };
-  
+
   // All possible quick access items
   const allQuickAccessItems = [
     {
@@ -310,9 +310,9 @@ const DashboardContent = ({
           <span>{userData.completionRate}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-orange-400 h-2.5 rounded-full transition-all duration-500" 
-            style={{width: `${userData.completionRate}%`}}
+          <div
+            className="bg-orange-400 h-2.5 rounded-full transition-all duration-500"
+            style={{ width: `${userData.completionRate}%` }}
           ></div>
         </div>
       </section>
@@ -320,48 +320,50 @@ const DashboardContent = ({
       {/* Jadwal and Search Row - Responsive grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         {/* Jadwal Card - Full width on mobile, 3/4 on desktop */}
-        <section className="md:col-span-3 flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm">
-          <div className="bg-blue-900 text-white p-4 w-full sm:w-48 flex flex-col justify-center">
-            <h3 className="text-sm font-semibold">Jadwal Hari ini</h3>
-            <p className="text-xs mt-1">{formatDate()}</p>
-          </div>
-          <div className="bg-blue-100 p-4 flex-grow">
-            <h3 className="text-blue-900 font-medium text-sm">TUGAS</h3>
-            <ol className="text-xs space-y-1 mt-2">
-              <li>
-                <span className="font-medium">1. Agama</span><br/>
-                <span className="text-gray-700">Sholat Lima Waktu</span>
-              </li>
-              <li>
-                <span className="font-medium">2. BTQ</span><br/>
-                <span className="text-gray-700">Baca Surat An-naba</span>
-              </li>
-              <li>
-                <span className="font-medium">3. Tataboga</span><br/>
-                <span className="text-gray-700">Masak Telur</span>
-              </li>
-            </ol>
-            <div className="mt-2 flex justify-end">
-              <button 
-                className="bg-blue-900 text-white text-xs px-3 py-1 rounded-full flex items-center hover:bg-blue-800 transition-colors duration-300"
-                onClick={navigateToTugas}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                Lihat Jadwal
-              </button>
+        {role !== '0a' && role !== '0b' && (
+          <section className="md:col-span-3 flex flex-col sm:flex-row rounded-lg overflow-hidden shadow-sm">
+            <div className="bg-blue-900 text-white p-4 w-full sm:w-48 flex flex-col justify-center">
+              <h3 className="text-sm font-semibold">Jadwal Hari ini</h3>
+              <p className="text-xs mt-1">{formatDate()}</p>
             </div>
-          </div>
-        </section>
+            <div className="bg-blue-100 p-4 flex-grow">
+              <h3 className="text-blue-900 font-medium text-sm">TUGAS</h3>
+              <ol className="text-xs space-y-1 mt-2">
+                <li>
+                  <span className="font-medium">1. Agama</span><br />
+                  <span className="text-gray-700">Sholat Lima Waktu</span>
+                </li>
+                <li>
+                  <span className="font-medium">2. BTQ</span><br />
+                  <span className="text-gray-700">Baca Surat An-naba</span>
+                </li>
+                <li>
+                  <span className="font-medium">3. Tataboga</span><br />
+                  <span className="text-gray-700">Masak Telur</span>
+                </li>
+              </ol>
+              <div className="mt-2 flex justify-end">
+                <button
+                  className="bg-blue-900 text-white text-xs px-3 py-1 rounded-full flex items-center hover:bg-blue-800 transition-colors duration-300"
+                  onClick={navigateToTugas}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Lihat Jadwal
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Search Box - Full width on mobile, 1/4 on desktop */}
         <div className="flex flex-col w-full">
           <div className="relative mb-3">
-            <input 
-              type="text" 
-              placeholder="Pencarian..." 
+            <input
+              type="text"
+              placeholder="Pencarian..."
               className="w-full bg-gray-100 rounded-lg px-4 py-2 pl-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
             />
             <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -373,46 +375,43 @@ const DashboardContent = ({
         </div>
       </div>
 
-      {/* Pengumuman Section - Show for all roles except 0a & 0b */}
-      {role === '0a' || role === '0b' && (
-        <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
-          <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
-          
-          {isLoadingAnnouncements ? (
-            <div className="flex justify-center items-center p-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
-            </div>
-          ) : announcements.length > 0 ? (
-            announcements.map((announcement) => (
-              <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
-                <p className="font-medium text-sm">{announcement.judul}</p>
-                <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
-                  <span className={`px-2 py-0.5 text-xs rounded-full ${
-                    announcement.status === 'Dibuka' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
+      {/* Pengumuman Section - Show for all roles */}
+      <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
+        <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
+
+        {isLoadingAnnouncements ? (
+          <div className="flex justify-center items-center p-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
+          </div>
+        ) : announcements.length > 0 ? (
+          announcements.map((announcement) => (
+            <div key={announcement.id} className="mt-2 p-3 bg-white rounded-lg mb-2">
+              <p className="font-medium text-sm">{announcement.judul}</p>
+              <p className="text-xs text-gray-700">{announcement.deskripsi}</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
+                <span className={`px-2 py-0.5 text-xs rounded-full ${announcement.status === 'Dibuka'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {announcement.status}
-                  </span>
-                </div>
+                  {announcement.status}
+                </span>
               </div>
-            ))
-          ) : (
-            <div className="mt-2 p-3 bg-white rounded-lg mb-2">
-              <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
             </div>
-          )}
-        </section>
-      )}
+          ))
+        ) : (
+          <div className="mt-2 p-3 bg-white rounded-lg mb-2">
+            <p className="text-xs text-gray-700">Tidak ada pengumuman saat ini</p>
+          </div>
+        )}
+      </section>
 
       {/* Presensi Terbaru Section - Hanya untuk role 3 dan 4 */}
       {(role === '3' || role === '4') && (
         <section className="bg-white rounded-lg shadow-sm mb-4 p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-sm">Presensi Terbaru</h3>
-            <button 
+            <button
               onClick={navigateToLihatPresensi}
               className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center"
             >
@@ -422,7 +421,7 @@ const DashboardContent = ({
               </svg>
             </button>
           </div>
-          
+
           {isLoadingPresensi ? (
             <div className="flex justify-center items-center p-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
@@ -432,11 +431,10 @@ const DashboardContent = ({
               {recentPresensi.map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                   <div className="flex items-center">
-                    <div className={`w-2 h-2 rounded-full mr-3 ${
-                      item.status === 'Hadir' ? 'bg-green-500' :
-                      item.status === 'Izin' ? 'bg-yellow-500' :
-                      'bg-red-500'
-                    }`}></div>
+                    <div className={`w-2 h-2 rounded-full mr-3 ${item.status === 'Hadir' ? 'bg-green-500' :
+                        item.status === 'Izin' ? 'bg-yellow-500' :
+                          'bg-red-500'
+                      }`}></div>
                     <div>
                       <p className="text-sm font-medium">{item.user.name}</p>
                       <p className="text-xs text-gray-500">{item.user.pleton || '-'}</p>
@@ -462,7 +460,7 @@ const DashboardContent = ({
         <h3 className="font-medium text-sm mb-4">Akses Cepat</h3>
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-4">
           {quickAccessItems.map((item) => (
-            <div 
+            <div
               key={item.id}
               className={`flex flex-col items-center ${item.onClick ? 'cursor-pointer active:scale-95' : ''} 
                 transition-transform duration-200`}
@@ -488,14 +486,14 @@ const DashboardContent = ({
             </div>
             <h2 className="text-lg font-medium">Progress Al-Quran</h2>
           </div>
-          <button 
+          <button
             className="bg-green-500 text-white px-4 py-1 rounded-lg text-sm font-medium w-full sm:w-auto hover:bg-green-600 transition-colors duration-300"
             onClick={navigateToAlQuran}
           >
             Lanjutkan Membaca
           </button>
         </div>
-        
+
         <div className="flex mb-2">
           <div className="grid grid-cols-2 xs:grid-cols-4 gap-4 w-full">
             <div>
@@ -516,7 +514,7 @@ const DashboardContent = ({
             </div>
           </div>
         </div>
-        
+
         <p className="text-xs text-gray-500">
           Terakhir Dibaca: {quranProgress.lastRead || '-'}
         </p>
