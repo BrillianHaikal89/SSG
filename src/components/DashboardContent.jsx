@@ -185,7 +185,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToTugas,
-      roles: ['1a', '2c', '3']
+      roles: ['1a']
     },
     {
       id: 'alquran',
