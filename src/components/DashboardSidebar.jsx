@@ -12,6 +12,7 @@ const DashboardSidebar = ({
     navigateToKelolaKegiatan,
     navigateToAlQuran,
     navigateToPresensi,
+    navigateToLihatPresensi,
     navigateToTugas,
     navigateToProfile,
     navigateToMY,
@@ -35,7 +36,7 @@ const DashboardSidebar = ({
                 navigateToProfile();
                 closeSidebar && closeSidebar();
             },
-            roles: ['0a', '0b', '1a', '1b'] // Only show for these roles
+            roles: ['0a', '0b', '1a'] // Only show for these roles
         },
         {
             id: 'my',
@@ -88,7 +89,7 @@ const DashboardSidebar = ({
             ),
             label: "Lihat Presensi",
             onClick: () => {
-                router.push('/dashboard/lihatpresensi');
+                navigateToLihatPresensi();
                 closeSidebar && closeSidebar();
             },
             roles: ['3', '4'] 
