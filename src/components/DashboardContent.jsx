@@ -219,7 +219,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToPresensi,
-      roles: ['1a', '3', '2c']
+      roles: ['1a']
     },
     {
       id: 'nilai',
@@ -230,7 +230,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: null,
-      roles: []
+      roles: ['all']
     },
     {
       id: 'my',
@@ -274,7 +274,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToScan,
-      roles: ['2c']
+      roles: ['2c', '3', '4']
     },
     {
       id: 'lihat-presensi',
