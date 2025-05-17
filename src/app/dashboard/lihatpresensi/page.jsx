@@ -33,7 +33,7 @@ const LihatPresensiPage = () => {
     try {
       setLoading(true);
       const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/users/get-presensi?user_id=${userId}`);
+      const response = await fetch(`${API_URL}/users/get-presensi?users=${users}`);
       
       if (!response.ok) {
         throw new Error('Gagal mengambil data presensi');
