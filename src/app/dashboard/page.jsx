@@ -28,6 +28,10 @@ const MySwal = withReactContent(Swal);
     router.push('/dashboard/kegiatan');
   }
 
+  const navigateToKelolaTugas = () => {
+    router.push('/dashboard/kelolatugas');
+  }
+
   const navigateToRundown = () => {
     router.push('/dashboard/rundown');
   };
@@ -227,6 +231,7 @@ const handleLogout = () => {
       userData={userData}
       loading={loading}
       navigateToKelolaKegiatan={navigateToKelolaKegiatan}
+      navigateToKelolaTugas={navigateToKelolaTugas}
       navigateToScan ={navigateToScan}
       handleLogout={handleLogout}
       navigateToMY={navigateToMY}

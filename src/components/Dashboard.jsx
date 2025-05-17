@@ -9,6 +9,7 @@ const Dashboard = ({
   loading, 
   navigateToScan,
   navigateToKelolaKegiatan,
+  navigateToKelolaTugas,
   handleLogout,
   navigateToMY,
   navigateToRundown,
@@ -82,6 +83,7 @@ const Dashboard = ({
         sidebarOpen={sidebarOpen}
         toggleSidebar={toggleSidebar}
         navigateToKelolaKegiatan={navigateToKelolaKegiatan}
+        navigateToKelolaTugas={navigateToKelolaTugas}
         handleLogout={handleLogout}
         navigateToHome={navigateToHome}
         navigateToMY={navigateToMY}
@@ -113,6 +115,7 @@ const Dashboard = ({
           userData={userData}
           navigateToMY={navigateToMY}
           navigateToKelolaKegiatan={navigateToKelolaKegiatan}
+          navigateTokelolaTugas={navigateToKelolaTugas}
           navigateToRundown={navigateToRundown}
           navigateToPresensi={navigateToPresensi}
           navigateToLihatPresensi={navigateToLihatPresensi}

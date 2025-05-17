@@ -5,6 +5,7 @@ const DashboardContent = ({
   userData,
   navigateToMY,
   navigateToRundown,
+  navigateToKelolaTugas,
   navigateToKelolaKegiatan,
   navigateToPresensi,
   navigateToTugas,
@@ -12,7 +13,8 @@ const DashboardContent = ({
   navigateToECard,
   navigateToPeserta,
   navigateToScan,
-  navigateToLihatPresensi
+  navigateToLihatPresensi,
+  navigateToProfile,
 }) => {
   const { role, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +168,17 @@ const DashboardContent = ({
       roles: ['2c', '3']
     },
     {
+      id: 'kelola-tugas',
+      name: 'Kelola Tugas',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      ),
+      onClick: navigateToKelolaTugas,
+      roles: ['3', '4']
+    },
+    {
       id: "kegiatan",
       name: "Kelola Kegiatan",
       icon: (
@@ -174,7 +187,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToKelolaKegiatan,
-      roles: ['3']
+      roles: ['3', '4']
     },
     {
       id: 'tugas',
@@ -390,8 +403,8 @@ const DashboardContent = ({
               <div className="flex justify-between items-center mt-1">
                 <p className="text-xs text-gray-500">{formatAnnouncementDate(announcement.tanggal)}</p>
                 <span className={`px-2 py-0.5 text-xs rounded-full ${announcement.status === 'Dibuka'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-gray-100 text-gray-800'
                   }`}>
                   {announcement.status}
                 </span>
@@ -431,8 +444,8 @@ const DashboardContent = ({
                 <div key={item.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                   <div className="flex items-center">
                     <div className={`w-2 h-2 rounded-full mr-3 ${item.status === 'Hadir' ? 'bg-green-500' :
-                        item.status === 'Izin' ? 'bg-yellow-500' :
-                          'bg-red-500'
+                      item.status === 'Izin' ? 'bg-yellow-500' :
+                        'bg-red-500'
                       }`}></div>
                     <div>
                       <p className="text-sm font-medium">{item.user.name}</p>
