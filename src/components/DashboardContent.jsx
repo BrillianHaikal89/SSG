@@ -12,13 +12,16 @@ const DashboardContent = ({
   navigateToProfile,
   navigateToECard,
   navigateToPeserta,
-  navigateToScan
+  navigateToScan,
+  navigateToLihatPresensi
 }) => {
   const { role, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [bookmarkData, setBookmarkData] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(false);
+  const [recentPresensi, setRecentPresensi] = useState([]);
+  const [isLoadingPresensi, setIsLoadingPresensi] = useState(false);
 
   const checkBookmark = async () => {
     if (!user?.userId) return;
@@ -65,13 +68,34 @@ const DashboardContent = ({
     }
   };
 
-  useEffect(() => {
-    checkBookmark();
-  }, [user?.userId]);
+  const fetchRecentPresensi = async () => {
+    if (role !== '3' && role !== '4') return;
+    
+    try {
+      setIsLoadingPresensi(true);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/api/users/presensi/recent?limit=5`);
+      
+      if (!response.ok) {
+        throw new Error('Gagal mengambil data presensi');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setRecentPresensi(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching recent presensi:', error);
+    } finally {
+      setIsLoadingPresensi(false);
+    }
+  };
 
   useEffect(() => {
+    checkBookmark();
     fetchAnnouncements();
-  }, []);
+    fetchRecentPresensi();
+  }, [role, user?.userId]);
 
   // Format date untuk lastRead dari updated_at
   const formatLastRead = (dateString) => {
@@ -94,6 +118,19 @@ const DashboardContent = ({
       day: 'numeric', 
       month: 'long', 
       year: 'numeric'
+    };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
+  };
+
+  // Format date for presensi
+  const formatPresensiDate = (dateString) => {
+    if (!dateString) return '-';
+    const options = { 
+      day: 'numeric', 
+      month: 'short', 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false
     };
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
@@ -182,7 +219,7 @@ const DashboardContent = ({
         </svg>
       ),
       onClick: navigateToPresensi,
-      roles: ['1a']
+      roles: ['1a', '3', '2c']
     },
     {
       id: 'nilai',
@@ -239,6 +276,18 @@ const DashboardContent = ({
       onClick: navigateToScan,
       roles: ['2c']
     },
+    {
+      id: 'lihat-presensi',
+      name: 'Lihat Presensi',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      ),
+      onClick: navigateToLihatPresensi,
+      roles: ['3', '4']
+    }
   ];
 
   // Filter quick access items based on user role
@@ -324,8 +373,58 @@ const DashboardContent = ({
         </div>
       </div>
 
-      {/* Pengumuman Section - Show for all roles except 0a & 0b */}
-      {(role !== '0a', '0b') && (
+      {/* Presensi Terbaru Section - Hanya untuk role 3 dan 4 */}
+      {(role === '3' || role === '4') && (
+        <section className="bg-white rounded-lg shadow-sm mb-4 p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-sm">Presensi Terbaru</h3>
+            <button 
+              onClick={navigateToLihatPresensi}
+              className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center"
+            >
+              Lihat Semua
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          {isLoadingPresensi ? (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-700"></div>
+            </div>
+          ) : recentPresensi.length > 0 ? (
+            <div className="space-y-3">
+              {recentPresensi.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                  <div className="flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-3 ${
+                      item.status === 'Hadir' ? 'bg-green-500' :
+                      item.status === 'Izin' ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}></div>
+                    <div>
+                      <p className="text-sm font-medium">{item.user.name}</p>
+                      <p className="text-xs text-gray-500">{item.user.pleton || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium">{item.status}</p>
+                    <p className="text-xs text-gray-500">{formatPresensiDate(item.tanggal)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">Belum ada data presensi</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Pengumuman Section - Show for all roles except 0a */}
+      {role !== '0a' && (
         <section className="bg-orange-300 rounded-lg shadow-sm mb-4 p-4">
           <h3 className="font-bold text-sm mb-2">Pengumuman</h3>
           
